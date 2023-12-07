@@ -1,4 +1,4 @@
-% function [F,GAM,INFO] = lpvL2sfsynengine(G,ncont,Fbasis,Fgrad,RateBounds)
+% function [F,GAM,INFO] = lpvL2sfsynengine(G,ncont,Fbasis,Fgrad,RateBounds,Opt)
 %
 % Engine to synthesize a state-feedback controller for grid-based
 % LPV systems.
@@ -10,6 +10,7 @@
 % Fgrad: Gradient of the basis functions wrt. the parameters:
 %        Nbasis-by-Nparameters-by-nmod
 % RateBounds: Upper and lower bounds on the parameter rates: Nparameter-by-2
+% Opt: LPVSYNOPTIONS object
 %
 % OUTPUTS
 % F: nu-by-nx-nmod array of state feedback gains
@@ -20,8 +21,10 @@
 % are compatible.
 % XXX Add options object to pass through solver options
 
-function [F,gam,info] = lpvL2sfsynengine(G,nu,Fbasis,Fgrad,RateBounds)
+function [F,gam,info] = lpvL2sfsynengine(G,nu,Fbasis,Fgrad,RateBounds,opt)
 
+% Parse Input
+Method = opt.Method;
 
 % Dimensions
 G = G(:,:,:);
@@ -98,6 +101,11 @@ end
 [ginv,ndec] = lmivar(1,[1 1]);
 ginvI = lmivar(3,ndec*eye(nd));
 
+if isequal(Method,'MaxFeas')
+    % LBC is lower bound on X
+    [LBC,ndec] = lmivar(1,[nX 0]);
+end
+
 % LMI for Dissipation Inequality - Loop through array of models
 cnt = 1;
 for k1 = 1:nmod
@@ -145,16 +153,26 @@ for k1 = 1:nmod
     end
     if ratebndflg || k1 == 1
         % xpdlow*I < X < xpdupp*I
-        xpdlow = 1e-6;
-        lmiterm([cnt 1 1 0],xpdlow*eye(nx));
+        if opt.Xlb > 0 
+            xpdlow = opt.Xlv;
+        else
+            xpdlow = 1e-6;
+        end
+        if isequal(Method,'MaxFeas')
+            lmiterm([cnt 1 1 LBC],1,1);
+        else
+            lmiterm([cnt 1 1 0],xpdlow*eye(nx));
+        end
         for n1=1:nbasis
             lmiterm([-cnt 1 1 X(n1)],Fbk1(n1),1);
         end
         cnt = cnt+1;
         
-        % TODO PJS 10/22/2011: What value should we choose here?
-        xpdupp = 1e6;
-        %xpdupp = 1e9;
+        if isfinite(opt.Xub)
+            xpdupp = opt.Xub;
+        else
+            xpdupp = 1e6;
+        end
         lmiterm([-cnt 1 1 0],xpdupp*eye(nx));
         for n2=1:nbasis
             lmiterm([cnt 1 1 X(n2)],Fbk1(n2),1);
@@ -170,7 +188,7 @@ end
 % The Uperp LMI leads to the main LMI constraint. The Vper LMI
 % simply leads to a constraint [-I D1'/gam; D1/gam -I] <0
 % which implies that gam>= max(svd(D1)), i.e. ginv<=1/max(svd(D1))
-gmin = 0;
+gmin = max(0,opt.Gammalb);
 for k = 1:nmod
     gmin = max(gmin,norm(D1(:,:,k)));
 end
@@ -180,42 +198,98 @@ if gmin>0
     cnt=cnt+1;
 end
 
+% 1/Gammaub <= 1/Gamma
+if isfinite(opt.Gammaub)
+    lmiterm([-cnt 1 1 ginv],1,1);
+    lmiterm([cnt 1 1 0],1/opt.Gammaub);
+    cnt = cnt +1;
+end
+
+
+% Get LMI Options
+if ~isempty(opt.SolverOptions)
+    LMIopt = opt.SolverOptions;
+elseif isequal(opt.Solver,'lmilab')
+    % Default settings for LMI Lab
+    LMIopt = zeros(5,1);
+    %LMIopt(1) = 1/(gmax-gmin); % Tol setting in old code
+    if isequal(Method,'MaxFeas')
+        LMIopt(2) = 50;   % Max # of iters for MaxFeas problem
+    elseif RateBndFlag
+        %LMIopt(2) = 600;  % Setting in old LPVOFSYN1
+        LMIopt(2) = 350;  % Max # of iters for rate bounded syn
+    else
+        LMIopt(2) = 250;  % Max # of iters for non-rate bounded syn
+    end
+    LMIopt(5) = 1;        % Toggle display
+else
+    LMIopt = [];
+end
+
+% Get LMI Initial Condition
+if ~isempty(opt.SolverInit)
+    x0 = opt.SolverInit;
+else
+    x0 = [];
+end
+
 % SDP: min gamsq subject to LMI constraints
 lmisys = getlmis;
 c = zeros(ndec,1);
 c(end) = -1;
 
-opt = [0 250 0 0 0];
-[copt,xopt] = mincx(lmisys,c,opt);
+% TODO HP 07/12/2023: so far only lmilab supported. Add other solvers?
+if ~isequal(opt.Solver,'lmilab')
+    error('Specified solver is currently not available.');
+end
+
+[copt,xopt] = mincx(lmisys,c,LMIopt,x0);
 gam = 1/xopt(end);
 info = [];
-if ~isempty(xopt)
-    % Controller reconstruction
-    F = zeros(nu,nx,nmod);
-    Zopt = zeros(nx,nx,nmod);
-    for k1=1:nmod
-        Fbk1 = Fbasis(:,:,k1);
-        Xk1 = zeros(nx);
-        for ibasis=1:nbasis
-            Xk1 = Xk1 + Fbk1(ibasis,1)*dec2mat(lmisys,xopt,X(ibasis));
-        end
-        Zopt(:,:,k1) = inv(Xk1)/gam^2;        
-        %F(:,:,k1) = -( C2(:,:,k1)+gam^2*B2(:,:,k1)'*Zopt(:,:,k1) );
-        
-        % Explicit solution for controller reconstruction
-        p12t = C1(:,:,k1)*Xk1 + D11(:,:,k1)*Bhat(:,:,k1)'/gam^2;
-        p22 = -eye(ne-nu) + D11(:,:,k1)*D11(:,:,k1)'/gam^2;
-        p23t = D12(:,:,k1)*D11(:,:,k1)'/gam^2;
-        F(:,:,k1) = -( B2(:,:,k1)'+ D12(:,:,k1)*Bhat(:,:,k1)'/gam^2 ...
-                -p23t*(p22\p12t) )*Zopt(:,:,k1)*gam^2 - C2(:,:,k1);
-        
-        % Undo orthog transformation
-        F(:,:,k1) = r2inv(:,:,k1)*F(:,:,k1);        
-    end    
+
+% Handle Infeasible LMI Case
+if isempty(xopt)
+    F = [];
+    gam = inf;
+    info = struct('xopt',xopt,'copt',copt,'lmisys',lmisys);
+    return;
 else
-    F = [];    
-    Zopt = [];
+    if isequal(Method,'BackOff')
+        opt2 = opt;
+        opt2.Method = 'MaxFeas';
+        opt2.Gammaub = opt.BackOffFactor*gam;
+        info1 = struct('xopt',xopt,'copt',copt,'lmisys',lmisys,'X',X,'Y',Y);
+        gam1 = gam;
+        [F,gam,info2] = lpvsyn(sys,nmeas,ncont,Xb,Yb,opt2);
+        info = struct('MinGamma',Gamma1,'Stage1Info',info1,'Stage2Info',info2);
+
+    else
+        % Controller reconstruction
+        F = zeros(nu,nx,nmod);
+        Zopt = zeros(nx,nx,nmod);
+        for k1=1:nmod
+            Fbk1 = Fbasis(:,:,k1);
+            Xk1 = zeros(nx);
+            for ibasis=1:nbasis
+                Xk1 = Xk1 + Fbk1(ibasis,1)*dec2mat(lmisys,xopt,X(ibasis));
+            end
+            Zopt(:,:,k1) = inv(Xk1)/gam^2;
+            %F(:,:,k1) = -( C2(:,:,k1)+gam^2*B2(:,:,k1)'*Zopt(:,:,k1) );
+
+            % Explicit solution for controller reconstruction
+            p12t = C1(:,:,k1)*Xk1 + D11(:,:,k1)*Bhat(:,:,k1)'/gam^2;
+            p22 = -eye(ne-nu) + D11(:,:,k1)*D11(:,:,k1)'/gam^2;
+            p23t = D12(:,:,k1)*D11(:,:,k1)'/gam^2;
+            F(:,:,k1) = -( B2(:,:,k1)'+ D12(:,:,k1)*Bhat(:,:,k1)'/gam^2 ...
+                -p23t*(p22\p12t) )*Zopt(:,:,k1)*gam^2 - C2(:,:,k1);
+
+            % Undo orthog transformation
+            F(:,:,k1) = r2inv(:,:,k1)*F(:,:,k1);
+        end
+    end
 end
+   
+
 
 
 

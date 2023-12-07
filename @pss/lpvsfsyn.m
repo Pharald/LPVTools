@@ -23,7 +23,7 @@ function [F,Gamma,Info] = lpvsfsyn(P,ncont,Xb,alg,opt)
 
 
 
-% XXX - OPTIONS are not currently being used. 
+% XXX - OPTIONS are currently only used if 'L2' is selected. 
 % [L,GAM,INFO] = LPVESTSYN(P,NMEAS,...,opt) permits the user to pass in 
 % See also: lpvsynOptions.
 
@@ -68,7 +68,6 @@ elseif nin==4
             'either a a CHAR, or a lpvsynOptions'])
     end
 end
-Method = opt.Method;
 
 % Always assume one basis function: constant
 if isempty(Xb)
@@ -94,8 +93,10 @@ end
 
 if strcmpi(alg,'L2')
     % Run the L2 synthesis engine:
-    [F,Gamma,Info] = lpvL2sfsynengine(Pdata,ncont,Fbasis,Fgrad,RateBounds);
+    [F,Gamma,Info] = lpvL2sfsynengine(Pdata,ncont,Fbasis,Fgrad,RateBounds,opt);
 
+    % TODO HP 07/12/2023: Add lpvsynoptions for stochastic synthesis engine
+    % The options are only used for L2 synthesis at the moment
 elseif strcmpi(alg,'LQG')
     % Run the Stochastic synthesis engine:
     [F,Gamma,Info] = lpvLQGsfsynengine(Pdata,ncont,Fbasis,Fgrad,RateBounds);
