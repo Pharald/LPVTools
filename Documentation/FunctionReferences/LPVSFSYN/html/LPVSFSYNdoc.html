@@ -1,0 +1,109 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>LPVSFSYN - Parameter-dependent state feedback controller synthesis</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-03-01"><meta name="DC.source" content="LPVSFSYNdoc.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>LPVSFSYN - Parameter-dependent state feedback controller synthesis</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Syntax</a></li><li><a href="#2">Description</a></li></ul></div><h2>Syntax<a name="1"></a></h2><pre>  [F,GAM,INFO] = lpvsfsyn(P,NCON)
+  [F,GAM,INFO] = lpvsfsyn(P,NCON,'L2')
+  [F,GAM,INFO] = lpvsfsyn(P,NCON,'LQG')
+  [F,GAM,INFO] = lpvsfsyn(P,NCON,Xb,Yb)
+  [F,GAM,INFO] = lpvsfsyn(P,NCON,Xb,Yb,'L2')
+  [F,GAM,INFO] = lpvsfsyn(P,NCON,Xb,Yb,'LQG')</pre><h2>Description<a name="2"></a></h2><p><tt>[F,GAM,INFO] = lpvsfsyn(P,NCON,'L2')</tt> computes a parameter-varying state-feedback controller for the parameter-varying system <tt>P</tt>. <tt>NCON</tt> specifies the number of available control inputs in <tt>P</tt>. <tt>F</tt> is the state-feedback controller for the plant <tt>P</tt>, which minimizes the <img src="LPVSFSYNdoc_eq14766676290793252675.png" alt="$L_2$"> norm from the input of <tt>P</tt> to its output. <tt>GAM</tt> is the minimum <img src="LPVSFSYNdoc_eq14766676290793252675.png" alt="$L_2$"> norm achived by <tt>F</tt>. <tt>INFO</tt> is a struct with additional data.</p><p><tt>[F,GAM,INFO] = lpvsfsyn(P,NCON,'LQG')</tt> computes a parameter-varying state-feedback controller <tt>F</tt>, which minimizes the stochastic LPV bound. The stochastic LPV bound is defined as the expected value of the average instantaneous power of the output of <tt>P</tt>, assuming its inputs are zero mean, white-noise processes with unit intensity.</p><p><tt>[F,GAM,INFO] = lpvsfsyn(P,NCON,Xb,Yb,ALG)</tt> performs a rate-bounded synthesis. <tt>Xb</tt> and <tt>Yb</tt> are <tt>basis</tt> objects specifying the basis functions to be used in the synthesis. <tt>ALG</tt> can be either <tt>'L2'</tt> or <tt>'LQG'</tt>. A call without the <tt>ALG</tt> argument is equivalent to <tt>[F,GAM,INFO] = lpvsfsyn(P,NCON,Xb,Yb,'L2')</tt>.</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% LPVSFSYN - Parameter-dependent state feedback controller synthesis
+%
+%  
+%% Syntax
+%
+%    [F,GAM,INFO] = lpvsfsyn(P,NCON)
+%    [F,GAM,INFO] = lpvsfsyn(P,NCON,'L2')
+%    [F,GAM,INFO] = lpvsfsyn(P,NCON,'LQG')
+%    [F,GAM,INFO] = lpvsfsyn(P,NCON,Xb,Yb)
+%    [F,GAM,INFO] = lpvsfsyn(P,NCON,Xb,Yb,'L2')
+%    [F,GAM,INFO] = lpvsfsyn(P,NCON,Xb,Yb,'LQG')
+%
+%% Description
+% 
+% |[F,GAM,INFO] = lpvsfsyn(P,NCON,'L2')| computes a parameter-varying 
+% state-feedback controller for the parameter-varying system |P|. 
+% |NCON| specifies the number of available control inputs in |P|. |F| is the 
+% state-feedback controller for the plant |P|, which minimizes the $L_2$ norm 
+% from the input of |P| to its output. |GAM| is the minimum $L_2$ norm 
+% achived by |F|. |INFO| is a struct with additional data. 
+%
+% |[F,GAM,INFO] = lpvsfsyn(P,NCON,'LQG')| computes a parameter-varying 
+% state-feedback controller |F|, which minimizes the stochastic LPV bound.  
+% The stochastic LPV bound is defined as the expected value of the average 
+% instantaneous power of the output of |P|, assuming its inputs are zero mean, 
+% white-noise processes with unit intensity.
+%
+% |[F,GAM,INFO] = lpvsfsyn(P,NCON,Xb,Yb,ALG)| performs a rate-bounded synthesis.
+% |Xb| and |Yb| are |basis| objects specifying the basis functions to be used in 
+% the synthesis. |ALG| can be either |'L2'| or |'LQG'|. A call without the |ALG|
+% argument is equivalent to |[F,GAM,INFO] = lpvsfsyn(P,NCON,Xb,Yb,'L2')|.
+
+##### SOURCE END #####
+--></body></html>

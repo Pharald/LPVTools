@@ -1,0 +1,162 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Model Reduction for LPV systems</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-04-19"><meta name="DC.source" content="ModelreductionGuide.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Model Reduction for LPV systems</h1><!--introduction--><p>A primer on model reduction in the LPV framework.</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Introduction</a></li><li><a href="#2">LPV Model Reduction Commands</a></li><li><a href="#3">Examples and How To</a></li><li><a href="#4">Concepts</a></li></ul></div><h2>Introduction<a name="1"></a></h2><p>LPVTools provides tools for LPV model reduction. LPV model reduction is different from Linear Time-Invariant (LTI) model reduction techniques which act on a single point, because they perform the model reduction for all values of the scheduling parameter simultaneously. The resulting reduced order model is still a LPV model with consistent state, input and output vectors. If LTI model reduction techniques (e.g. <tt>balreal</tt>) are applied to a LPV model, the resulting model may lose <a href="..\..\Concepts\StateConsistency\html\StateConsistency.html">state consistency</a> and the resulting reduced order model is no longer a LPV system. LPVTools provides two functions for LPV model reduction. <tt>lpvbalancmr</tt> performs balanced trunctation, and provides the option of weighting different frequency bands in the model reduction to emphasize accuracy for some dynamics while de-emphasizing others.. However it is restricted to stable LPV systems. <tt>lpvncfmr</tt> performs a contractive coprime factorization of a LPV system, and can handle unstable LPV systems.</p><p><b>Further Reading</b></p><div><ol><li>G. D. Wood, "Control of parameter-dependent mechanical systems," Ph.D. Dissertation, University of Cambridge, 1995.</li><li>G. D. Wood, P. J. Goddard, and K. Glover, "Approximation of linear parameter-varying systems," <i>IEEE Conference on Decision and Control</i>, Vol. 1, pp 406-411, 1996.</li><li>R. Widowati, R. Bambang, R. Sagari, S. M. and Nababan, &#8220;Model reduction for unstable LPV system based on coprime factorizations and singular perturbation,&#8221; <i>5th Asian Control Conference</i>, Vol. 2, pp. 963-970, Melbourne, Australia, 2004.</li></ol></div><h2>LPV Model Reduction Commands<a name="2"></a></h2><p>
+<table border=1>
+<tr>
+<td><a href="..\..\FunctionReferences\LPVGRAM\html\LPVGRAMdoc.html">LPVGRAM</a> </td>
+<td>Compute Gramians for PSS objects.</td>
+</tr>
+<tr>
+<td><a href="..\..\FunctionReferences\LPVBALREAL\html\LPVBALREALdoc.html">LPVBALREAL</a> </td>
+<td>Perform Gramian-based balancing for PSS objects.</td>
+</tr>
+<tr>
+<td><a href="..\..\FunctionReferences\LPVBALANCMR\html\LPVBALANCMRdoc.html">LPVBALANCMR</a> </td>
+<td>Balanced truncation model reduction.</td>
+</tr>
+<tr>
+<td><a href="..\..\FunctionReferences\LPVNCFMR\html\LPVNCFMRdoc.html">LPVNCFMR</a></td>
+<td>Balanced truncation model reduction through contractive
+  coprime factorization.</td>
+</tr>
+</table>
+</p><h2>Examples and How To<a name="3"></a></h2><div><ul><li><a href="matlab:open(fullfile(docroot,'robust/simplify-models.html'))">LTI Model Reduction</a></li><li><a href="..\..\HowTo\StableModelReduction\html\StableModelReduction.html">Model Reduction for a stable LPV system</a></li><li><a href="..\..\HowTo\UnstableModelReduction\html\UnstableModelReduction.html">Model Reduction for an unstable LPV system</a></li></ul></div><h2>Concepts<a name="4"></a></h2><div><ul><li><a href="..\..\Concepts\StateConsistency\html\StateConsistency.html">State Consistency</a></li></ul></div><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Model Reduction for LPV systems
+% A primer on model reduction in the LPV framework.
+
+%% Introduction
+% 
+% LPVTools provides tools for LPV model reduction. LPV model reduction is
+% different from Linear Time-Invariant (LTI) model reduction techniques 
+% which act on a single point, because they perform the model reduction for
+% all values of the scheduling parameter simultaneously. The resulting
+% reduced order model is still a LPV model with consistent state, input and
+% output vectors. If LTI model reduction techniques (e.g. |balreal|) are
+% applied to a LPV model, the resulting model may lose 
+% <..\..\Concepts\StateConsistency\html\StateConsistency.html state consistency>
+% and the resulting reduced order model is no longer a LPV system.
+% LPVTools provides two functions for LPV model reduction. |lpvbalancmr|
+% performs balanced trunctation, and provides the option of weighting 
+% different frequency bands in the model reduction to emphasize accuracy 
+% for some dynamics while de-emphasizing others.. However it is 
+% restricted to stable LPV systems. |lpvncfmr| performs a contractive 
+% coprime factorization of a LPV system, and can handle unstable LPV
+% systems.
+% 
+% 
+% *Further Reading*
+% 
+% # G. D. Wood, "Control of parameter-dependent mechanical systems," Ph.D. 
+% Dissertation, University of Cambridge, 1995.
+% #  G. D. Wood, P. J. Goddard, and K. Glover, "Approximation of linear 
+% parameter-varying systems," _IEEE Conference on Decision and Control_,
+% Vol. 1, pp 406-411, 1996.
+% # R. Widowati, R. Bambang, R. Sagari, S. M. and Nababan, 
+% “Model reduction for unstable LPV system based on coprime
+% factorizations and singular perturbation,” _5th Asian Control
+% Conference_, Vol. 2, pp. 963-970, Melbourne, Australia, 2004.
+
+%% LPV Model Reduction Commands
+% 
+% <html>
+% <table border=1>
+% <tr>
+% <td><a href="..\..\FunctionReferences\LPVGRAM\html\LPVGRAMdoc.html">LPVGRAM</a> </td>
+% <td>Compute Gramians for PSS objects.</td>
+% </tr>
+% <tr>
+% <td><a href="..\..\FunctionReferences\LPVBALREAL\html\LPVBALREALdoc.html">LPVBALREAL</a> </td>
+% <td>Perform Gramian-based balancing for PSS objects.</td>
+% </tr>
+% <tr>
+% <td><a href="..\..\FunctionReferences\LPVBALANCMR\html\LPVBALANCMRdoc.html">LPVBALANCMR</a> </td>
+% <td>Balanced truncation model reduction.</td>
+% </tr>
+% <tr>
+% <td><a href="..\..\FunctionReferences\LPVNCFMR\html\LPVNCFMRdoc.html">LPVNCFMR</a></td>
+% <td>Balanced truncation model reduction through contractive
+%   coprime factorization.</td>
+% </tr>
+% </table>
+% </html>
+
+%% Examples and How To
+% 
+% * <matlab:open(fullfile(docroot,'robust/simplify-models.html')) LTI Model Reduction>
+% * <..\..\HowTo\StableModelReduction\html\StableModelReduction.html Model Reduction for a stable LPV system>
+% * <..\..\HowTo\UnstableModelReduction\html\UnstableModelReduction.html Model Reduction for an unstable LPV system>
+
+%% Concepts
+% 
+% * <..\..\Concepts\StateConsistency\html\StateConsistency.html State
+% Consistency>
+
+##### SOURCE END #####
+--></body></html>

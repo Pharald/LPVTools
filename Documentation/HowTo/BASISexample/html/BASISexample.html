@@ -1,0 +1,156 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Defining Basis Functions</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-04-20"><meta name="DC.source" content="BASISexample.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Defining Basis Functions</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Introduction</a></li><li><a href="#2">Constructing Basis Functions</a></li><li><a href="#6">Basic Arithmetic for Basis Functions</a></li><li><a href="#8">Aggregating Basis Functions</a></li></ul></div><h2>Introduction<a name="1"></a></h2><p>Basis functions are needed for rate-bounded LPV analysis and synthesis in the grid-based LPV framework. These are functions of the time-varying parameter present in the system being analyzed.  Basis functions are specified using the <tt>basis</tt> object. To construct a <tt>basis</tt> function object the user provides a <tt>pmat</tt> or <tt>pgrid</tt> that defines the value of the basis function at each grid-point in the domain. Furthermore, the user provides the value of the partial derivative of the basis function with regard to each parameter in the system, at each point in the domain.</p><h2>Constructing Basis Functions<a name="2"></a></h2><p>Lets construct a <tt>basis</tt> object that describes the basis function <img src="BASISexample_eq17720256996721981915.png" alt="$f = \rho(t) + \rho(t)^2$">.</p><pre class="codeinput"><span class="comment">% Define the time-varying parameter rho</span>
+rho = pgrid(<span class="string">'rho'</span>,1:5)
+</pre><pre class="codeoutput">Gridded real parameter "rho" with 5 points in [1,5] and rate bounds [-Inf,Inf].
+</pre><p>Define the basis function as a <tt>pmat</tt>:</p><pre class="codeinput">f = rho + rho^2
+</pre><pre class="codeoutput">PMAT with 1 rows and 1 columns.                                
+The PMAT consists of the following blocks:                     
+  rho: Gridded real, 5 points in [1,5], rate bounds [-Inf,Inf].
+</pre><p>Define the value of the partial derivative of f with respect to rho:</p><pre class="codeinput">pf = 1+2*rho
+</pre><pre class="codeoutput">PMAT with 1 rows and 1 columns.                                
+The PMAT consists of the following blocks:                     
+  rho: Gridded real, 5 points in [1,5], rate bounds [-Inf,Inf].
+</pre><p>Now we can define the <tt>basis</tt> object for this basis function. The first argument to <tt>basis</tt> is the value of the basis function. The second argument is the value of the partial derivative:</p><pre class="codeinput">bf = basis(f,pf)
+</pre><pre class="codeoutput">BASIS: 1 basis functions and 1 partial derivatives with respect to 1 PGRID
+The BASIS object consists of the following blocks:
+  rho: Gridded real, 5 points in [1,5]            
+</pre><h2>Basic Arithmetic for Basis Functions<a name="6"></a></h2><p>The <tt>basis</tt> object includes methods for basic arithmetic. Hence, an initial <tt>basis</tt> object can be used to construct others. Lets define another <tt>basis</tt> object that describes the basis function: <img src="BASISexample_eq10800775673254844634.png" alt="$g = f^2 = \rho^2+2\rho^3 + \rho^4$">.</p><pre class="codeinput">bg = bf^2
+</pre><pre class="codeoutput">BASIS: 1 basis functions and 1 partial derivatives with respect to 1 PGRID
+The BASIS object consists of the following blocks:
+  rho: Gridded real, 5 points in [1,5]            
+</pre><p>Note that there is no need to specify the partial derivatives for the new system <tt>g</tt>. These are automatically computed for <tt>g</tt> using the data in <tt>f</tt> and the chain rule of differentiation.</p><h2>Aggregating Basis Functions<a name="8"></a></h2><p>For analysis and synthesis, a set of basis functions can be groupped together using horzcar or vertcat:</p><pre class="codeinput">BF = [bf,bg]
+</pre><pre class="codeoutput">BASIS: 2 basis functions and 1 partial derivatives with respect to 1 PGRID
+The BASIS object consists of the following blocks:
+  rho: Gridded real, 5 points in [1,5]            
+</pre><p>In this case the <tt>basis</tt> object <tt>BF</tt> describes the two basis functions <img src="BASISexample_eq17720256996721981915.png" alt="$f = \rho(t) + \rho(t)^2$"> and <img src="BASISexample_eq10800775673254844634.png" alt="$g = f^2 = \rho^2+2\rho^3 + \rho^4$">.</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Defining Basis Functions
+%
+%% Introduction
+% 
+% Basis functions are needed for rate-bounded LPV analysis and synthesis 
+% in the grid-based LPV framework.
+% These are functions of the time-varying parameter present in the system
+% being analyzed.  Basis functions are specified using the |basis| object.  
+% To construct a |basis| function object the user provides a |pmat| or 
+% |pgrid| that defines the value of the basis function at each grid-point  
+% in the domain. Furthermore, the user provides the value of the partial
+% derivative of the basis function with regard to each parameter in the
+% system, at each point in the domain.
+%
+%% Constructing Basis Functions
+% 
+% Lets construct a |basis| object that describes the basis function 
+% $f = \rho(t) + \rho(t)^2$.
+
+% Define the time-varying parameter rho
+rho = pgrid('rho',1:5)
+
+%%
+% Define the basis function as a |pmat|:
+f = rho + rho^2
+
+%%
+% Define the value of the partial derivative of f with respect to rho:
+pf = 1+2*rho
+
+%%
+% Now we can define the |basis| object for this basis function. The first
+% argument to |basis| is the value of the basis function. The second
+% argument is the value of the partial derivative:
+
+bf = basis(f,pf)
+
+%% Basic Arithmetic for Basis Functions
+% 
+% The |basis| object includes methods for basic arithmetic. Hence, an
+% initial |basis| object can be used to construct others. Lets define
+% another |basis| object that describes the basis function: $g = f^2 =
+% \rho^2+2\rho^3 + \rho^4$.
+bg = bf^2
+
+%%
+% Note that there is no need to specify the partial
+% derivatives for the new system |g|. These are automatically computed for
+% |g| using the data in |f| and the chain rule of differentiation.
+
+%% Aggregating Basis Functions
+% 
+% For analysis and synthesis, a set of basis functions can be groupped
+% together using horzcar or vertcat:
+BF = [bf,bg]
+
+%%
+% In this case the |basis| object |BF| describes the two basis functions 
+% $f = \rho(t) + \rho(t)^2$ and $g = f^2 = \rho^2+2\rho^3 + \rho^4$.
+
+
+##### SOURCE END #####
+--></body></html>

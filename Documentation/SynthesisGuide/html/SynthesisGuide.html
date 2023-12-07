@@ -1,0 +1,272 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Synthesis for LPV systems</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-04-20"><meta name="DC.source" content="SynthesisGuide.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Synthesis for LPV systems</h1><!--introduction--><p>A primer on synthesis in the LPV framework.</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">LPV Synthesis</a></li><li><a href="#2">LPV Synthesis Commands</a></li><li><a href="#3">Examples and How To</a></li><li><a href="#4">Concepts</a></li><li><a href="#5">LTI synthesis capabilities</a></li></ul></div><h2>LPV Synthesis<a name="1"></a></h2><p><b>Problem Statement</b></p><p>Consider a parameter dependent linear plant <img src="SynthesisGuide_eq03930283805599026933.png" alt="$P_\rho$"> of the form:</p><p><img src="SynthesisGuide_eq13971167790730068102.png" alt="$$\left[ \begin{array}{c} \dot x (t) \\ e (t) \\ y (t) \end{array} \right]&#xA;= \left[ \begin{array}{ccc} A(\rho(t)) &amp; B_1(\rho(t)) &amp; B_2(\rho(t)) \\&#xA;C_1(\rho(t)) &amp; D_{11}(\rho(t)) &amp; D_{12}(\rho(t)) \\&#xA;C_2(\rho(t)) &amp; D_{21}(\rho(t)) &amp; D_{22}(\rho(t)) \end{array} \right]&#xA;\left[ \begin{array}{c} x (t) \\ d (t) \\ u (t) \end{array} \right]&#xA;\ \ \ \ \ \ \ (1)$$"></p><p>where <img src="SynthesisGuide_eq11905270608999804013.png" alt="$\rho$"> is a time varying parameter, that takes on values in a known compact set <img src="SynthesisGuide_eq10271516613937513731.png" alt="$\mathcal{P}$"> and has known bound on <img src="SynthesisGuide_eq13210591369447348458.png" alt="$\dot{\rho}$">, <img src="SynthesisGuide_eq01507068271926391489.png" alt="$\overline{\nu} \leq \dot{\rho} \leq \underline{\nu}$">. The time variations of <img src="SynthesisGuide_eq10967996549329579195.png" alt="$\rho(t)$"> are not known in advance, but the parameter values are measured in real-time and available for control design.</p><p><img vspace="5" hspace="5" src="ClosedLoop.png" alt=""> </p><p><i>Figure 1: Closed-loop interconnection for LPV synthesis problem.</i></p><p>The control problem is to synthesize a controller <img src="SynthesisGuide_eq03417785618755575887.png" alt="$K_{\rho}$"> such that the closed-loop system shown in Figure 1, is stable and the gain from <img src="SynthesisGuide_eq17615571056258974497.png" alt="$d$"> to <img src="SynthesisGuide_eq12226254761175012236.png" alt="$e$"> is minimized. This requires that the controller be designed such that the closed-loop performance is optimized in the presence of rate-bounded, time-varying parameter trajectories <img src="SynthesisGuide_eq17642273524539208163.png" alt="$\rho \in \mathcal{P} \subset \mathcal{R}^n_{\rho}$">. Denote the closed-loop system by <img src="SynthesisGuide_eq13232414437783629868.png" alt="$lft(P_{\rho},K_{\rho})$">, and the gain of this closed-loop system by <img src="SynthesisGuide_eq00229588313752742714.png" alt="$\|lft(P_{\rho},K_{\rho})\|$"> Then the design objective can be stated as:</p><p><img src="SynthesisGuide_eq12230164512829144586.png" alt="$$ \min_{K_{\rho}} \max_{\rho \in \mathcal{P},&#xA;   \overline{\nu} \leq \dot{\rho} \leq \underline{\nu}}&#xA;   \|lft(P_{\rho},K_{\rho})\|&#xA;\ \ \ \ \ \ \ (2)$$"></p><p>The resulting controller is itself parameter dependent - using the available real-time information of the parameter variation. In the grid-based LPV framework</p><p><b>LPVTools Implementation</b></p><p>LPVTools implements LPV controller synthesis for both the LFT-based LPV framework and the grid-based LPV framework. The synthesis functions generate controllers which optimize the performance of the closed-loop system while taking into account the permissible parameter trajectories: <img src="SynthesisGuide_eq09937054496266542728.png" alt="$\rho \in \mathcal{P}$">, subject to <img src="SynthesisGuide_eq01507068271926391489.png" alt="$\overline{\nu} \leq \dot{\rho} \leq \underline{\nu}$">.</p><p>In the grid-based LPV framework <tt>lpvsyn</tt>, <tt>lpvncfyn</tt>, <tt>lpvmixsyn</tt>, <tt>lpvloopshape</tt>, and <tt>lpvstochsyn</tt> are used to synthesize LPV output-feedback controllers. <tt>lpvsfsyn</tt> is used to synthesize LPV state-feedback controllers, and <tt>lpvestsyn</tt> is used to generate LPV estimators. These functions can be used to generate controllers and estimators to minimize either the induced <img src="SynthesisGuide_eq14766676290793252675.png" alt="$L_2$"> norm  (based on results by Becker [1] and Wu [2,3], with pole-constrained synthesis based on the derivation by Lee [4]) or the stochastic LPV bound (based on results by Wu [2]). In the LFT-based LPV framework only <tt>lpvsyn</tt> is provided to synthesize LPV output-feedback controllers, and it implements an algorithm which minimizes the induced <img src="SynthesisGuide_eq14766676290793252675.png" alt="$L_2$"> norm (based on results by Packard [5], and Apkarian and Gahinet [6]).</p><p>The LPV controller synthesis conditions lead to a set of Linear Matrix Inequalities (LMIs) which must be solved in order to generate a controller. These LMIs suffer from similar computational issues to the <a href="..\..\Concepts\StabilityAndInducedGain\html\StabilityAndInducedGain.html">LPV analysis conditions</a>, and their complexity also grows with <img src="SynthesisGuide_eq18062369181181941495.png" alt="$O(2^{n_\rho})$">.</p><p><b>References</b></p><div><ol><li>G. Becker, "Quadratic Stability and Performance of Linear Parameter Dependent Systems," Ph.D. Dissertation, University of California, Berkeley, 1993.</li><li>F. Wu, "Control of Linear Parameter Varying Systems," PhD thesis, University of California, Berkeley, 1993.</li><li>F. Wu, X. Yang, A. Packard, and G. Becker, "Induced L2 norm control for LPV systems with bounded parameter variation rates," <i>International Journal of Nonlinear and Robust Control</i>, vol. 6, pp. 983-998, 1996.</li><li>L. H. Lee, "Identification and Robust Control of Linear Parameter-Varying Systems," Ph.D. Dissertation, University of California at Berkeley, 1997, doi:10.1.1.55.2269.</li><li>A. Packard, "Gain scheduling via linear fractional transformations," <i>Systems and Control Letters</i>, vol. 22, no. 2, pp. 79-92, 1994.</li><li>P. Apkarian and P.Gahinet, "A convex characterization of gain-scheduled Hinfinity controllers," <i>IEEE Transactions on Automatic Control</i>, vol. 40, no. 5, pp. 853-864, 1995.</li></ol></div><h2>LPV Synthesis Commands<a name="2"></a></h2><p>LPVTools provides the following functions to design controllers for multiinput-multioutput (MIMO) LPV models:</p><p>
+<table border=1>
+<tr>
+<td><a href="..\..\FunctionReferences\LPVSYN\html\LPVSYNdoc.html">LPVSYN</a> </td>
+<td>Synthesize a LPV controller</td>
+</tr>
+<tr>
+<td><a href="..\..\FunctionReferences\LPVNCFSYN\html\LPVNCFSYNdoc.html">LPVNCFSYN</a></td>
+<td>Normalized coprime factor LPV controller synthesis</td>
+</tr>
+<tr>
+<td><a href="..\..\FunctionReferences\LPVLOOPSHAPE\html\LPVLOOPSHAPEdoc.html">LPVLOOPSHAPE</a></td>
+<td>LPV loop-shaping synthesis</td>
+</tr>
+<tr>
+<td><a href="..\..\FunctionReferences\LPVMIXSYN\html\LPVMIXSYNdoc.html">LPVMIXSYN</a></td>
+<td>LPV mixed-sensitivity synthesis</td>
+</tr>
+<tr>
+<td><a href="..\..\FunctionReferences\LPVSFSYN\html\LPVSFSYNdoc.html">LPVSFSYN</a></td>
+<td>Synthesize a LPV state-feedback controller</td>
+</tr>
+<tr>
+<td><a href="..\..\FunctionReferences\LPVESTSYN\html\LPVESTSYNdoc.html">LPVESTSYN</a></td>
+<td>Synthesize a LPV state estimator</td>
+</tr>
+<tr>
+<td><a href="..\..\FunctionReferences\LPVSTOCHSYN\html\LPVSTOCHSYNdoc.html">LPVSTOCHSYN</a></td>
+<td>Synthesize stochastic LPV controller</td>
+</tr>
+<tr>
+<td><a href="..\..\FunctionReferences\LPVSYNOPTIONS\html\LPVSYNOPTIONSdoc.html">LPVSYNOPTIONS</a></td>
+<td>Create options object for LPV synthesis and analysis</td>
+</tr>
+</table>
+</p><h2>Examples and How To<a name="3"></a></h2><div><ul><li><a href="..\..\HowTo\BASISexample\html\BASISexample.html">Tutorial: Creating basis functions</a></li><li><a href="..\..\GettingStarted\MiniTutorials\Grid_Synthesis\html\Grid_Synthesis.html">Tutorial: Synthesis for gridded LPV systems</a></li><li><a href="..\..\GettingStarted\MiniTutorials\LFT_Tutorial\html\LFT_Tutorial.html">Tutorial: Synthesis for LFT LPV systems</a></li><li><a href="..\..\Demos\SpinningDisk_Stochastic\html\SpinningDisk_Stochastic.html">Example: Stochastic LPV control of spinning mass</a></li><li><a href="..\..\Demos\SpinningDisk_L2_LFT\html\SpinningDisk_L2_LFT.html">Example: LPV control of spinning mass using LFT framework</a></li></ul></div><h2>Concepts<a name="4"></a></h2><div><ul><li><a href="..\..\Concepts\PermissibleTrajectories\html\PermissibleTrajectories.html">Permissible Parameter Trajectories</a></li><li><a href="..\..\Concepts\StabilityAndInducedGain\html\StabilityAndInducedGain.html">Stability and Induced Gain</a></li><li><a href="matlab:open(fullfile(docroot,'robust/gs/h-infinity-performance.html'))">Characterizing Closed-loop Performance Objectives</a></li></ul></div><h2>LTI synthesis capabilities<a name="5"></a></h2><p>Overloaded LTI synthesis function from the Control Systems Toolbox and the Robust Control Toolbox are provided for LPV systems. (e.g. <tt>lqr</tt>, <tt>hinfsyn</tt>, <tt>h2syn</tt>, <tt>loopsyn</tt>, <tt>ncfsyn</tt>, and <tt>mixsyn</tt>). These functions perform the controller synthesis pointwise in the parameter domain of the controller. In each case the resulting controller is not a LPV controller (i.e. one that satisfies the LPV analysis conditions), but a collection of LTI controllers - one for each point.</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Synthesis for LPV systems
+% A primer on synthesis in the LPV framework.
+
+%% LPV Synthesis
+%
+% *Problem Statement*
+% 
+% Consider a parameter dependent linear plant $P_\rho$ of the form:
+% 
+% $$\left[ \begin{array}{c} \dot x (t) \\ e (t) \\ y (t) \end{array} \right]
+% = \left[ \begin{array}{ccc} A(\rho(t)) & B_1(\rho(t)) & B_2(\rho(t)) \\ 
+% C_1(\rho(t)) & D_{11}(\rho(t)) & D_{12}(\rho(t)) \\
+% C_2(\rho(t)) & D_{21}(\rho(t)) & D_{22}(\rho(t)) \end{array} \right] 
+% \left[ \begin{array}{c} x (t) \\ d (t) \\ u (t) \end{array} \right]
+% \ \ \ \ \ \ \ (1)$$
+%
+% where $\rho$ is a time varying parameter, that takes on values in a known
+% compact set $\mathcal{P}$ and has known bound on $\dot{\rho}$, 
+% $\overline{\nu} \leq \dot{\rho} \leq \underline{\nu}$. 
+% The time variations of $\rho(t)$ are not known in advance, but 
+% the parameter values are measured in real-time and available for
+% control design.
+%
+% <<ClosedLoop.png>>
+%
+% _Figure 1: Closed-loop interconnection for LPV synthesis problem._
+% 
+% The control problem is to synthesize a controller $K_{\rho}$ 
+% such that the closed-loop system shown in Figure 1, is stable and
+% the gain from $d$ to $e$ is minimized.
+% This requires that the controller be designed such that the closed-loop 
+% performance is optimized in the presence of rate-bounded,
+% time-varying parameter trajectories $\rho \in \mathcal{P} \subset \mathcal{R}^n_{\rho}$.
+% Denote the closed-loop system by $lft(P_{\rho},K_{\rho})$, and the gain of
+% this closed-loop system by $\|lft(P_{\rho},K_{\rho})\|$
+% Then the design objective can be stated as:
+%
+% $$ \min_{K_{\rho}} \max_{\rho \in \mathcal{P}, 
+%    \overline{\nu} \leq \dot{\rho} \leq \underline{\nu}} 
+%    \|lft(P_{\rho},K_{\rho})\|
+% \ \ \ \ \ \ \ (2)$$
+% 
+% The resulting controller is itself parameter dependent - using the
+% available real-time information of the parameter variation. 
+% In the grid-based LPV framework 
+% 
+% *LPVTools Implementation*
+%
+% LPVTools implements LPV controller synthesis for both the LFT-based
+% LPV framework and the grid-based LPV framework.  
+% The synthesis functions generate controllers which 
+% optimize the performance of the
+% closed-loop system while taking into account the 
+% permissible parameter trajectories: $\rho \in \mathcal{P}$, 
+% subject to $\overline{\nu} \leq \dot{\rho} \leq \underline{\nu}$.
+%
+% In the grid-based LPV framework |lpvsyn|, |lpvncfyn|, |lpvmixsyn|, 
+% |lpvloopshape|, and |lpvstochsyn| are used to synthesize LPV 
+% output-feedback controllers. 
+% |lpvsfsyn| is used to synthesize LPV state-feedback controllers, 
+% and |lpvestsyn| is used to generate LPV estimators.
+% These functions can be used to generate controllers and estimators to 
+% minimize either the induced $L_2$ norm  (based on results by Becker [1] and Wu [2,3], 
+% with pole-constrained synthesis based on the derivation by Lee [4]) or the 
+% stochastic LPV bound (based on results by Wu [2]).
+% In the LFT-based LPV framework only |lpvsyn| is provided to 
+% synthesize LPV output-feedback controllers, and it 
+% implements an algorithm which minimizes the 
+% induced $L_2$ norm (based on results by Packard [5], and 
+% Apkarian and Gahinet [6]).
+%
+% The LPV controller synthesis conditions lead to a set of Linear Matrix
+% Inequalities (LMIs) which must be solved in order to generate a controller.
+% These LMIs suffer from similar computational issues to the
+% <..\..\Concepts\StabilityAndInducedGain\html\StabilityAndInducedGain.html
+% LPV analysis conditions>, and their complexity also grows with
+% $O(2^{n_\rho})$. 
+% 
+% *References*
+%
+% # G. Becker, "Quadratic Stability and Performance of Linear Parameter 
+% Dependent Systems," Ph.D. Dissertation, University of California,
+% Berkeley, 1993.
+% # F. Wu, "Control of Linear Parameter Varying Systems," PhD thesis, University of California,
+% Berkeley, 1993.
+% # F. Wu, X. Yang, A. Packard, and G. Becker, "Induced L2 norm control for LPV systems with
+% bounded parameter variation rates," _International Journal of Nonlinear and Robust Control_,
+% vol. 6, pp. 983-998, 1996.
+% # L. H. Lee, "Identification and Robust Control of Linear 
+% Parameter-Varying Systems," Ph.D. Dissertation, University of California 
+% at Berkeley, 1997, doi:10.1.1.55.2269.
+% # A. Packard, "Gain scheduling via linear fractional transformations," _Systems and Control
+% Letters_, vol. 22, no. 2, pp. 79-92, 1994.
+% # P. Apkarian and P.Gahinet, "A convex characterization of gain-scheduled Hinfinity controllers,"
+% _IEEE Transactions on Automatic Control_, vol. 40, no. 5, pp. 853-864, 1995.
+					 	                                  
+
+%% LPV Synthesis Commands
+% 
+% LPVTools provides the following functions to design controllers for multiinput-multioutput (MIMO) LPV models:
+% 
+% 
+% <html>
+% <table border=1>
+% <tr>
+% <td><a href="..\..\FunctionReferences\LPVSYN\html\LPVSYNdoc.html">LPVSYN</a> </td>
+% <td>Synthesize a LPV controller</td>
+% </tr>
+% <tr>
+% <td><a href="..\..\FunctionReferences\LPVNCFSYN\html\LPVNCFSYNdoc.html">LPVNCFSYN</a></td>
+% <td>Normalized coprime factor LPV controller synthesis</td>
+% </tr>
+% <tr>
+% <td><a href="..\..\FunctionReferences\LPVLOOPSHAPE\html\LPVLOOPSHAPEdoc.html">LPVLOOPSHAPE</a></td>
+% <td>LPV loop-shaping synthesis</td>
+% </tr>
+% <tr>
+% <td><a href="..\..\FunctionReferences\LPVMIXSYN\html\LPVMIXSYNdoc.html">LPVMIXSYN</a></td>
+% <td>LPV mixed-sensitivity synthesis</td>
+% </tr>
+% <tr>
+% <td><a href="..\..\FunctionReferences\LPVSFSYN\html\LPVSFSYNdoc.html">LPVSFSYN</a></td>
+% <td>Synthesize a LPV state-feedback controller</td>
+% </tr>
+% <tr>
+% <td><a href="..\..\FunctionReferences\LPVESTSYN\html\LPVESTSYNdoc.html">LPVESTSYN</a></td>
+% <td>Synthesize a LPV state estimator</td>
+% </tr>
+% <tr>
+% <td><a href="..\..\FunctionReferences\LPVSTOCHSYN\html\LPVSTOCHSYNdoc.html">LPVSTOCHSYN</a></td>
+% <td>Synthesize stochastic LPV controller</td>
+% </tr>
+% <tr>
+% <td><a href="..\..\FunctionReferences\LPVSYNOPTIONS\html\LPVSYNOPTIONSdoc.html">LPVSYNOPTIONS</a></td>
+% <td>Create options object for LPV synthesis and analysis</td>
+% </tr>
+% </table>
+% </html>
+
+%% Examples and How To
+% 
+% * <..\..\HowTo\BASISexample\html\BASISexample.html Tutorial: Creating basis functions>
+% * <..\..\GettingStarted\MiniTutorials\Grid_Synthesis\html\Grid_Synthesis.html Tutorial: Synthesis for gridded LPV systems>
+% * <..\..\GettingStarted\MiniTutorials\LFT_Tutorial\html\LFT_Tutorial.html Tutorial: Synthesis for LFT LPV systems>
+% * <..\..\Demos\SpinningDisk_Stochastic\html\SpinningDisk_Stochastic.html Example: Stochastic LPV control of spinning mass>
+% * <..\..\Demos\SpinningDisk_L2_LFT\html\SpinningDisk_L2_LFT.html Example: LPV control of spinning mass using LFT framework>
+
+%% Concepts
+% 
+% * <..\..\Concepts\PermissibleTrajectories\html\PermissibleTrajectories.html Permissible
+% Parameter Trajectories>
+% * <..\..\Concepts\StabilityAndInducedGain\html\StabilityAndInducedGain.html Stability and Induced Gain>
+% * <matlab:open(fullfile(docroot,'robust/gs/h-infinity-performance.html')) 
+% Characterizing Closed-loop Performance Objectives>
+
+%% LTI synthesis capabilities
+% 
+% Overloaded LTI synthesis function from the Control Systems Toolbox 
+% and the Robust Control Toolbox are provided for LPV systems. 
+% (e.g. |lqr|, |hinfsyn|, |h2syn|, |loopsyn|, |ncfsyn|, and |mixsyn|). 
+% These functions perform the controller synthesis pointwise
+% in the parameter domain of the controller.
+% In each case the resulting controller is not a LPV controller 
+% (i.e. one that satisfies the LPV analysis conditions), 
+% but a collection of LTI controllers - one for each point.
+##### SOURCE END #####
+--></body></html>

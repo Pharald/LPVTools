@@ -1,0 +1,151 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>LPVSAMPLE - Sample a LPV object</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-02-28"><meta name="DC.source" content="LPVSAMPLEdoc.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>LPVSAMPLE - Sample a LPV object</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Syntax</a></li><li><a href="#2">Description</a></li><li><a href="#3">Example: Sample a 2-dimensional <tt>rgrid</tt> object</a></li><li><a href="#4">Example: Sample a 2-by-2 <tt>pmat</tt> object</a></li><li><a href="#5">Example: Sample a 1-by-1 <tt>pss</tt> object</a></li></ul></div><h2>Syntax<a name="1"></a></h2><pre>  S=lpvsample(G,N)
+  S=lpvsample(G,N,OPT)</pre><h2>Description<a name="2"></a></h2><p>If <tt>R</tt> is an <tt>rgrid</tt>, then <tt>S=LPVSAMPLE(R,N)</tt> returns a sample of <tt>N</tt> points from the rectangular grid <tt>R</tt>. <tt>S</tt> is an Niv-by-N matrix with each column containing one sample of the rectangular grid.  The rows of <tt>S</tt> correspond to the ordering of independent variables in <tt>R.IVName</tt>.</p><p>Otherwise, if <tt>G</tt> is a <tt>pmat</tt>, <tt>pss</tt>, <tt>pfrd</tt>, <tt>upmat</tt>, <tt>upss</tt> or <tt>upfrd</tt>, then <tt>S=lpvsample(G,N)</tt> returns <tt>N</tt> samples of the LPV object <tt>G</tt>. Each sample of <tt>G</tt> is generated by evaluating <tt>G</tt> at a randomly chosen point in the domain of <tt>G</tt>. The output <tt>S</tt> is an array of size: [ <tt>size(G)</tt>, <tt>N</tt> ].</p><p><tt>S=lpvsample(G,N,OPT)</tt> allows the user to specify the sampling algorithm to be used. <tt>OPT</tt> is a <tt>char</tt> that specifies the type of sampling: * <tt>'grid'</tt>: Draws points drawn randomly (possibly with repeats) from         the rectangular grid of <tt>G.Domain</tt>. * <tt>'uniform'</tt> (default): Draws points uniformly from the hypercube         specified by the limits of <tt>G.Domain</tt>. * <tt>'LHC'</tt>: Does a Latin Hypercube sample of the <tt>G.Domain</tt>.</p><p>For <tt>'uniform'</tt> and <tt>'LHC'</tt>, the samples are not, in general, elements of the rectangular grid.</p><h2>Example: Sample a 2-dimensional <tt>rgrid</tt> object<a name="3"></a></h2><pre class="codeinput">R = rgrid( {<span class="string">'a'</span>, <span class="string">'b'</span>}, {linspace(-2,2,12), 1:5} );
+Su = lpvsample(R,15);   <span class="comment">% Uniform sample</span>
+Sg = lpvsample(R,15,<span class="string">'grid'</span>);   <span class="comment">% Sample from grid</span>
+plot(Su(1,:),Su(2,:),<span class="string">'bx'</span>,Sg(1,:),Sg(2,:),<span class="string">'ro'</span>);
+legend(<span class="string">'Uniform'</span>,<span class="string">'Grid'</span>,<span class="string">'Location'</span>,<span class="string">'Best'</span>)
+</pre><img vspace="5" hspace="5" src="LPVSAMPLEdoc_01.png" alt=""> <h2>Example: Sample a 2-by-2 <tt>pmat</tt> object<a name="4"></a></h2><pre class="codeinput">a = pgrid(<span class="string">'a'</span>,1:5);
+M = 10*a;
+Su = lpvsample(M,15);   <span class="comment">% Uniform sample</span>
+Sg = lpvsample(M,15,<span class="string">'grid'</span>);   <span class="comment">% Sample from grid</span>
+plot(1:15,Su(:),<span class="string">'bx'</span>,1:15,Sg(:),<span class="string">'ro'</span>)
+legend(<span class="string">'Uniform'</span>,<span class="string">'Grid'</span>,<span class="string">'Location'</span>,<span class="string">'Best'</span>)
+</pre><img vspace="5" hspace="5" src="LPVSAMPLEdoc_02.png" alt=""> <h2>Example: Sample a 1-by-1 <tt>pss</tt> object<a name="5"></a></h2><pre class="codeinput">a = pgrid(<span class="string">'a'</span>,1:5);
+M = ss(-a,2,4,0);
+Su = lpvsample(M,15);   <span class="comment">% Uniform sample</span>
+Sg = lpvsample(M,15,<span class="string">'grid'</span>);   <span class="comment">% Sample from grid</span>
+bode(Su,<span class="string">'b'</span>,Sg,<span class="string">'r'</span>)
+legend(<span class="string">'Uniform'</span>,<span class="string">'Grid'</span>,<span class="string">'Location'</span>,<span class="string">'Best'</span>)
+</pre><img vspace="5" hspace="5" src="LPVSAMPLEdoc_03.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% LPVSAMPLE - Sample a LPV object
+%
+%  
+%% Syntax
+%
+%    S=lpvsample(G,N)
+%    S=lpvsample(G,N,OPT)
+%
+%% Description
+% 
+% If |R| is an |rgrid|, then |S=LPVSAMPLE(R,N)| returns a sample of |N| 
+% points from the rectangular grid |R|. |S| is an Niv-by-N matrix with 
+% each column containing one sample of the rectangular grid.  The rows of 
+% |S| correspond to the ordering of independent variables in |R.IVName|. 
+%
+% Otherwise, if |G| is a |pmat|, |pss|, |pfrd|, |upmat|, |upss| or |upfrd|, 
+% then |S=lpvsample(G,N)| returns |N| samples of the LPV object |G|. 
+% Each sample of |G| is generated by evaluating |G| at a randomly chosen 
+% point in the domain of |G|. The output |S| is an array of size: 
+% [ |size(G)|, |N| ].
+%
+% |S=lpvsample(G,N,OPT)| allows the user to specify the sampling algorithm
+% to be used. |OPT| is a |char| that specifies the type of sampling:
+% * |'grid'|: Draws points drawn randomly (possibly with repeats) from 
+%         the rectangular grid of |G.Domain|.
+% * |'uniform'| (default): Draws points uniformly from the hypercube
+%         specified by the limits of |G.Domain|.
+% * |'LHC'|: Does a Latin Hypercube sample of the |G.Domain|.
+%
+% For |'uniform'| and |'LHC'|, the samples are not, in general, elements
+% of the rectangular grid.
+% 
+%% Example: Sample a 2-dimensional |rgrid| object
+
+R = rgrid( {'a', 'b'}, {linspace(-2,2,12), 1:5} );
+Su = lpvsample(R,15);   % Uniform sample
+Sg = lpvsample(R,15,'grid');   % Sample from grid
+plot(Su(1,:),Su(2,:),'bx',Sg(1,:),Sg(2,:),'ro');
+legend('Uniform','Grid','Location','Best')
+
+%% Example: Sample a 2-by-2 |pmat| object
+
+a = pgrid('a',1:5);
+M = 10*a;
+Su = lpvsample(M,15);   % Uniform sample
+Sg = lpvsample(M,15,'grid');   % Sample from grid
+plot(1:15,Su(:),'bx',1:15,Sg(:),'ro')
+legend('Uniform','Grid','Location','Best')
+
+%% Example: Sample a 1-by-1 |pss| object
+
+a = pgrid('a',1:5);
+M = ss(-a,2,4,0);
+Su = lpvsample(M,15);   % Uniform sample
+Sg = lpvsample(M,15,'grid');   % Sample from grid
+bode(Su,'b',Sg,'r')
+legend('Uniform','Grid','Location','Best')
+
+
+
+
+##### SOURCE END #####
+--></body></html>

@@ -1,0 +1,112 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>LPVNORM - Compute bound on norm for pss systems.</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-03-01"><meta name="DC.source" content="LPVNORMdoc.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>LPVNORM - Compute bound on norm for <tt>pss</tt> systems.</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Syntax</a></li><li><a href="#2">Description</a></li></ul></div><h2>Syntax<a name="1"></a></h2><pre>  [Gamma,X] = lpvnorm(P)
+  [Gamma,X] = lpvnorm(P,'L2')
+  [Gamma,X] = lpvnorm(P,'LQG')
+  [Gamma,X] = lpvnorm(P,Xb)
+  [Gamma,X] = lpvnorm(P,Xb,'L2')
+  [Gamma,X] = lpvnorm(P,Xb,'LQG')</pre><h2>Description<a name="2"></a></h2><p><tt>lpvnorm</tt> computes a bound on the norm of a <tt>pss</tt> system over the set of all permissible trajectories of the independend variables which the <tt>pss</tt> depends on.</p><p><tt>[Gamma,X] = lpvnorm(P,'L2')</tt> computes an upper bound <tt>Gamma</tt> on the induced <img src="LPVNORMdoc_eq14766676290793252675.png" alt="$L_2$"> norm of the <tt>pss</tt> <tt>P</tt>. The upper bound <tt>Gamma</tt> and a constant (parameter independent) matrix <tt>X</tt> are computed to satisfy the induced norm linear matrix inequality (LMI) condition. <tt>X</tt> is returned as a <tt>pmat</tt>. The <img src="LPVNORMdoc_eq14766676290793252675.png" alt="$L_2$"> norm bound is valid for arbitrarily fast variations of the system parameters.</p><p><tt>[Gamma,X] = lpvnorm(P,'LQG')</tt> computes an upper bound <tt>Gamma</tt> on the stochastic LPV bound. The stochastic LPV bound is defined as the expected value of the average instantaneous power of the output of <tt>P</tt>, assuming its inputs are zero mean, white-noise processes with unit intensity.</p><p><tt>[Gamma,X] = lpvnorm(P,Xb,ALG)</tt> computes a tighter (less conservative) bound on the norm by using a parameter dependent matrix <tt>X</tt> = <img src="LPVNORMdoc_eq15663439512301904981.png" alt="$X(\rho)$"> and bounds on the parameter rates of variation. The basis functions used to construct <img src="LPVNORMdoc_eq15663439512301904981.png" alt="$X(\rho)$"> are specified with the <tt>basis</tt> object <tt>Xb</tt>. <tt>ALG</tt> can be either <tt>'L2'</tt> or <tt>'LQG'</tt>. A call without the <tt>ALG</tt> argument is equivalent to <tt>[Gamma,X] = lpvnorm(P,Xb,'L2')</tt>.</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% LPVNORM - Compute bound on norm for |pss| systems.
+%
+%  
+%% Syntax
+%
+%    [Gamma,X] = lpvnorm(P)
+%    [Gamma,X] = lpvnorm(P,'L2')
+%    [Gamma,X] = lpvnorm(P,'LQG') 
+%    [Gamma,X] = lpvnorm(P,Xb)
+%    [Gamma,X] = lpvnorm(P,Xb,'L2')
+%    [Gamma,X] = lpvnorm(P,Xb,'LQG')
+%
+%% Description
+% 
+% |lpvnorm| computes a bound on the norm of a |pss| system over the set of
+% all permissible trajectories of the independend variables which the |pss| 
+% depends on. 
+%
+% |[Gamma,X] = lpvnorm(P,'L2')| computes an upper bound |Gamma| on the induced 
+% $L_2$ norm of the |pss| |P|. The upper bound |Gamma| and a constant (parameter
+% independent) matrix |X| are computed to satisfy the induced norm linear
+% matrix inequality (LMI) condition. |X| is returned as a |pmat|. The $L_2$ norm
+% bound is valid for arbitrarily fast variations of the system parameters.
+%
+% |[Gamma,X] = lpvnorm(P,'LQG')| computes an upper bound |Gamma| on the 
+% stochastic LPV bound. The stochastic LPV bound is defined as the expected 
+% value of the average instantaneous power of the output of |P|, assuming its
+% inputs are zero mean, white-noise processes with unit intensity.
+%
+% |[Gamma,X] = lpvnorm(P,Xb,ALG)| computes a tighter (less conservative) 
+% bound on the norm by using a parameter dependent matrix |X| = $X(\rho)$ 
+% and bounds on the parameter rates of variation. The basis functions used 
+% to construct $X(\rho)$ are specified with the |basis| object |Xb|. |ALG| can be 
+% either |'L2'| or |'LQG'|. A call without the |ALG| argument is equivalent to 
+% |[Gamma,X] = lpvnorm(P,Xb,'L2')|.
+##### SOURCE END #####
+--></body></html>

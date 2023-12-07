@@ -1,0 +1,113 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>LPVIMPULSE - Parameter dependent impulse response for LPV systems</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-03-01"><meta name="DC.source" content="LPVIMPULSEdoc.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>LPVIMPULSE - Parameter dependent impulse response for LPV systems</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Syntax</a></li><li><a href="#2">Description</a></li></ul></div><h2>Syntax<a name="1"></a></h2><pre>  lpvimpulse(SYS,PTRAJ)
+  [Y,T,X,U,PTRAJOUT] = LPVIMPULSE(SYS,PTRAJ)
+  [Y,T,X,U,PTRAJOUT] = lpvimpulse(SYS,ptraj,TFINAL)
+  [Y,T,X,U,PTRAJOUT] = lpvimpulse(SYS,ptraj,T)</pre><h2>Description<a name="2"></a></h2><p><tt>[Y,T,X,U,PTRAJOUT] = lpvimpulse(SYS,PTRAJ)</tt> computes the parameter dependent impulse response of <tt>SYS</tt>. <tt>SYS</tt> is a LPV system with <tt>Ny</tt> outputs, <tt>Nx</tt> states, <tt>Nu</tt> inputs, and <tt>N</tt> independent variables <tt>IVName1,...,IVNameN</tt>. <tt>PTRAJ</tt> is a struct which defines the time-variation of the parameters (independent variables) in <tt>SYS</tt>. The field <tt>PTRAJ.time</tt> contains a sorted row vector of time-values. <tt>PTRAJ</tt> must also have a field for each independend variable in <tt>SYS</tt>, such that <tt>PTRAJ.IVName1, ... ,PTRAJ.IVNameN</tt> each contain a row vector of parameter trajectories corresponding to <tt>PTRAJ.time</tt>. The output <tt>Y</tt> is a <tt>length(T)-by-NY-by-Nu</tt> matrix such that <tt>Y(:,i,j)</tt> corresponds to the i-th output of <tt>SYS</tt> due to a step command in the j-th input channel. Similarly <tt>X</tt> is a <tt>length(T)-by-Nx-by-Nu</tt> matrix describing the state trajectories of <tt>SYS</tt>, <tt>U</tt> is a <tt>length(T)-by-Nu-by-Nu</tt> matrix describing the trajectory of the inputs to <tt>SYS</tt>, and <tt>T</tt> is a column vector of time values corresponding to <tt>Y</tt>, <tt>X</tt> and <tt>U</tt>. <tt>PTRAJOUT</tt> contains the corresponding parameter trajectories.</p><p><tt>lpvimpulse(SYS,PTRAJ)</tt> generates plots of the parameter dependent impulse response of <tt>SYS</tt>.</p><p><tt>[Y,T,X,U,PTRAJOUT] = lpvimpulse(SYS,ptraj,TFINAL)</tt> simulates the impulse response up to the time <tt>TFINAL</tt>.</p><p><tt>[Y,T,X,U,PTRAJOUT] = lpvimpulse(SYS,ptraj,T)</tt> simulates the impulse response using a user supplied time vector <tt>T</tt>.</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% LPVIMPULSE - Parameter dependent impulse response for LPV systems
+%
+%  
+%% Syntax
+%
+%    lpvimpulse(SYS,PTRAJ)
+%    [Y,T,X,U,PTRAJOUT] = LPVIMPULSE(SYS,PTRAJ)
+%    [Y,T,X,U,PTRAJOUT] = lpvimpulse(SYS,ptraj,TFINAL)
+%    [Y,T,X,U,PTRAJOUT] = lpvimpulse(SYS,ptraj,T)
+% 
+%
+%% Description 
+% 
+% |[Y,T,X,U,PTRAJOUT] = lpvimpulse(SYS,PTRAJ)| computes the parameter dependent
+% impulse response of |SYS|. |SYS| is a LPV system with |Ny| outputs, |Nx| states,
+% |Nu| inputs, and |N| independent variables |IVName1,...,IVNameN|. |PTRAJ| is a 
+% struct which defines the time-variation of the parameters (independent 
+% variables) in |SYS|. The field |PTRAJ.time| contains a sorted row vector of 
+% time-values. |PTRAJ| must also have a field for each independend variable 
+% in |SYS|, such that |PTRAJ.IVName1, ... ,PTRAJ.IVNameN| each contain a row 
+% vector of parameter trajectories corresponding to |PTRAJ.time|. 
+% The output |Y| is a |length(T)-by-NY-by-Nu| matrix such that |Y(:,i,j)|  
+% corresponds to the i-th output of |SYS| due to a step command in the j-th 
+% input channel. Similarly |X| is a |length(T)-by-Nx-by-Nu| matrix describing
+% the state trajectories of |SYS|, |U| is a |length(T)-by-Nu-by-Nu| matrix 
+% describing the trajectory of the inputs to |SYS|, and |T| is a column vector 
+% of time values corresponding to |Y|, |X| and |U|. |PTRAJOUT| contains the 
+% corresponding parameter trajectories.
+%
+% |lpvimpulse(SYS,PTRAJ)| generates plots of the parameter dependent impulse 
+% response of |SYS|.
+% 
+% |[Y,T,X,U,PTRAJOUT] = lpvimpulse(SYS,ptraj,TFINAL)| simulates the impulse
+% response up to the time |TFINAL|.
+%
+% |[Y,T,X,U,PTRAJOUT] = lpvimpulse(SYS,ptraj,T)| simulates the impulse response
+% using a user supplied time vector |T|.
+
+##### SOURCE END #####
+--></body></html>

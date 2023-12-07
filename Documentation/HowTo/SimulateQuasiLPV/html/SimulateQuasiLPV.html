@@ -1,0 +1,153 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Simulating Quasi-LPV Systems</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-04-19"><meta name="DC.source" content="SimulateQuasiLPV.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Simulating Quasi-LPV Systems</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Introduction</a></li><li><a href="#2">Example</a></li></ul></div><h2>Introduction<a name="1"></a></h2><p>LPVTools provides command line simulation tools that enable simulation of <a href="..\..\Concepts\QuasiLPV\html\QuasiLPV.html">quasi-LPV systems</a>, i.e. systems in which one of the states is also the scheduling parameter. An accurate simulation of a quasi-LPV system requires that the parameter trajectory during simulation is a function of the system state. This is achieved using <a href="matlab:open(fullfile(docroot,'matlab/function-handles.html'))">Function Handles.</a></p><p>The syntax for LPV simulations is:</p><pre class="language-matlab">lpvlsim(G,PTRAJ,UIN,TIN,X0)
+</pre><p>where <tt>G</tt> is the system to be simulated, <tt>PTRAJ</tt> is a structure that defines the parameter trajectory, <tt>UIN</tt> is the input to the system, <tt>TIN</tt> a vector of simulation time values, and <tt>X0</tt> is the initial value of the system.</p><p>The LPV simulation command requires the user to specify the parameter trajectory in the structure <tt>PTRAJ</tt>. To use function handles to specify the parameter trajectory, <tt>PTRAJ</tt> must be specified as a structure with the field \|PTRAJ.Functions| that specifies function handles for evaluating the parameters <img src="SimulateQuasiLPV_eq04481422835735243116.png" alt="$\rho = f(x,u,t)$">. A second field <tt>PTRAJ.Names</tt> provides a cell array list of the parameter names corresponding to each function handle.  The following code provides an example demonstrating the simulation of a simple nonlinear system using the quasi-LPV command line simulation approach:</p><h2>Example<a name="2"></a></h2><p>Create system xdot = -(1+rho)x + u; y = x;</p><pre class="codeinput">rho = pgrid(<span class="string">'rho'</span>,linspace(0,50,100));
+sys = ss(-1-rho,1,1,0)
+</pre><pre class="codeoutput">PSS with 1 States, 1 Outputs, 1 Inputs, Continuous System.        
+The PSS consists of the following blocks:                         
+  rho: Gridded real, 100 points in [0,50], rate bounds [-Inf,Inf].
+</pre><p>Make rho(x,u,t) = x^2 Nonlinear system is xdot = -x - x^3 + u</p><pre class="codeinput">pFHN.Functions = @(x,u,t) x^2;
+pFHN.Names = {<span class="string">'rho'</span>}
+</pre><pre class="codeoutput">pFHN = 
+    Functions: @(x,u,t)x^2
+        Names: {'rho'}
+</pre><p>Simulate from initial condition x0=6; u=0 Response starts very fast (xdot = -37*x), becomes slow (xdot = -x)</p><pre class="codeinput">Nt=100;
+tVec = linspace(0,10,Nt);
+uVec = zeros(Nt,1);
+x0 = 6;
+lpvlsim(sys,pFHN,uVec,tVec,x0);
+</pre><img vspace="5" hspace="5" src="SimulateQuasiLPV_01.png" alt=""> <p>The plot shows the response generated for this quasi-LPV example.  It is important to emphasize that this simulation captures the nonlinear dependence <img src="SimulateQuasiLPV_eq09353553981524136606.png" alt="$\rho(x)=x^2$">. Hence this function-handle approach enables simulation of nonlinear systems represented in the quasi-LPV form.  The functions <tt>lpvstep</tt>, <tt>lpvimpulse</tt>, and <tt>lpvinitial</tt> were also extended to allow for quasi-LPV simulations.</p><p>It should be noted that the Simulink blocks in LPVTools naturally allow for quasi-LPV simulations <img src="SimulateQuasiLPV_eq00095252817175250422.png" alt="$\rho(x,u,t)$"> because the parameter trajectory at the ``Parameter'' input port can be generated via Simulink blocks operating on any signal in the model.</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Simulating Quasi-LPV Systems
+%
+%% Introduction
+% 
+% LPVTools provides command line simulation tools that enable simulation 
+% of <..\..\Concepts\QuasiLPV\html\QuasiLPV.html quasi-LPV systems>, i.e. 
+% systems in which one of the states is also the scheduling parameter.
+% An accurate simulation of a quasi-LPV system requires that the 
+% parameter trajectory during simulation is a function of 
+% the system state. This is achieved using 
+% <matlab:open(fullfile(docroot,'matlab/function-handles.html')) Function Handles.>
+% 
+% The syntax for LPV simulations is:
+% 
+%   lpvlsim(G,PTRAJ,UIN,TIN,X0)
+% 
+% where |G| is the system to be simulated, |PTRAJ| is a structure that
+% defines the parameter trajectory, |UIN| is the input to the system, |TIN| 
+% a vector of simulation time values, and |X0| is the initial value of the
+% system.
+% 
+% The LPV simulation command requires the user to specify the parameter
+% trajectory in the structure |PTRAJ|. To use function handles to specify
+% the parameter trajectory, |PTRAJ| must be specified as a structure with 
+% the field \|PTRAJ.Functions| that specifies function handles for
+% evaluating the parameters $\rho = f(x,u,t)$. A second field
+% |PTRAJ.Names| provides a cell array list of the parameter names
+% corresponding to each function handle.  The following code provides an
+% example demonstrating the simulation of a simple nonlinear system
+% using the quasi-LPV command line simulation approach:
+
+
+%% Example
+% Create system xdot = -(1+rho)x + u; y = x;
+rho = pgrid('rho',linspace(0,50,100));
+sys = ss(-1-rho,1,1,0)
+
+%%
+% Make rho(x,u,t) = x^2
+% Nonlinear system is xdot = -x - x^3 + u
+pFHN.Functions = @(x,u,t) x^2;
+pFHN.Names = {'rho'}
+
+%%
+% Simulate from initial condition x0=6; u=0
+% Response starts very fast (xdot = -37*x), becomes slow (xdot = -x)
+Nt=100; 
+tVec = linspace(0,10,Nt); 
+uVec = zeros(Nt,1);
+x0 = 6;
+lpvlsim(sys,pFHN,uVec,tVec,x0);
+
+%%
+% The plot shows the response generated for this
+% quasi-LPV example.  It is important to emphasize that this simulation
+% captures the nonlinear dependence $\rho(x)=x^2$. Hence this
+% function-handle approach enables simulation of nonlinear systems
+% represented in the quasi-LPV form.  The functions |lpvstep|,
+% |lpvimpulse|, and |lpvinitial| were also extended to
+% allow for quasi-LPV simulations.  
+% 
+% It should be noted that the Simulink blocks in LPVTools
+% naturally allow for quasi-LPV simulations $\rho(x,u,t)$ because the
+% parameter trajectory at the ``Parameter'' input port can be generated
+% via Simulink blocks operating on any signal in the model.
+##### SOURCE END #####
+--></body></html>

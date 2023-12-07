@@ -1,0 +1,228 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>LPV Model Reduction for a Unstable LPV System:</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-04-19"><meta name="DC.source" content="UnstableModelReduction.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>LPV Model Reduction for a Unstable LPV System:</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">LPV Model Reduction for a Unstable LPV System</a></li><li><a href="#8">References</a></li></ul></div><h2>LPV Model Reduction for a Unstable LPV System<a name="1"></a></h2><p>Consider a third-order parameter dependent system:</p><p><img src="UnstableModelReduction_eq03579981396707387237.png" alt="$$&#xA;\begin{array}{l@{}l}&#xA;\left[ \begin{array}{c} \dot x_1 (t) \\ \dot x_2 (t) \\ \dot x_{act} \end{array} \right]&#xA; &{}=  \left[ \begin{array}{ccc}&#xA;0 &amp; 1 &amp; 0\\&#xA;-\omega_n^2 &amp; -2\zeta(\rho)\omega_n &amp; 1\\&#xA;0 &amp; 0 &amp; -100&#xA;\end{array} \right]&#xA;\left[ \begin{array}{c}  x_1 (t) \\ x_2 (t) \\ x_{act} \end{array} \right]&#xA;+&#xA;\left[ \begin{array}{c}  0 \\ 0 \\ 100 \end{array} \right] u \\&#xA;y &{}= x_1&#xA; \end{array} \ \ \ \ \ \ \ (1)$$"></p><p>where the parameter <img src="UnstableModelReduction_eq11905270608999804013.png" alt="$\rho$"> lies in the interval <img src="UnstableModelReduction_eq13000145536126759927.png" alt="$[1,5]$">, and the coefficients <img src="UnstableModelReduction_eq05186634492890754471.png" alt="$\zeta(\rho)$"> and <img src="UnstableModelReduction_eq11630137503890776924.png" alt="$\omega_n$"> are defined as:</p><p><img src="UnstableModelReduction_eq09536629262753331438.png" alt="$$\zeta(\rho) = \frac{2-p}{10} \ \ \ \ \ \ \ (2)$$"></p><p><img src="UnstableModelReduction_eq15590601665312858891.png" alt="$$ \omega_n = 5 \ \ \ \ \ \ \ (3)$$"></p><p>We note that the system consists of a second order system, with damping coefficient <img src="UnstableModelReduction_eq05186634492890754471.png" alt="$\zeta(\rho)$"> and natural frequency <img src="UnstableModelReduction_eq11630137503890776924.png" alt="$\omega_n$">, that is in series with a first-order actuator at its input. The second order system is unstable for <img src="UnstableModelReduction_eq00887170277785010627.png" alt="$\rho&gt;2$"> and marginally stable for <img src="UnstableModelReduction_eq15797186748043160927.png" alt="$\rho = 2$">. The actuator has a pole at 100 rad/s, which is two orders of magnitude higher than the natural frequency of the second-order system. Hence, if the unstable dynamics at low frequency are the main object of interest, it is possible to remove the actuator state from this 3 state model, with minimal effect in the frequency band where the unstable second-order dynamics take place. Lets do this using LPVTools.</p><pre class="codeinput"><span class="comment">% Define the time-varying rho parameter as a gridded real parameter:</span>
+p = pgrid(<span class="string">'p'</span>,1:5);
+
+<span class="comment">% Define the second-order system:</span>
+zet = (2-p)/30;
+wn = 5;
+G = ss([0 1;-wn^2 -2*zet*wn],[0;1],[1 0],0);
+
+<span class="comment">% Define the first order actuator:</span>
+act = ss(-100,100,1,0);
+
+<span class="comment">% Define the plant model which consists of the the second-order system and</span>
+<span class="comment">% the actuator in series:</span>
+sys = G*act
+</pre><pre class="codeoutput">PSS with 3 States, 1 Outputs, 1 Inputs, Continuous System.   
+The PSS consists of the following blocks:                    
+  p: Gridded real, 5 points in [1,5], rate bounds [-Inf,Inf].
+</pre><p>Lets compare the frequency response of <tt>sys</tt> and <tt>G</tt> at the five grid points: <img src="UnstableModelReduction_eq11396754039786787536.png" alt="$\rho = [1,2,3,4,5]$"></p><pre class="codeinput">freq = linspace(1,1e3,10000);
+bode(sys,<span class="string">'b'</span>,freq)
+hold <span class="string">on</span>
+bode(G,<span class="string">'r--'</span>,freq)
+legend(<span class="string">'G*act'</span>,<span class="string">'G'</span>)
+hold <span class="string">off</span>
+</pre><img vspace="5" hspace="5" src="UnstableModelReduction_01.png" alt=""> <p>We note the actuator pole kicking in at 100 rad/s, and that its effect on the second order dynamics is negligable. Hence, it should be safe to remove 1 state from the model if we are only interested in the system's dynamics at low frequency.</p><p><tt>lpvncfmr</tt> will compute a contractive coprime factorization of the LPV system <tt>sys</tt>, which removes those states that contribute least to its input/output behaviour. <tt>sys</tt> has 3 states, we will call on <tt>lpvncfmr</tt> to % remove 1 state and generate a realization with only 2 states. Note that the function <tt>lpvbalancmr</tt> can not be used in this case, because the LPV system is unstable and it requires a stable LPV system. <tt>lpvncfmr</tt> can handle both stable and unstable LPV systems.</p><pre class="codeinput"><span class="comment">% The first input to |lpvncfmr| is the system to be reduced. The second</span>
+<span class="comment">% input is the desired state order of the output:</span>
+sys_red = lpvncfmr(sys,2);
+</pre><p><tt>sys_red</tt> is the 2 state reduced-order model:</p><pre class="codeinput">sys_red
+</pre><pre class="codeoutput">PSS with 2 States, 1 Outputs, 1 Inputs, Continuous System.   
+The PSS consists of the following blocks:                    
+  p: Gridded real, 5 points in [1,5], rate bounds [-Inf,Inf].
+</pre><p>Lets compare the frequency response of the original three state system <tt>sys</tt>, and the reduced order second-order system <tt>sys_red</tt>.</p><pre class="codeinput">freq = linspace(1,1e2,5000);
+bode(sys,<span class="string">'b'</span>,freq)
+hold <span class="string">on</span>;
+bode(sys_red,<span class="string">'k:'</span>,freq)
+legend(<span class="string">'sys: 3-state model'</span>,<span class="keyword">...</span>
+<span class="string">'sys_red: 2-state model'</span>,<span class="string">'location'</span>,<span class="string">'northeast'</span>)
+</pre><img vspace="5" hspace="5" src="UnstableModelReduction_02.png" alt=""> <p>We note that the frequency response in of the original three state system and the reduced order system is identical up to approximatly 30 rad/s.</p><h2>References<a name="8"></a></h2><div><ol><li>G. D. Wood, "Control of parameter-dependent mechanical systems," Ph.D. Dissertation, University of Cambridge, 1995.</li><li>G. D. Wood, P. J. Goddard, and K. Glover, "Approximation of linear parameter-varying systems," <i>IEEE Conference on Decision and Control</i>, Vol. 1, pp 406-411, 1996.</li><li>R. Widowati, R. Bambang, R. Sagari, S. M. and Nababan, &#8220;Model reduction for unstable LPV system based on coprime factorizations and singular perturbation,&#8221; <i>5th Asian Control Conference</i>, Vol. 2, pp. 963-970, Melbourne, Australia, 2004.</li></ol></div><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% LPV Model Reduction for a Unstable LPV System:
+% 
+%% LPV Model Reduction for a Unstable LPV System
+% 
+% Consider a third-order parameter dependent system:
+% 
+% $$ 
+% \begin{array}{l@{}l}
+% \left[ \begin{array}{c} \dot x_1 (t) \\ \dot x_2 (t) \\ \dot x_{act} \end{array} \right]
+%  &{}=  \left[ \begin{array}{ccc} 
+% 0 & 1 & 0\\ 
+% -\omega_n^2 & -2\zeta(\rho)\omega_n & 1\\ 
+% 0 & 0 & -100 
+% \end{array} \right]
+% \left[ \begin{array}{c}  x_1 (t) \\ x_2 (t) \\ x_{act} \end{array} \right] 
+% + 
+% \left[ \begin{array}{c}  0 \\ 0 \\ 100 \end{array} \right] u \\
+% y &{}= x_1
+%  \end{array} \ \ \ \ \ \ \ (1)$$
+%
+% where the parameter $\rho$ lies in the interval $[1,5]$, and the
+% coefficients $\zeta(\rho)$ and $\omega_n$ are defined as:
+%
+% $$\zeta(\rho) = \frac{2-p}{10} \ \ \ \ \ \ \ (2)$$
+%
+% $$ \omega_n = 5 \ \ \ \ \ \ \ (3)$$
+% 
+% We note that the system consists of a second order system, with damping
+% coefficient $\zeta(\rho)$ and natural frequency $\omega_n$, that is in
+% series with a first-order actuator at its
+% input. The second order system is unstable for $\rho>2$ and marginally
+% stable for $\rho = 2$.
+% The actuator has a pole at 100 rad/s, which is two orders of
+% magnitude higher than the natural frequency of the second-order system. 
+% Hence, if the unstable dynamics at low frequency are the main object of interest, 
+% it is possible to remove the actuator state from this 3 state model, with
+% minimal effect in the frequency band where the unstable second-order dynamics take place.
+% Lets do this using LPVTools.
+
+
+% Define the time-varying rho parameter as a gridded real parameter:
+p = pgrid('p',1:5);
+
+% Define the second-order system:
+zet = (2-p)/30;
+wn = 5;
+G = ss([0 1;-wn^2 -2*zet*wn],[0;1],[1 0],0);
+
+% Define the first order actuator:
+act = ss(-100,100,1,0);
+
+% Define the plant model which consists of the the second-order system and
+% the actuator in series:
+sys = G*act
+
+%%
+% Lets compare the frequency response of |sys| and |G| at the five grid 
+% points: $\rho = [1,2,3,4,5]$
+
+freq = linspace(1,1e3,10000);
+bode(sys,'b',freq)
+hold on
+bode(G,'rREPLACE_WITH_DASH_DASH',freq)
+legend('G*act','G')
+hold off
+
+%%
+% We note the actuator pole kicking in at 100 rad/s, and that its
+% effect on the second order dynamics is negligable. Hence, it should be
+% safe to remove 1 state from the model if we are only interested in the
+% system's dynamics at low frequency.
+
+%% 
+% 
+% |lpvncfmr| will compute a contractive coprime factorization of the LPV 
+% system |sys|, which removes those states that contribute least to its
+% input/output behaviour. 
+% |sys| has 3 states, we will call on |lpvncfmr| to 
+% % remove 1 state and generate a realization with only 2 states.
+% Note that the function |lpvbalancmr| can not be 
+% used in this case, because the LPV system is unstable and it requires a
+% stable LPV system. |lpvncfmr| can handle both stable and unstable LPV
+% systems.
+
+% The first input to |lpvncfmr| is the system to be reduced. The second 
+% input is the desired state order of the output:
+sys_red = lpvncfmr(sys,2);
+
+%% 
+% |sys_red| is the 2 state reduced-order model:
+sys_red
+
+%%
+% Lets compare the frequency response of the original three state system 
+% |sys|, and the reduced order second-order system |sys_red|.
+
+freq = linspace(1,1e2,5000);
+bode(sys,'b',freq)
+hold on;
+bode(sys_red,'k:',freq)
+legend('sys: 3-state model',...
+'sys_red: 2-state model','location','northeast')
+
+%%
+% We note that the frequency response in of the original three state system 
+% and the reduced order system is identical up to approximatly 30 rad/s. 
+
+
+%% References
+% 
+% # G. D. Wood, "Control of parameter-dependent mechanical systems," Ph.D. 
+% Dissertation, University of Cambridge, 1995.
+% #  G. D. Wood, P. J. Goddard, and K. Glover, "Approximation of linear 
+% parameter-varying systems," _IEEE Conference on Decision and Control_,
+% Vol. 1, pp 406-411, 1996.
+% # R. Widowati, R. Bambang, R. Sagari, S. M. and Nababan, 
+% “Model reduction for unstable LPV system based on coprime
+% factorizations and singular perturbation,” _5th Asian Control
+% Conference_, Vol. 2, pp. 963-970, Melbourne, Australia, 2004.
+
+##### SOURCE END #####
+--></body></html>

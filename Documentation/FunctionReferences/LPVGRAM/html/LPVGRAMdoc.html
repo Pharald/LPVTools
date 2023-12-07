@@ -1,0 +1,114 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>LPVGRAM - Compute Gramians for PSS objects</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-02-28"><meta name="DC.source" content="LPVGRAMdoc.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>LPVGRAM - Compute Gramians for PSS objects</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Syntax</a></li><li><a href="#2">Description</a></li></ul></div><h2>Syntax<a name="1"></a></h2><pre>  Wc = LPVGRAM(SYS,'c')
+  Wo = LPVGRAM(SYS,'o')
+  W = LPVGRAM(SYS,OPTION,WEIGHT)
+  W = LPVGRAM(SYS,...,INVERT)</pre><h2>Description<a name="2"></a></h2><p><tt>Wc = LPVGRAM(SYS,'c')</tt> computes the controllability gramian of the <tt>pss</tt> <tt>sys</tt>. The output <tt>Wc</tt> is a constant <tt>double</tt> matrix, which satisfies the LMI: <tt>A*Wc+Wc*A' +B*B' &lt; 0</tt> at each point in the domain of <tt>SYS</tt>, where <tt>A</tt> is the state matrix of <tt>SYS</tt> and <tt>B</tt> is its input matrix.</p><p><tt>Wo = LPVGRAM(SYS,'o')</tt> computes the observability gramian of the <tt>pss</tt> <tt>SYS</tt>. The output <tt>Wo</tt> is a constant <tt>double</tt> matrix, which satisfies the LMI: <tt>A'*Wo+Wo*A +C'*C &lt; 0</tt> at each point in the domain of <tt>SYS</tt>, where <tt>A</tt> is the state matrix of <tt>SYS</tt> and <tt>C</tt> is its output matrix.</p><p><tt>W = LPVGRAM(SYS,OPTION,WEIGHT)</tt> applies a matrix weighting <tt>WEIGHT</tt> when solving for the gramian. For a controllabilty gramian the LMI becomes:</p><pre>               A*WEIGHT*Wc+Wc*WEIGHT*A' +B*B' &lt; 0</pre><p>For a observability gramian the LMI becomes:</p><pre>               A'*WEIGHT*Wo+Wo*WEIGHT*A +C'*C &lt; 0</pre><p>If no <tt>WEIGHT</tt> is specified a default value of <tt>eye(size(A))</tt> is used, and the resulting gramian is diagonal.</p><p><tt>W = LPVGRAM(SYS,...,INVERT)</tt> provides an alternative implementation of the algorithm which solves for the gramians. If <tt>INVERT</tt> is <tt>True</tt> the LMI conditions are changed to solve for the inverse of the gramians, which can improve the accuracy of the solution for certain systems. The default implementation assumes <tt>INVERT=FALSE</tt>.</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% LPVGRAM - Compute Gramians for PSS objects
+%
+%  
+%% Syntax
+%
+%    Wc = LPVGRAM(SYS,'c')
+%    Wo = LPVGRAM(SYS,'o')
+%    W = LPVGRAM(SYS,OPTION,WEIGHT)
+%    W = LPVGRAM(SYS,...,INVERT)
+%
+%% Description
+% 
+% |Wc = LPVGRAM(SYS,'c')| computes the controllability gramian of the |pss| |sys|.
+% The output |Wc| is a constant |double| matrix, which satisfies the 
+% LMI: |A*Wc+Wc*A' +B*B' < 0| at each point in the domain of |SYS|, where |A| is 
+% the state matrix of |SYS| and |B| is its input matrix.
+%
+% |Wo = LPVGRAM(SYS,'o')| computes the observability gramian of the |pss| |SYS|. 
+% The output |Wo| is a constant |double| matrix, which satisfies the 
+% LMI: |A'*Wo+Wo*A +C'*C < 0| at each point in the domain of |SYS|, where |A| is 
+% the state matrix of |SYS| and |C| is its output matrix.
+%
+% |W = LPVGRAM(SYS,OPTION,WEIGHT)| applies a matrix weighting |WEIGHT| when 
+% solving for the gramian. For a controllabilty gramian the LMI becomes: 
+% 
+%                 A*WEIGHT*Wc+Wc*WEIGHT*A' +B*B' < 0
+% 
+% For a observability gramian the LMI becomes: 
+% 
+%                 A'*WEIGHT*Wo+Wo*WEIGHT*A +C'*C < 0
+% 
+% If no |WEIGHT| is specified a default value of |eye(size(A))| is used, and
+% the resulting gramian is diagonal.
+%
+% |W = LPVGRAM(SYS,...,INVERT)| provides an alternative implementation of the
+% algorithm which solves for the gramians. If |INVERT| is |True| the LMI
+% conditions are changed to solve for the inverse of the gramians, which
+% can improve the accuracy of the solution for certain systems. The default 
+% implementation assumes |INVERT=FALSE|.
+##### SOURCE END #####
+--></body></html>

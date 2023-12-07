@@ -1,0 +1,120 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>LPVSPLIT - Extract data based on independent variable range</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-02-28"><meta name="DC.source" content="LPVSPLITdoc.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>LPVSPLIT - Extract data based on independent variable range</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Syntax</a></li><li><a href="#2">Description</a></li></ul></div><h2>Syntax<a name="1"></a></h2><pre>  B = lpvsplit(A,NAME1,RANGE1,NAME2,RANGE2,....)
+  B = lpvsplit(A,NAME1,INDEX1,NAME2,INDEX2,....,'index')
+  B = lpvsplit(A,NAME1,VALUES1,NAME2,VALUES2,....,'value')
+  B = lpvsplit(A,NAME,RANGE)
+  B = lpvsplit(A,NAME,INDEX,'index')
+  B = lpvsplit(A,NAME,VALUES,'value')
+  B = lpvsplit(A,DOMAIN)</pre><h2>Description<a name="2"></a></h2><p><tt>B = lpvsplit(A,NAME1,RANGE1,NAME2,RANGE2,....)</tt> extracts data from the grid-based LPV object <tt>A</tt> on the domain specified by the <tt>NAME</tt> / <tt>RANGE</tt> pairs. Each <tt>RANGE</tt> is a 1-by-2 row vector [min, max], that specifies the values of the independent variable to be extracted along the domain direction <tt>NAME</tt>. The data at all points in <tt>A.Parameter."NAME".GridData</tt> which lies inside <tt>RANGE</tt> is extracted. If <tt>RANGE</tt> is a scalar then the data is extracted where the variable <tt>NAME</tt> is exactly equal to <tt>RANGE</tt>. If an independent variable of <tt>A</tt> is not listed in the inputs then all values along this domain direction are retained in <tt>B</tt>.</p><p><tt>B = lpvsplit(A,NAME1,INDEX1,NAME2,INDEX2,....,'index')</tt> extracts data from the <tt>pmat</tt> <tt>A</tt> on the domain specified by the <tt>NAME</tt> / <tt>INDEX</tt> pairs. Each <tt>INDEX</tt> is a vector of integers or a logical array that specifies the indices of <tt>A.Parameter."NAME".GridData</tt> to be extracted.</p><p><tt>B = lpvsplit(A,NAME1,VALUES1,NAME2,VALUES2,....,'value')</tt> extracts data from the <tt>pmat</tt> <tt>A</tt> on the domain specified by the <tt>NAME</tt> / <tt>VALUES</tt> pairs. <tt>VALUES</tt> specifies the <tt>A.Parameter."NAME".GridData</tt> to be extracted.</p><p><tt>B = lpvsplit(A,NAME,RANGE)</tt> is an alternative syntax. <tt>NAME</tt> is an N-by-1 cell array of characters and <tt>RANGE</tt> is an N-by-1 cell array of ranges. <tt>B = lpvsplit(A,NAME,INDEX,'index')</tt> and <tt>B = lpvsplit(A,NAME,VALUES,'value')</tt> also apply for <tt>INDEX</tt> or <tt>VALUES</tt> as a cell array.</p><p><tt>B = lpvsplit(A,DOMAIN)</tt> is an another alternative syntax. <tt>DOMAIN</tt> is an <tt>rgrid</tt> object. This extracts data from the <tt>pmat</tt> <tt>A</tt> based on the independent variables and data ranges in <tt>DOMAIN</tt>.</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% LPVSPLIT - Extract data based on independent variable range
+%
+%  
+%% Syntax
+%
+%    B = lpvsplit(A,NAME1,RANGE1,NAME2,RANGE2,....)
+%    B = lpvsplit(A,NAME1,INDEX1,NAME2,INDEX2,....,'index')
+%    B = lpvsplit(A,NAME1,VALUES1,NAME2,VALUES2,....,'value')
+%    B = lpvsplit(A,NAME,RANGE)
+%    B = lpvsplit(A,NAME,INDEX,'index')
+%    B = lpvsplit(A,NAME,VALUES,'value')
+%    B = lpvsplit(A,DOMAIN)
+%
+%% Description
+% 
+% 
+% |B = lpvsplit(A,NAME1,RANGE1,NAME2,RANGE2,....)| extracts data from the
+% grid-based LPV object |A| on the domain specified by the |NAME| / |RANGE| pairs. Each |RANGE| is a 1-by-2 
+% row vector [min, max], that specifies the values of the independent 
+% variable to be extracted along the domain direction |NAME|. The data at all
+% points in |A.Parameter."NAME".GridData| which lies inside |RANGE| is extracted. 
+% If |RANGE| is a scalar then the data is extracted where the variable |NAME| 
+% is exactly equal to |RANGE|. If an independent variable of |A| is not listed 
+% in the inputs then all values along this domain direction are retained in |B|.
+%
+% |B = lpvsplit(A,NAME1,INDEX1,NAME2,INDEX2,....,'index')| extracts data from
+% the |pmat| |A| on the domain specified by the |NAME| / |INDEX| pairs.
+% Each |INDEX| is a vector of integers or a logical array that specifies 
+% the indices of |A.Parameter."NAME".GridData| to be extracted.
+%
+% |B = lpvsplit(A,NAME1,VALUES1,NAME2,VALUES2,....,'value')| extracts data 
+% from the |pmat| |A| on the domain specified by the |NAME| / |VALUES| pairs. 
+% |VALUES| specifies the |A.Parameter."NAME".GridData| to be extracted.
+%
+% |B = lpvsplit(A,NAME,RANGE)| is an alternative syntax. |NAME| is an N-by-1
+% cell array of characters and |RANGE| is an N-by-1 cell array of ranges.
+% |B = lpvsplit(A,NAME,INDEX,'index')| and |B = lpvsplit(A,NAME,VALUES,'value')|
+% also apply for |INDEX| or |VALUES| as a cell array. 
+%
+% |B = lpvsplit(A,DOMAIN)| is an another alternative syntax. |DOMAIN| is
+% an |rgrid| object. This extracts data from the |pmat| |A| based on the
+% independent variables and data ranges in |DOMAIN|.
+##### SOURCE END #####
+--></body></html>

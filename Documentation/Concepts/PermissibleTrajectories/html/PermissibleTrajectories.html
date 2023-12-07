@@ -1,0 +1,148 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Permissible Parameter Trajectories</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-04-05"><meta name="DC.source" content="PermissibleTrajectories.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Permissible Parameter Trajectories</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Introduction</a></li><li><a href="#2">Example</a></li><li><a href="#3">Formal Definition</a></li></ul></div><h2>Introduction<a name="1"></a></h2><p>An LPV system is a time-varying, state-space model of the form:</p><p><img src="PermissibleTrajectories_eq12313534934502497485.png" alt="$$\left[ \begin{array}{c} \dot x (t) \\ y (t)\end{array} \right]&#xA;= \left[ \begin{array}{cc} A(\rho(t)) &amp; B(\rho(t)) \\ C(\rho(t)) &amp; D(\rho(t))&#xA;\end{array} \right] \left[ \begin{array}{c} x (t) \\ u (t)\end{array} \right]&#xA;\ \ \ \ \ \ \ (1)$$"></p><p>The LPV model in Equation (1) describes how the LPV system depends on a set of time-varying parameters. Its important to understand that for practical applications (e.g. analysis in the LPV framework) each time-varying parameter in (1) has associated with it a set of <i>permissible parameter trajectories</i>, which describe how the parameter can change with time in the model. The permissible parameter trajectories contstrain the parameter values to those for which the model is valid.</p><p>The set of allowable trajectories for a particular parameter satisfies two properties: First, the parameter's value remains inside some interval of allowable values <img src="PermissibleTrajectories_eq01523866841637335680.png" alt="$[\rho_{min}, \rho_{max}]$"> (an interval on the real line). Second, the parameter's rate of change lies inside some interval <img src="PermissibleTrajectories_eq07697842177544956742.png" alt="$[\overline{\nu}, \underline{\nu}]$"> (also an interval on the real line). Hence, for an LPV system that only depends on a single parameter <img src="PermissibleTrajectories_eq09568470586167262767.png" alt="$\rho \in \mathcal{R}$">, a permissible trajectory is any trajectory such that: <img src="PermissibleTrajectories_eq11652759283574969016.png" alt="$\rho_{min} \leq \rho(t) \leq \rho_{max}$"> and <img src="PermissibleTrajectories_eq10401788913890274754.png" alt="$\underline{\nu} \leq \dot{\rho}(t) \leq \overline{\nu}$"> for all <img src="PermissibleTrajectories_eq12656067504604335951.png" alt="$t$">. A trajectory is said to be "rate unbounded" if <img src="PermissibleTrajectories_eq03373346420063307508.png" alt="$\overline{\nu} = \infty$"> and <img src="PermissibleTrajectories_eq02799696907762919065.png" alt="$\underline{\nu} = -\infty$">.</p><h2>Example<a name="2"></a></h2><p>Lets assume the LPV model in Equation (1) represents an aircraft, and that the model is scheduled on altitude <img src="PermissibleTrajectories_eq08062630503172331818.png" alt="$h$">. If this particular model is only valid for a limited range of altitudes <img src="PermissibleTrajectories_eq08062630503172331818.png" alt="$h$">: <img src="PermissibleTrajectories_eq17605547723807386253.png" alt="$5000~ft \leq h \leq 10000~ft$">, and for slow variations in altitude <img src="PermissibleTrajectories_eq14508487921322910372.png" alt="$-10~ft/sec \leq \dot{h} \leq 10~ft/sec$">, then the set of permissible parameter trajectories contains any altitude trajectory such that</p><p><img src="PermissibleTrajectories_eq11415589916870487394.png" alt="$$h(t) \in [5000,10000]~ft,~\forall t$$"></p><p>and</p><p><img src="PermissibleTrajectories_eq02706066007273301473.png" alt="$$\dot{h}(t) \in [-10,10]~ft/sec,~\forall t$">.</p><p>An example of a permissible parameter trajectory for this system is shown in Figure 1.</p><p><img vspace="5" hspace="5" src="AltitudeExample.png" alt=""> </p><p><i>Figure 1: A permissible altitude trajectory.</i></p><h2>Formal Definition<a name="3"></a></h2><p>Given an LPV system that depend on a set of time-varying parameters <img src="PermissibleTrajectories_eq04699245618552696836.png" alt="$\rho \in \mathcal{R}^{n_\rho}$">. A permissible parameter trajectory is any trajectory such that <img src="PermissibleTrajectories_eq11905270608999804013.png" alt="$\rho$"> lies inside the compact set <img src="PermissibleTrajectories_eq11751239583881263375.png" alt="$\mathcal{P} \subseteq \mathcal{R}^{n_\rho}$"> and  <img src="PermissibleTrajectories_eq09324325378054254722.png" alt="$\dot{\rho}(t)$"> lies inside the set <img src="PermissibleTrajectories_eq03044895591770120011.png" alt="$\mathcal{D} \subseteq \mathcal{R}^{n_\rho}$">. The set <img src="PermissibleTrajectories_eq10271516613937513731.png" alt="$\mathcal{P}$"> is the <img src="PermissibleTrajectories_eq04724309825176207703.png" alt="$n_\rho$"> dimensional hyper rectangle formed by <img src="PermissibleTrajectories_eq09234157966567028045.png" alt="$[\rho_{1,min},\rho_{1,max}]\times[\rho_{2,min},\rho_{2,max}]\times \ldots \times [\rho_{n_\rho,min},\rho_{n_\rho,max}]$">, and the set <img src="PermissibleTrajectories_eq08452194875580872938.png" alt="$\mathcal{D}$"> is the <img src="PermissibleTrajectories_eq04724309825176207703.png" alt="$n_\rho$"> dimensional hyper rectangle formed by <img src="PermissibleTrajectories_eq14915706067576462991.png" alt="$[\underline{\nu}_1,\overline{\nu}_1]\times[\underline{\nu}_2,\overline{\nu}_2]\times \ldots \times [\underline{\nu}_{n_\rho},\overline{\nu}_{n_\rho}]$">.</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Permissible Parameter Trajectories
+
+
+%%  Introduction
+% 
+% An LPV system is a time-varying, state-space model of the form:
+%
+% $$\left[ \begin{array}{c} \dot x (t) \\ y (t)\end{array} \right]
+% = \left[ \begin{array}{cc} A(\rho(t)) & B(\rho(t)) \\ C(\rho(t)) & D(\rho(t))
+% \end{array} \right] \left[ \begin{array}{c} x (t) \\ u (t)\end{array} \right]
+% \ \ \ \ \ \ \ (1)$$
+% 
+% The LPV model in Equation (1) describes how the LPV system depends on a 
+% set of time-varying parameters. 
+% Its important to understand that for practical applications 
+% (e.g. analysis in the LPV framework) each time-varying parameter in (1) has
+% associated with it a set of _permissible parameter trajectories_, 
+% which describe how the parameter can change with time in the model.
+% The permissible parameter trajectories contstrain the parameter values to
+% those for which the model is valid.
+% 
+% The set of allowable trajectories for a particular parameter satisfies 
+% two properties: First, the parameter's value remains inside some interval
+% of allowable values $[\rho_{min}, \rho_{max}]$ (an interval on the real line). 
+% Second, the parameter's rate of change lies inside some interval
+% $[\overline{\nu}, \underline{\nu}]$ (also an interval on the real line).  
+% Hence, for an LPV system that only depends on 
+% a single parameter $\rho \in \mathcal{R}$, a permissible trajectory is 
+% any trajectory such that: $\rho_{min} \leq \rho(t) \leq \rho_{max}$
+% and $\underline{\nu} \leq \dot{\rho}(t) \leq \overline{\nu}$ for all $t$.
+% A trajectory is said to be "rate unbounded" if $\overline{\nu} = \infty$ 
+% and $\underline{\nu} = -\infty$.
+% 
+% 
+%% Example
+% 
+% Lets assume the LPV model in Equation (1) represents an aircraft, 
+% and that the model is scheduled on altitude $h$. 
+% If this particular model is only valid for a limited range of
+% altitudes $h$: $5000~ft \leq h \leq 10000~ft$, and for slow
+% variations in altitude $-10~ft/sec \leq \dot{h} \leq 10~ft/sec$, then 
+% the set of permissible parameter trajectories contains any altitude
+% trajectory such that 
+% 
+% $$h(t) \in [5000,10000]~ft,~\forall t$$  
+%  
+% and  
+% 
+% $$\dot{h}(t) \in [-10,10]~ft/sec,~\forall t$. 
+%
+% An example of a permissible parameter trajectory for this system 
+% is shown in Figure 1.
+%
+% <<AltitudeExample.png>>
+%
+% _Figure 1: A permissible altitude trajectory._
+%
+% 
+%% Formal Definition 
+% 
+% Given an LPV system that depend on a set of time-varying parameters 
+% $\rho \in \mathcal{R}^{n_\rho}$. A permissible parameter 
+% trajectory is any trajectory such that $\rho$ lies inside
+% the compact set $\mathcal{P} \subseteq \mathcal{R}^{n_\rho}$
+% and  $\dot{\rho}(t)$ lies inside the set 
+% $\mathcal{D} \subseteq \mathcal{R}^{n_\rho}$. 
+% The set $\mathcal{P}$ is the $n_\rho$ dimensional hyper rectangle formed  
+% by $[\rho_{1,min},\rho_{1,max}]\times[\rho_{2,min},\rho_{2,max}]\times
+% \ldots \times [\rho_{n_\rho,min},\rho_{n_\rho,max}]$, 
+% and the set $\mathcal{D}$ is the $n_\rho$ dimensional hyper rectangle formed 
+% by $[\underline{\nu}_1,\overline{\nu}_1]\times[\underline{\nu}_2,\overline{\nu}_2]\times
+% \ldots \times [\underline{\nu}_{n_\rho},\overline{\nu}_{n_\rho}]$. 
+
+
+
+
+##### SOURCE END #####
+--></body></html>

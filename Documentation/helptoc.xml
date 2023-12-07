@@ -1,0 +1,175 @@
+<?xml version='1.0' encoding="utf-8"?>
+<toc version="2.0">
+    <tocitem target="LPVToolsIntroPage.html">LPVTools
+
+    <!-- 1. Getting Started Section -->
+	<tocitem target="\GettingStarted\LPVToolsGettingStarted.html" image="HelpIcon.GETTING_STARTED">
+		 Getting Started with LPVTools
+             <tocitem target="\GettingStarted\WhatIsLPVTools.html#WhatIsLPVTools">Product Description
+             	<tocitem target="\GettingStarted\WhatIsLPVTools.html#WhatIsLPVTools">
+                 What is LPVTools?</tocitem>
+             	<tocitem target="\GettingStarted\WhatIsLPVTools.html#SystemReq">
+                 System Requirements</tocitem>
+				<tocitem target="\GettingStarted\WhatIsLPVTools.html#AboutTheAuthors">
+                 About the Authors</tocitem>
+             </tocitem>
+
+             <tocitem target="\GettingStarted\LPVSystems\html\LPVSystems.html">LPV Systems</tocitem>	
+             <tocitem target="\GettingStarted\LPVToolsObjects\html\LPVToolsObjects.html">LPVTools Data Structures</tocitem>                        			
+            <tocitem target="\GettingStarted\MiniTutorials.html">Tutorials
+                <tocitem target="\GettingStarted\MiniTutorials\Grid_Modeling\html\Grid_Modeling.html">Modeling Gridded LPV Systems</tocitem>
+                <tocitem target="\GettingStarted\MiniTutorials\Grid_Analysis\html\Grid_Analysis.html">Analysis and Simulation of Gridded LPV Systems</tocitem>
+                <tocitem target="\GettingStarted\MiniTutorials\Grid_Synthesis\html\Grid_Synthesis.html">Synthesis for Gridded LPV Systems</tocitem><tocitem target="\GettingStarted\MiniTutorials\LFT_Tutorial\html\LFT_Tutorial.html">Modeling and Control of LFT LPV Systems</tocitem>
+                <tocitem target="\GettingStarted\MiniTutorials\GridToLFT\html\GridToLFT.html">Conversion Between LFT and Gridded LPV</tocitem>
+            </tocitem>
+	</tocitem>
+
+
+    <!-- 2. User Guide -->
+	<tocitem target="ModelingGuide\html\ModelingGuide.html">Modeling LPV Systems
+		<tocitem target="ModelingGuide\html\ModelingGuide.html#2">Examples and How To
+			<tocitem target="GettingStarted\MiniTutorials\Grid_Modeling\html\Grid_Modeling.html">Constructing Gridded LPV Systems</tocitem>
+			<tocitem target="GettingStarted\MiniTutorials\LFT_Tutorial\html\LFT_Tutorial.html">Constructing LFT LPV Systems</tocitem>
+			<tocitem target="GettingStarted\MiniTutorials\GridToLFT\html\GridToLFT.html">Conversion Between LFT and Gridded LPV</tocitem>	
+
+			<tocitem target="HowTo\LPV_fromAnalyticalLinearization\html\LPV_fromAnalyticalLinearization.html">LPV Models from Analytical Linearization</tocitem>
+			<tocitem target="HowTo\LPV_fromNonlinearSim\html\LPV_fromNonlinearSim.html">LPV Models from Nonlinear Simulation</tocitem>				
+		</tocitem>
+		<tocitem target="ModelingGuide\html\ModelingGuide.html#3">Concepts
+			<tocitem target="Concepts\PermissibleTrajectories\html\PermissibleTrajectories.html">Permissible Parameter Trajectories</tocitem> 
+			<tocitem target="GettingStarted\LPVSystems\html\LPVSystems.html#2">Grid-based LPV model</tocitem> 
+			<tocitem target="GettingStarted\LPVSystems\html\LPVSystems.html#3">LFT-based LPV model</tocitem> 			 
+			<tocitem target="Concepts\QuasiLPV\html\QuasiLPV.html">Quasi-LPV models</tocitem> 
+			<tocitem target="Concepts\StateConsistency\html\StateConsistency.html">State Consistency</tocitem> 
+		</tocitem>    	          		 
+	</tocitem>
+
+	<tocitem target="AnalysisGuide\html\\AnalysisGuide.html">Analysis of LPV Systems
+		<tocitem target="AnalysisGuide\html\\AnalysisGuide.html#2">Examples and How To
+			<tocitem target="HowTo\BASISexample\html\BASISexample.html">Creating basis functions</tocitem>	
+			<tocitem target="GettingStarted\MiniTutorials\Grid_Analysis\html\Grid_Analysis.html">Analysis for gridded LPV systems</tocitem>	
+			<tocitem target="GettingStarted\MiniTutorials\LFT_Tutorial\html\LFT_Tutorial.html">Analysis for LFT LPV systems</tocitem>				
+			<tocitem target="HowTo\WCGAIN\html\WCGAIN.html ">Worst-case LPV analysis using lpvwcgain</tocitem>		
+		</tocitem>	
+
+		<tocitem target="AnalysisGuide\html\\AnalysisGuide.html#3">Concepts
+			<tocitem target="Concepts\StabilityAndInducedGain\html\StabilityAndInducedGain.html">Stability and Induced Gain</tocitem> 
+			<tocitem target="Concepts\IQCs\html\IQCs.html">Integral Quadratic Constraints</tocitem>		
+		</tocitem>	
+	</tocitem>
+
+    <tocitem target="SynthesisGuide\html\SynthesisGuide.html">Synthesis for LPV Systems
+    	<tocitem target="SynthesisGuide\html\SynthesisGuide.html#3">Examples and How To
+    		<tocitem target="HowTo\BASISexample\html\BASISexample.html">Creating basis functions</tocitem>
+    		<tocitem target="GettingStarted\MiniTutorials\Grid_Synthesis\html\Grid_Synthesis.html">Synthesis for gridded LPV Systems</tocitem>	
+			<tocitem target="GettingStarted\MiniTutorials\LFT_Tutorial\html\LFT_Tutorial.html">Synthesis for LFT LPV Systems</tocitem>  
+    	</tocitem>		     						
+    </tocitem> 
+
+    <tocitem target="\ModelReductionGuide\html\ModelReductionGuide.html">Model Reduction for LPV Systems
+    	<tocitem target="ModelReductionGuide\html\ModelReductionGuide.html#2">Example and How To
+    		<tocitem target="HowTo\StableModelReduction\html\StableModelReduction.html">Model Reduction for Stable LPV Systems</tocitem>    
+    		<tocitem target="HowTo\UnstableModelReduction\html\UnstableModelReduction.html">Model Reduction for Unstable LPV Systems</tocitem>    
+		</tocitem>		
+    </tocitem>                  
+    <tocitem target="\SimulationGuide\html\SimulationGuide.html">Simulation of LPV Systems
+    	<tocitem target="SimulationGuide\html\SimulationGuide.html#2">Example and How To
+    		<tocitem target="HowTo\QuasiLPV\html\QuasiLPV.html">Simulation for Quasi-LPV Systems</tocitem>     
+    	</tocitem> 		    		
+    </tocitem>                                             
+
+	
+    <!-- 3. Function References -->
+    <tocitem target="FunctionReferences\funclist.html" image="HelpIcon.FUNCTION">Functions 		
+
+		<tocitem target="FunctionReferences\funclist.html#1">
+		Manipulation of parameter dependent models
+			<tocitem target="\FunctionReferences\DOMUNION\html\DOMUNIONdoc.html">DOMUNION - Map LPV objects onto a common domain</tocitem>
+			<tocitem target="\FunctionReferences\GRID2LFT\html\GRID2LFTdoc.html">GRID2LFT - Transform a grid-based LPV model into a LFT model</tocitem>
+			<tocitem target="\FunctionReferences\LFT2GRID\html\LFT2GRIDdoc.html">LFT2GRID - Transform a LFT model into a grid-based LPV model</tocitem>
+			<tocitem target="\FunctionReferences\LPVSPLIT\html\LPVSPLITdoc.html">LPVSPLIT - Extract grid-based LPV model data from a subset of its domain</tocitem>
+			<tocitem target="\FunctionReferences\LPVINTERP\html\LPVINTERPdoc.html">LPVINTERP - Interpolate a grid-based LPV object</tocitem>
+			<tocitem target="\FunctionReferences\LPVSUBS\html\LPVSUBSdoc.html">LPVSUBS - Substitutes values for parameters</tocitem>
+			<tocitem target="\FunctionReferences\LPVELIMIV\html\LPVELIMIVdoc.html">LPVELIMIV - Eliminate singleton independent variables</tocitem>
+			<tocitem target="\FunctionReferences\LPVSAMPLE\html\LPVSAMPLEdoc.html">LPVSAMPLE - Sample a grid-based LPV object</tocitem>
+			<tocitem target="\FunctionReferences\LPVBALANCE\html\LPVBALANCEdoc.html">LPVBALANCE - Diagonal scaling for LPV models</tocitem>
+			<tocitem target="\FunctionReferences\LPVPLOT\html\LPVPLOTdoc.html">LPVPLOT - Plot PMAT data as a function of the parameter</tocitem>
+		</tocitem>
+	
+		<tocitem target="FunctionReferences\funclist.html#2">
+		Model order reduction
+			<tocitem target="\FunctionReferences\LPVGRAM\html\LPVGRAMdoc.html">LPVGRAM - Compute Gramians for PSS objects</tocitem>
+			<tocitem target="\FunctionReferences\LPVBALREAL\html\LPVBALREALdoc.html">LPVBALREAL - Perform Gramian-based balancing for PSS objects</tocitem>
+			<tocitem target="\FunctionReferences\LPVBALANCMR\html\LPVBALANCMRdoc.html">LPVBALANCMR - Balanced truncation model reduction</tocitem>
+			<tocitem target="\FunctionReferences\LPVNCFMR\html\LPVNCFMRdoc.html">LPVNCFMR - Balanced normalized coprime factor model reduction</tocitem>
+		</tocitem>
+
+		<tocitem target="FunctionReferences\funclist.html#3">
+		Robustness and worst-case analysis
+			<tocitem target="\FunctionReferences\LPVNORM\html\LPVNORMdoc.html">LPVNORM - Compute the gain of a LPV system</tocitem>
+			<tocitem target="\FunctionReferences\LPVWCGAIN\html\LPVWCGAINdoc.html">LPVWCGAIN - Worst-case gain of an uncertain LPV system</tocitem>
+		</tocitem>
+
+		<tocitem target="FunctionReferences\funclist.html#4">
+		Controller and estimator synthesis
+			<tocitem target="\FunctionReferences\LPVSYN\html\LPVSYNdoc.html">LPVSYN - Synthesize a LPV controller</tocitem>
+			<tocitem target="\FunctionReferences\LPVNCFSYN\html\LPVNCFSYNdoc.html">LPVNCFSYN - Normalized coprime factor LPV synthesis</tocitem>
+			<tocitem target="\FunctionReferences\LPVLOOPSHAPE\html\LPVLOOPSHAPEdoc.html">LPVLOOPSHAPE - LPV loop-shaping synthesis</tocitem>
+			<tocitem target="\FunctionReferences\LPVMIXSYN\html\LPVMIXSYNdoc.html">LPVMIXSYN - LPV mixed-sensitivity synthesis</tocitem>
+			<tocitem target="\FunctionReferences\LPVSFSYN\html\LPVSFSYNdoc.html">LPVSFSYN - Synthesize a LPV state feedback controller</tocitem>
+			<tocitem target="\FunctionReferences\LPVESTSYN\html\LPVESTSYNdoc.html">LPVESTSYN - Synthesize a LPV state estimator</tocitem>
+			<tocitem target="\FunctionReferences\LPVSTOCHSYN\html\LPVSTOCHSYNdoc.html">LPVSTOCHSYN - Synthesize stochastic LPV controller</tocitem>
+			<tocitem target="\FunctionReferences\LPVSYNOPTIONS\html\LPVSYNOPTIONSdoc.html">LPVSYNOPTIONS - Options object for LPV synthesis and analysis</tocitem>
+		</tocitem>
+
+		<tocitem target="FunctionReferences\funclist.html#5">
+		Time-domain analysis
+			<tocitem target="\FunctionReferences\LPVLSIM\html\LPVLSIMdoc.html">LPVLSIM - Simulate parameter dependent time response of a PSS</tocitem>
+			<tocitem target="\FunctionReferences\LPVSTEP\html\LPVSTEPdoc.html">LPVSTEP - Simulate parameter dependent step response of a PSS</tocitem>
+			<tocitem target="\FunctionReferences\LPVINITIAL\html\LPVINITIALdoc.html">LPVINITIAL - Simulate initial conditions response of a PSS</tocitem>
+			<tocitem target="\FunctionReferences\LPVIMPULSE\html\LPVIMPULSEdoc.html">LPVIMPULSE - Simulate parameter dependent impulse response of a PSS</tocitem>
+		</tocitem>
+    </tocitem>
+
+    <!-- 4. Class References -->
+    <tocitem target="ClassReference\classlist.html" image="HelpIcon.FUNCTION">Classes 
+
+		<tocitem target="ClassReference\classlist.html#1">
+                 Grid based parameter dependent matrices and systems
+			<tocitem target="\ClassReference\PGRID\html\PGRIDdoc.html">PGRID - Grid of parameter values</tocitem>
+            <tocitem target="\ClassReference\RGRID\html\RGRIDdoc.html">RGRID - Rectangular grid of parameter values.</tocitem>
+            <tocitem target="\ClassReference\PMAT\html\PMATdoc.html">PMAT - Parameter-varying matrix</tocitem>
+            <tocitem target="\ClassReference\PSS\html\PSSdoc.html">PSS - Parameter-varying state-space model</tocitem>
+			<tocitem target="\ClassReference\PFRD\html\PFRDdoc.html">PFRD - Parameter-varying frequency response data model</tocitem>
+			<tocitem target="\ClassReference\UPMAT\html\UPMATdoc.html">UPMAT - Parameter-varying uncertain matrix</tocitem>
+			<tocitem target="\ClassReference\UPSS\html\UPSSdoc.html">UPSS - Parameter-varying uncertain state-space model</tocitem>
+			<tocitem target="\ClassReference\UPFRD\html\UPFRDdoc.html">UPFRD - Parameter-varying uncertain frequency response data model</tocitem>
+			<tocitem target="\ClassReference\BASIS\html\BASISdoc.html">BASIS - Basis function</tocitem>
+			<tocitem target="\ClassReference\PSTRUCT\html\PSTRUCTdoc.html">PSTRUCT - Parameter-varying structure</tocitem>
+		</tocitem>
+
+		<tocitem target="ClassReference\classlist.html#2">
+                 LFT based parameter dependent matrices and systems
+			<tocitem target="\ClassReference\TVREAL\html\TVREALdoc.html">TVREAL - Time-varying real parameter</tocitem>
+			<tocitem target="\ClassReference\PLFTMAT\html\PLFTMATdoc.html">PLFTMAT - Parameter-varying matrix in LFT framework</tocitem>
+			<tocitem target="\ClassReference\PLFTSS\html\PLFTSSdoc.html">PLFTSS - Parameter-varying ss array in LFT framework</tocitem>
+		</tocitem>
+
+    </tocitem>
+
+    <!-- 5. Class References -->
+    <tocitem target="SimulinkReference\html\SimulinkReference.html" image="HelpIcon.FUNCTION">Simulink blocks
+    </tocitem>
+
+
+    <!-- 6. Demos -->
+	<tocitem target="Demos\Demolist.html" 
+                 image="HelpIcon.EXAMPLES">LPVTools Toolbox Examples
+		<tocitem target="\Demos\SpinningDisk_Stochastic\html\SpinningDisk_Stochastic.html">Stochastic LPV control of spinning mass</tocitem>
+		<tocitem target="\Demos\SpinningDisk_Stochastic\html\SpinningDisk_Stochastic.html">LPV control of spinning mass using LFT framework</tocitem>
+		
+	</tocitem>
+</tocitem>
+
+</toc>
+

@@ -1,0 +1,129 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>State Consistency</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-04-13"><meta name="DC.source" content="StateConsistency.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>State Consistency</h1><p>LPV systems are time-varying, state-space models of the form:</p><p><img src="StateConsistency_eq12313534934502497485.png" alt="$$\left[ \begin{array}{c} \dot x (t) \\ y (t)\end{array} \right]&#xA;= \left[ \begin{array}{cc} A(\rho(t)) &amp; B(\rho(t)) \\ C(\rho(t)) &amp; D(\rho(t))&#xA;\end{array} \right] \left[ \begin{array}{c} x (t) \\ u (t)\end{array} \right]&#xA;\ \ \ \ \ \ \ (1)$$"></p><p>where <img src="StateConsistency_eq04699245618552696836.png" alt="$\rho \in \mathcal{R}^{n_\rho}$"> is a vector of measurable parameters, <img src="StateConsistency_eq18310886064519335070.png" alt="$y \in \mathcal{R}^{n_y}$"> is a vector of outputs, <img src="StateConsistency_eq10503651933861830198.png" alt="$x \in \mathcal{R}^{n_x}$"> is the state vector, <img src="StateConsistency_eq17381826063452410240.png" alt="$u \in \mathcal{R}^{n_u}$"> is a vector of inputs, and <img src="StateConsistency_eq12360041428994997409.png" alt="$A\in \mathcal{R}^{n_x \times n_x}$">, <img src="StateConsistency_eq04269405753391622990.png" alt="$B\in \mathcal{R}^{n_x \times n_u}$">, <img src="StateConsistency_eq00627091781239678105.png" alt="$C\in \mathcal{R}^{n_y \times n_x}$"> and <img src="StateConsistency_eq07080944360012221644.png" alt="$D\in \mathcal{R}^{n_y \times n_u}$"> are parameter dependent matrices.</p><p>Note that the state-vector of the system in Equation (1) remains the same for all values of the parameter, i.e. the states in <img src="StateConsistency_eq12428413953531653171.png" alt="$x$"> are ordered the same way, and their interpretation remains the same, irrespective of the value of <img src="StateConsistency_eq11905270608999804013.png" alt="$\rho$">. This property is referred to as <i>state consistency</i>, and it must be kept in mind when working with LPV models.</p><p><b>State Consistency in LPV Model Construction</b></p><p>A common approach to constructing LPV models is to use Jacobian linearization along a grid of parameter values (e.g. batch linearization of Simulink models) to construct a grid-based LPV system. In this case, the user must ensure that the models generated by the linearization all share the same state-vector.</p><p>Figure 1 illustrates the concept. A nonlinear model is linearized along a grid of Mach and altitude values, resulting in an array of linearized systems. State consistency requires the state vectors (<img src="StateConsistency_eq12428413953531653171.png" alt="$x$">) of all the individual linearizations to be identical if these models are to be used to contruct a grid-based LPV system.</p><p><img vspace="5" hspace="5" src="LPVArray.png" alt=""> </p><p><i>Figure 1: A grid-based LPV system.</i></p><p><b>Maintaining State Consistency</b></p><p>There are some operations that are commonly applied to Linear Time-Invariant (LTI) systems, that can result in loss of state-consistency of a LPV model. A good example is <tt>balreal</tt>, which performs a Gramian-based balancing of a LTI state-space realization. If <tt>balreal</tt> is applied to a grid-based LPV system it will balance each of the LTI models, which the grid-based LPV system is comprised of, and the resulting systems will no longer have state consistency. An alternative function that will maintain state consistency is <tt>lpvbalreal</tt> which computes a balancing realization for the LPV system as a whole, yielding a balanced LPV system with state consistency.</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% State Consistency
+% 
+% 
+% LPV systems are time-varying, state-space models of the form:
+% 
+% $$\left[ \begin{array}{c} \dot x (t) \\ y (t)\end{array} \right]
+% = \left[ \begin{array}{cc} A(\rho(t)) & B(\rho(t)) \\ C(\rho(t)) & D(\rho(t))
+% \end{array} \right] \left[ \begin{array}{c} x (t) \\ u (t)\end{array} \right]
+% \ \ \ \ \ \ \ (1)$$
+% 
+% where $\rho \in \mathcal{R}^{n_\rho}$ is a vector of measurable parameters, 
+% $y \in \mathcal{R}^{n_y}$ is a vector of outputs,
+% $x \in \mathcal{R}^{n_x}$ is the state vector, $u \in \mathcal{R}^{n_u}$ is a vector 
+% of inputs, and 
+% $A\in \mathcal{R}^{n_x \times n_x}$, $B\in \mathcal{R}^{n_x \times n_u}$, 
+% $C\in \mathcal{R}^{n_y \times n_x}$ and $D\in \mathcal{R}^{n_y \times n_u}$ are parameter 
+% dependent matrices. 
+%
+% Note that the state-vector of the system in Equation (1) remains the same 
+% for all values of the parameter, i.e. the states in $x$ are ordered the
+% same way, and their interpretation remains the same, irrespective of the 
+% value of $\rho$. This property is referred to as _state consistency_, and
+% it must be kept in mind when working with LPV models.
+% 
+% *State Consistency in LPV Model Construction*
+%
+% A common approach to constructing LPV models is to use Jacobian linearization
+% along a grid of parameter values (e.g. batch linearization of Simulink models)
+% to construct a grid-based LPV system. In this case, the user must ensure that the
+% models generated by the linearization all share the same state-vector.
+%
+% Figure 1 illustrates the concept. A nonlinear model is linearized along a grid of 
+% Mach and altitude values, resulting in an array of linearized systems. 
+% State consistency requires the state vectors ($x$) of all the individual
+% linearizations to be identical if these models are to be used to contruct
+% a grid-based LPV system.
+% 
+% 
+% <<LPVArray.png>>
+%
+% _Figure 1: A grid-based LPV system._
+%
+%
+% *Maintaining State Consistency*
+%
+% There are some operations that are commonly applied to Linear
+% Time-Invariant (LTI) systems, that can result in loss of 
+% state-consistency of a LPV model. A good example is |balreal|, which 
+% performs a Gramian-based balancing of a LTI state-space realization.
+% If |balreal| is applied to a grid-based LPV system it will balance 
+% each of the LTI models, which the grid-based LPV system is comprised 
+% of, and the resulting systems will no longer have state consistency. 
+% An alternative function that will maintain state consistency is
+% |lpvbalreal| which computes a balancing realization for the LPV system as
+% a whole, yielding a balanced LPV system with state consistency.
+% 
+
+##### SOURCE END #####
+--></body></html>

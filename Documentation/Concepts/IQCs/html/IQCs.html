@@ -1,0 +1,195 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Integral Quadratic Constraints</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-04-13"><meta name="DC.source" content="IQCs.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Integral Quadratic Constraints</h1><p><b>Introduction</b></p><p>Integral Quadratic Constraints (IQCs) are used in some LPV analysis algorithms in LPVTools. Their function is to bound the input-to-output map of a system component for the purposes of analysis. IQCs were introduced by A. Megretski and A. Rantzer [1] to provide a general framework for robustness analysis.</p><p>An IQC is defined by a symmetric matrix <img src="IQCs_eq11810330696025364929.png" alt="$M=M^T \in \mathcal{R}^{n_z \times n_z}$"> and a stable linear system <img src="IQCs_eq04830554026302226625.png" alt="$\Psi \in \mathcal{RH}^{n_z \times(m_1+m_2)}$">. <img src="IQCs_eq12822177478652287827.png" alt="$\Psi$"> is denoted as</p><p><img src="IQCs_eq04864638807852905777.png" alt="$$&#xA;\Psi(j\omega):= C_\psi(j\omega I-A_\psi)^{-1}[B_{\psi 1}&#xA;\ B_{\psi 2}] +[D_{\psi 1} \ D_{\psi 2}] \ \ \ \ \ \ \ (1)&#xA;$$"></p><p>A bounded, causal operator <img src="IQCs_eq05669918357342148098.png" alt="$\Delta: \mathcal{L}_{2e}^{m_1} \rightarrow \mathcal{L}_{2e}^{m_2}$"> satisfies an IQC defined by <img src="IQCs_eq09466166176684662842.png" alt="$(\Psi,M)$"> if the following inequality holds for all <img src="IQCs_eq15671128351970519513.png" alt="$v \in \mathcal{L}_{2}^{m_1}[0,\infty)$">, <img src="IQCs_eq10821400271558170420.png" alt="$w = \Delta(v)$"> and <img src="IQCs_eq09779834706129320028.png" alt="$T \ge 0$">:</p><p><img src="IQCs_eq01072033059741530299.png" alt="$$&#xA;\int_0^T z(t)^T M z(t) \, dt \ge 0 \ \ \ \ \ \ \ (2)&#xA;$$"></p><p>where <img src="IQCs_eq17119888974628994297.png" alt="$z$"> is the output of the linear system <img src="IQCs_eq12822177478652287827.png" alt="$\Psi$">:</p><p><img src="IQCs_eq17469147476919620097.png" alt="$$&#xA;\dot{x}_\psi(t)  = A_\psi x_\psi(t) + B_{\psi 1} v(t) + B_{\psi 2} w(t)&#xA;, \; x_\psi(0) = 0 \ \ \ \ \ \ \ (3)&#xA;$$"></p><p><img src="IQCs_eq11784219792577377173.png" alt="$$&#xA;z(t)  = C_\psi x_\psi(t) + D_{\psi 1} v(t) + D_{\psi 2} w(t)&#xA;\ \ \ \ \ \ \ (4)&#xA;$$"></p><p>The notation <img src="IQCs_eq17053526349514921282.png" alt="$\Delta \in IQC(\Psi,M)$"> is used if <img src="IQCs_eq14413057877136744318.png" alt="$\Delta$"> satisfies the IQC defined by <img src="IQCs_eq09466166176684662842.png" alt="$(\Psi,M)$">. Figure 1 provides a graphic interpretation of the IQC. The input and output signals of <img src="IQCs_eq14413057877136744318.png" alt="$\Delta$"> are filtered through <img src="IQCs_eq12822177478652287827.png" alt="$\Psi$">. If <img src="IQCs_eq17053526349514921282.png" alt="$\Delta \in IQC(\Psi,M)$"> then the output signal <img src="IQCs_eq17119888974628994297.png" alt="$z$"> satisfies the (time-domain) constraint in Equation (2) for any finite-horizon <img src="IQCs_eq09779834706129320028.png" alt="$T \ge 0$">.</p><p><img vspace="5" hspace="5" src="IQCfilterpsi.png" alt=""> </p><p><i>Figure 1: Graphic interpretation of the IQC.</i></p><p><b>Integral Quadratic Constraints in LPVTools</b></p><p>IQCs are used for worst-case analysis (<tt>lpvwcgain</tt>) of uncertain LPV systems (grid-based [3] and LFT-based [4,5,6]), and for analysis (<tt>lpvnorm</tt>) of nominal (not uncertain) rate-bounded LFT-based LPV systems [7]. In each case the IQCs are used to bound the input-to-output map of some element in the system (the uncertainty block for worst-case analysis, and the parameter block for rate-bounded analysis of LFT-based LPV systems). The implementation of these algorithms requires the user to specify basis functions for the stable linear system <img src="IQCs_eq12822177478652287827.png" alt="$\Psi$">. The basis functions are currently constrained to be either constant or first order systems. The analysis functions require the user to supply a 1xN <tt>double</tt> row vector of positive numbers, which specify the real, stable poles of N first order basis functions to be used. If no vector is supplied, the software autmatically selects a constant term and three first order systems as the basis functions for <img src="IQCs_eq12822177478652287827.png" alt="$\Psi$"> in the analysis.</p><p><b>Additional Information</b></p><p>Reference [1] provides a library of IQC multipliers that are satisfied by many important system components, e.g. saturation, time delay, and norm bounded uncertainty.  The IQCs in [1] are expressed in the frequency domain as an integral constraint defined using a multiplier <img src="IQCs_eq05005124976938798092.png" alt="$\Pi$">. The multiplier <img src="IQCs_eq05005124976938798092.png" alt="$\Pi$"> can be factorized as <img src="IQCs_eq11633355382124011532.png" alt="$\Pi = \Psi^* M \Psi$"> and this connects the frequency domain formulation to the time-domain formulation used here. One technical point is that, in general, the time domain IQC constraint only holds over infinite horizons (<img src="IQCs_eq00856992958655098615.png" alt="$T=\infty$">).  The work in [1,2] draws a distinction between hard/complete IQCs for which the integral constraint is valid over all finite time intervals and soft/conditional IQCs for which the integral constraint need not hold over finite time intervals. The formulation of an IQC here, as a finite-horizon (time-domain) inequality, is thus valid for any frequency-domain IQC that admits a hard/complete factorization <img src="IQCs_eq09466166176684662842.png" alt="$(\Psi,M)$">.  While this is somewhat restrictive, it has recently been shown that a wide class of IQCs have a hard factorization [2].</p><p><b>References</b></p><div><ol><li>A. Megretski, and A. Rantzer, "System Analysis via Integral Quadratic Constraints," <i>IEEE Transactions on Automatic Control</i>, Vol. 42, No. 6, pp. 819&#8211;830, 1997, doi: 10.1109/CDC.1994.411315.</li><li>A. Megretski, "KYP lemma for non-strict inequalities and the associated minimax theorem,&#8221;, <i>Arxiv</i>, 2010, (arXiv:1008.2552).</li><li>H. Pfifer and P. Seiler, "Robustness Analysis of Linear Parameter Varying Systems Using Integral Quadratic Constraints," <i>American Control Conference</i>, pp. 4476-4481, 2014, doi: 10.1109/ACC.2014.6858751.</li><li>C. Scherer and S. Wieland, "Linear matrix inequalities in control," Lecture notes for a course of the dutch institute of systems and control, Delft University of Technology, 2004.</li><li>C. Scherer and I. Kose, "Robustness with dynamic IQCs: An exact state-space characterization of nominal stability with applications to robust estimation," <i>Automatica</i>, Vol. 44, No. 7, pp. 1666-1675, 2008.</li><li>C. Scherer, "LPV control and full-block multipliers," <i>Automatica</i>, Vol. 37, No. 3, pp. 361-375, 2001.</li><li>A. Helmersson, "An IQC-based stability criterion for systems with slowly varying parameters," Technical Report LiTH-ISYR-1979, Linkoping University 1997.</li></ol></div><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Integral Quadratic Constraints
+%
+%
+% 
+%
+% *Introduction*
+%
+% Integral Quadratic Constraints (IQCs) are used in some LPV analysis 
+% algorithms in LPVTools. Their function is to bound the input-to-output 
+% map of a system component for the purposes of analysis.
+% IQCs were introduced 
+% by A. Megretski and A. Rantzer [1] to provide a general framework 
+% for robustness analysis.
+% 
+% An IQC is defined by a symmetric matrix $M=M^T \in \mathcal{R}^{n_z 
+% \times n_z}$ and a stable linear system $\Psi \in \mathcal{RH}^{n_z
+% \times(m_1+m_2)}$. $\Psi$ is denoted as
+% 
+% $$
+% \Psi(j\omega):= C_\psi(j\omega I-A_\psi)^{-1}[B_{\psi 1} 
+% \ B_{\psi 2}] +[D_{\psi 1} \ D_{\psi 2}] \ \ \ \ \ \ \ (1)
+% $$
+% 
+% A bounded, causal operator $\Delta: \mathcal{L}_{2e}^{m_1} \rightarrow
+% \mathcal{L}_{2e}^{m_2}$ satisfies an IQC defined by $(\Psi,M)$ if the
+% following inequality holds for
+% all $v \in \mathcal{L}_{2}^{m_1}[0,\infty)$, $w = \Delta(v)$ 
+% and $T \ge 0$:
+%
+% $$
+% \int_0^T z(t)^T M z(t) \, dt \ge 0 \ \ \ \ \ \ \ (2)
+% $$
+% 
+% where $z$ is the output of the linear system $\Psi$:
+% 
+% $$
+% \dot{x}_\psi(t)  = A_\psi x_\psi(t) + B_{\psi 1} v(t) + B_{\psi 2} w(t) 
+% , \; x_\psi(0) = 0 \ \ \ \ \ \ \ (3)
+% $$
+%
+% $$
+% z(t)  = C_\psi x_\psi(t) + D_{\psi 1} v(t) + D_{\psi 2} w(t) 
+% \ \ \ \ \ \ \ (4)
+% $$
+% 
+% The notation $\Delta \in IQC(\Psi,M)$ is used if $\Delta$ satisfies
+% the IQC defined by $(\Psi,M)$.
+% Figure 1 provides a graphic interpretation of the IQC. The input
+% and output signals of $\Delta$ are filtered through $\Psi$. If
+% $\Delta \in IQC(\Psi,M)$ then the output signal $z$ satisfies
+% the (time-domain) constraint in Equation (2) for
+% any finite-horizon $T \ge 0$.  
+% 
+% 
+% <<IQCfilterpsi.png>>
+% 
+% _Figure 1: Graphic interpretation of the IQC._
+%
+% 
+% *Integral Quadratic Constraints in LPVTools*
+%
+% IQCs are used for worst-case analysis (|lpvwcgain|) of uncertain 
+% LPV systems (grid-based [3] and LFT-based [4,5,6]), and for analysis (|lpvnorm|) of 
+% nominal (not uncertain) rate-bounded LFT-based LPV systems [7].
+% In each case the IQCs are used to bound the input-to-output map 
+% of some element in the system (the uncertainty block for worst-case
+% analysis, and the parameter block for rate-bounded analysis of LFT-based
+% LPV systems). The implementation of these algorithms requires the user to
+% specify basis functions for the stable linear system $\Psi$. 
+% The basis functions are currently constrained to be either constant or 
+% first order systems. The analysis functions require the user to supply a 
+% 1xN |double| row vector of positive numbers, which specify the real, 
+% stable poles of N first order basis functions to be used. If no vector is 
+% supplied, the software autmatically selects a constant term and three 
+% first order systems as the basis functions for $\Psi$ in the analysis.
+%
+%
+%
+% *Additional Information*
+% 
+% Reference [1] provides a library of IQC multipliers that are
+% satisfied by many important system components, e.g. saturation, time
+% delay, and norm bounded uncertainty.  The IQCs in [1]
+% are expressed in the frequency domain as an integral constraint
+% defined using a multiplier $\Pi$. The multiplier $\Pi$ can be
+% factorized as $\Pi = \Psi^* M \Psi$ and this connects the frequency
+% domain formulation to the time-domain formulation used here.
+% One technical point is that, in general, the time domain IQC
+% constraint only holds over infinite horizons ($T=\infty$).  The work
+% in [1,2] draws a distinction between
+% hard/complete IQCs for which the integral constraint is valid over all
+% finite time intervals and soft/conditional IQCs for which the integral
+% constraint need not hold over finite time intervals. The formulation
+% of an IQC here, as a finite-horizon (time-domain) inequality,
+% is thus valid for any frequency-domain IQC that admits a hard/complete
+% factorization $(\Psi,M)$.  While this is somewhat restrictive, it has
+% recently been shown that a wide class of IQCs have a hard 
+% factorization [2]. 
+% 
+% *References*
+% 
+% # A. Megretski, and A. Rantzer, "System Analysis
+% via Integral Quadratic Constraints," _IEEE Transactions on
+% Automatic Control_, Vol. 42, No. 6, pp. 819–830, 1997, doi:
+% 10.1109/CDC.1994.411315.
+% # A. Megretski, "KYP lemma for non-strict inequalities and the associated
+% minimax theorem,”, _Arxiv_, 2010, (arXiv:1008.2552).
+% # H. Pfifer and P. Seiler, "Robustness Analysis of Linear Parameter 
+% Varying Systems Using Integral Quadratic Constraints," _American Control
+% Conference_, pp. 4476-4481, 2014, doi: 10.1109/ACC.2014.6858751.
+% # C. Scherer and S. Wieland, "Linear matrix inequalities in control,"
+% Lecture notes for a course of the dutch institute of systems and
+% control, Delft University of Technology, 2004.
+% # C. Scherer and I. Kose, "Robustness with dynamic IQCs: An
+% exact state-space characterization of nominal stability with
+% applications to robust estimation," _Automatica_, Vol. 44, No. 7, 
+% pp. 1666-1675, 2008.
+% # C. Scherer, "LPV control and full-block multipliers," _Automatica_,
+% Vol. 37, No. 3, pp. 361-375, 2001.
+% # A. Helmersson, "An IQC-based stability criterion for systems with slowly
+% varying parameters," Technical Report LiTH-ISYR-1979, Linkoping
+% University 1997.
+
+##### SOURCE END #####
+--></body></html>

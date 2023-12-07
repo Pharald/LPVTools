@@ -1,0 +1,148 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>LPVWCGAIN - Worst-case bound on induced L2 norm for pss and plftss</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-03-01"><meta name="DC.source" content="LPVWCGAINdoc.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>LPVWCGAIN - Worst-case bound on induced L2 norm for <tt>pss</tt> and <tt>plftss</tt></h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Syntax: <tt>lpvwcgain</tt> for <tt>pss</tt></a></li><li><a href="#2">Syntax: <tt>lpvwcgain</tt> for <tt>plftss</tt></a></li><li><a href="#3">Description</a></li></ul></div><h2>Syntax: <tt>lpvwcgain</tt> for <tt>pss</tt><a name="1"></a></h2><pre>  [GAM,X,INFO] = lpvwcgain(P)
+  [GAM,X,INFO] = lpvwcgain(P,Xb)
+  [GAM,X,INFO] = lpvwcgain(P,...,POLELIST)</pre><h2>Syntax: <tt>lpvwcgain</tt> for <tt>plftss</tt><a name="2"></a></h2><pre>  [WCG,WCU,INFO] = lpvwcgain(P)
+  [WCG,WCU,INFO] = lpvwcgain(P,OMEGA)
+  [WCG,WCU,INFO] = lpvwcgain(P,...,POLELIST)</pre><h2>Description<a name="3"></a></h2><p><tt>lpvwcgain</tt> computes the worst-case bound on the induced <img src="LPVWCGAINdoc_eq14766676290793252675.png" alt="$L_2$"> norm for <tt>pss</tt> and <tt>plftss</tt> systems. The grid based and LFT objects have minor differences in syntax, explained below.</p><p><b><tt>lpvwcgain</tt> for <tt>pss</tt></b></p><p><tt>[GAM,X,INFO] = lpvwcgain(P)</tt> computes the upper-bound on the worst-case induced <img src="LPVWCGAINdoc_eq14766676290793252675.png" alt="$L_2$"> norm of the LPV system <tt>P</tt>, assuming no rate-bounds on the independent variables of <tt>P</tt>.  "Worst-case" refers to all the modeled uncertainty and parameter-dependence (including parameter rate-bounds). <tt>GAM</tt> is the  upper bound on the worst-case induced <img src="LPVWCGAINdoc_eq14766676290793252675.png" alt="$L_2$"> norm. The upper bound <tt>GAM</tt> and a constant (parameter independent) matrix <tt>X</tt> are computed to satisfy the induced <img src="LPVWCGAINdoc_eq14766676290793252675.png" alt="$L_2$"> norm linear matrix inequality (LMI) condition.</p><p><tt>[GAM,X,INFO] = lpvwcgain(P,Xb)</tt> computes the upper-bound on the worst-case induced <img src="LPVWCGAINdoc_eq14766676290793252675.png" alt="$L_2$"> norm of the PSS P. The upper bound <tt>GAM</tt> and a parameter-varying matrix <tt>X</tt> are computed to satisfy the induced <img src="LPVWCGAINdoc_eq14766676290793252675.png" alt="$L_2$"> norm linear matrix inequality (LMI) condition. <tt>Xb</tt> is a <tt>basis</tt> object that defines the basis functions which describe the assumed parameter dependence of <tt>X</tt>. <tt>INFO</tt> is a structure containing additional information about the solution to the LMI.</p><p><b><tt>lpvwcgain</tt> for <tt>plftss</tt></b></p><p><tt>[WCG,WCU,INFO] = lpvwcgain(P)</tt> computes the upper-bound on the worst-case induced <img src="LPVWCGAINdoc_eq14766676290793252675.png" alt="$L_2$"> norm of the <tt>plftss</tt> <tt>P</tt>. "Worst-case" refers to all the modeled uncertainty and parameter-dependence. <tt>WCG</tt> is the  upper bound on the worst-case induced <img src="LPVWCGAINdoc_eq14766676290793252675.png" alt="$L_2$"> norm. <tt>INFO</tt> is a structure containing additional information about the solution, including an estimate of the lower bound on the worst-case induced <img src="LPVWCGAINdoc_eq14766676290793252675.png" alt="$L_2$"> norm, based on LTI worst-case gain analysis. <tt>WCU</tt> is value of the uncertainty associated with the lower-bound of the induced <img src="LPVWCGAINdoc_eq14766676290793252675.png" alt="$L_2$"> norm, which is based on LTI worst-case gain analysis.</p><p><tt>[WCG,WCU,INFO] = lpvwcgain(P,OMEGA)</tt> allows the user to specify a custom frequency vector for the analysis. <tt>OMEGA</tt> is the chosen vector of frequency values used in the analysis.</p><p>lpvwcgain(P,...,POLELIST) allows the user to define weighting functions for the Integral Quadratic Constraints (IQC) used to bound the uncertainty when formulating the LMI to be solved. <tt>POLELIST</tt> is a 1xN <tt>double</tt> row vector, of negative values. Each value in <tt>POLELIST</tt> corresponds to a pole of a stable transfer function that is used as a weight on all signals in the IQCs. A default <tt>POLELIST</tt>, with three pole values, is used when a <tt>POLELIST</tt> is not supplied by the user. The three pole values are selected automatically from the frequency range of the system dynamics.</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% LPVWCGAIN - Worst-case bound on induced L2 norm for |pss| and |plftss|
+%
+%  
+%% Syntax: |lpvwcgain| for |pss|
+% 
+%    [GAM,X,INFO] = lpvwcgain(P)
+%    [GAM,X,INFO] = lpvwcgain(P,Xb)    
+%    [GAM,X,INFO] = lpvwcgain(P,...,POLELIST)
+% 
+%% Syntax: |lpvwcgain| for |plftss|
+% 
+%    [WCG,WCU,INFO] = lpvwcgain(P)
+%    [WCG,WCU,INFO] = lpvwcgain(P,OMEGA)
+%    [WCG,WCU,INFO] = lpvwcgain(P,...,POLELIST)
+% 
+%% Description
+%
+% |lpvwcgain| computes the worst-case bound on the induced $L_2$ norm for 
+% |pss| and |plftss| systems. The grid based and LFT objects have minor
+% differences in syntax, explained below.
+% 
+% *|lpvwcgain| for |pss|*
+% 
+% |[GAM,X,INFO] = lpvwcgain(P)| computes the upper-bound on the worst-case
+% induced $L_2$ norm of the LPV system |P|, assuming no rate-bounds on the 
+% independent variables of |P|.  "Worst-case" refers to all the modeled
+% uncertainty and parameter-dependence (including parameter rate-bounds). 
+% |GAM| is the  upper bound on the worst-case induced $L_2$ norm.
+% The upper bound |GAM| and a constant (parameter independent) matrix |X| 
+% are computed to satisfy the induced $L_2$ norm linear matrix inequality (LMI) condition. 
+%
+% 
+% |[GAM,X,INFO] = lpvwcgain(P,Xb)| computes the upper-bound on the worst-case
+% induced $L_2$ norm of the PSS P. 
+% The upper bound |GAM| and a parameter-varying matrix |X| are computed to 
+% satisfy the induced $L_2$ norm linear matrix inequality (LMI) condition. 
+% |Xb| is a |basis| object that defines the basis functions which describe the 
+% assumed parameter dependence of |X|. |INFO| is a structure containing 
+% additional information about the solution to the LMI.
+%
+% 
+% *|lpvwcgain| for |plftss|*
+% 
+% |[WCG,WCU,INFO] = lpvwcgain(P)| computes the upper-bound on the worst-case
+% induced $L_2$ norm of the |plftss| |P|. "Worst-case" refers to all the modeled
+% uncertainty and parameter-dependence. |WCG| is the  upper bound on the 
+% worst-case induced $L_2$ norm. |INFO| is a structure containing additional 
+% information about the solution, including an estimate of the lower bound
+% on the worst-case induced $L_2$ norm, based on LTI worst-case gain analysis.
+% |WCU| is value of the uncertainty associated with the lower-bound of the
+% induced $L_2$ norm, which is based on LTI worst-case gain analysis.
+% 
+% |[WCG,WCU,INFO] = lpvwcgain(P,OMEGA)| allows the user to specify a custom 
+% frequency vector for the analysis. |OMEGA| is the chosen vector of frequency 
+% values used in the analysis. 
+% 
+% 
+% lpvwcgain(P,...,POLELIST) allows the user to define 
+% weighting functions for the Integral Quadratic Constraints (IQC) used 
+% to bound the uncertainty when formulating the LMI to be solved. |POLELIST| 
+% is a 1xN |double| row vector, of negative values. Each value in |POLELIST| 
+% corresponds to a pole of a stable transfer function that is used as a 
+% weight on all signals in the IQCs. A default |POLELIST|, with three pole 
+% values, is used when a |POLELIST| is not supplied by the user. The three 
+% pole values are selected automatically from the frequency range of the 
+% system dynamics.
+
+
+
+
+
+
+##### SOURCE END #####
+--></body></html>

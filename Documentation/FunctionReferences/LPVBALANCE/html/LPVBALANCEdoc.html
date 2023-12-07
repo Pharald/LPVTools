@@ -1,0 +1,136 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>LPVBALANCE - Diagonal scaling of a pmat or pss</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-03-01"><meta name="DC.source" content="LPVBALANCEdoc.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>LPVBALANCE - Diagonal scaling of a <tt>pmat</tt> or <tt>pss</tt></h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Syntax</a></li><li><a href="#2">Description</a></li></ul></div><h2>Syntax<a name="1"></a></h2><pre>  [B,D] = lpvbalance(A)
+  [B,DR,DC] = lpvbalance(A,BLK)</pre><h2>Description<a name="2"></a></h2><p><tt>lpvbalance</tt> computes a diagonal scaling for LPV objects to improve their numerical conditioning. The algorithm used to accomplish this uses a generalized version of Osborne's iteration.</p><p><b><tt>lpvbalance</tt> for <tt>pmat</tt></b></p><p><tt>[B,D] = lpvbalance(A)</tt> computes a single diagonal similarity transformation to improve the conditioning of the N-by-N <tt>pmat</tt> <tt>A</tt> at all points in the domain.  The transformation <tt>D</tt> is computed using a generalized version of Osborne's iteration. <tt>D</tt> is returned as an N-by-N diagonal, <tt>double</tt> matrix. The scaled <tt>pmat</tt> <tt>B</tt> is <tt>D*A*inv(D)</tt>.  This applies the transformation <tt>D</tt> at each point in the domain of <tt>A</tt>.</p><p><tt>[B,DR,DC] = lpvbalance(A,BLK)</tt> computes structured, diagonal transformations for the N-by-M <tt>pmat</tt> <tt>A</tt>. The scaled <tt>pmat</tt> <tt>B</tt> is <tt>DR*A*DC</tt> where <tt>DR</tt> is an N-by-N matrix and and <tt>DC</tt> is an M-by-M matrix. <tt>BLK</tt> is a K-by-2 matrix that specifies the block partitioning dimensions of <tt>DR</tt> and <tt>DC</tt>. If <tt>BLK = [c1 r1; ... ; ck rk]</tt> then <tt>DR</tt> and <tt>DC</tt> are partitioned as:</p><pre>  DR = blkdiag( d1*I_r1, ...,  dk*I_rk )
+  DC = blkdiag( (1/d1)*I_c1, ...,  (1/dk)*I_ck )</pre><p>where the notation <tt>I_r1= eye(r1)</tt>, represents the r1-by-r1 identity matrix. The block partitioning must be consistent with the dimensions of <tt>A</tt>, i.e. the sum across the rows of <tt>BLK</tt> should equal [M N].</p><p><b><tt>lpvbalance</tt> for <tt>pss</tt></b></p><p><tt>[P,D] = lpvbalance(S)</tt> computes a single diagonal similarity transformation to improve the conditioning of the Ny-by-Nu <tt>pss</tt> <tt>S</tt> at all points in the domain. The transformation <tt>D</tt> is computed using a generalized version of Osborne's iteration. <tt>D</tt> is returned as an Nx-by-Nx diagonal, double matrix where Nx is the state dimension of <tt>S</tt>. The scaled <tt>pss</tt> <tt>P</tt> is obtained by applying the similarity transformation <tt>D</tt> at each point in the domain of <tt>S</tt>.</p><p><tt>[P,DR,DC] = lpvbalance(S,BLK)</tt> computes diagonal transformations applied to the states and input/output channels. The state matrices of the scaled <tt>pss</tt> <tt>P</tt> are obtained from <tt>DR*[A B; C D]*DC</tt> where <tt>A</tt>, <tt>B</tt>, <tt>C</tt>, <tt>D</tt> are the state matrices of <tt>S</tt>. <tt>BLK</tt> is a K-by-2 matrix that specifies the partitioning dimensions of <tt>DR</tt> and <tt>DC</tt>. If <tt>BLK = [c1 r1; ... ; ck rk]</tt> then <tt>DR</tt> and <tt>DC</tt> are partitioned as:</p><pre>  DR = blkdiag( D, d1*I_r1, ...,  dk*I_rk )
+  DC = blkdiag( inv(D), (1/d1)*I_c1, ...,  (1/dk)*I_ck )</pre><p>where <tt>D</tt> is a diagonal, Nx-by-Nx matrix, and the notation <tt>I_r1= eye(r1)</tt>, represents the r1-by-r1 identity matrix. The block partitioning must be consistent with the input/output dimensions of <tt>S</tt>, i.e. the sum across the rows of <tt>BLK</tt> should equal [Nu Ny].</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% LPVBALANCE - Diagonal scaling of a |pmat| or |pss| 
+%
+%  
+%% Syntax
+%
+%    [B,D] = lpvbalance(A)
+%    [B,DR,DC] = lpvbalance(A,BLK)
+%
+%% Description
+% 
+% |lpvbalance| computes a diagonal scaling for LPV objects to improve their
+% numerical conditioning. The algorithm used to accomplish this uses a 
+% generalized version of Osborne's iteration.
+%
+% *|lpvbalance| for |pmat|*
+%
+% |[B,D] = lpvbalance(A)| computes a single diagonal similarity transformation
+% to improve the conditioning of the N-by-N |pmat| |A| at all points in the
+% domain.  The transformation |D| is computed using a generalized version of
+% Osborne's iteration. |D| is returned as an N-by-N diagonal, |double| matrix.
+% The scaled |pmat| |B| is |D*A*inv(D)|.  This applies the transformation |D| at
+% each point in the domain of |A|.
+%
+% |[B,DR,DC] = lpvbalance(A,BLK)| computes structured, diagonal transformations
+% for the N-by-M |pmat| |A|. The scaled |pmat| |B| is |DR*A*DC| where |DR| is an
+% N-by-N matrix and and |DC| is an M-by-M matrix. |BLK| is a K-by-2 matrix
+% that specifies the block partitioning dimensions of |DR| and |DC|. If
+% |BLK = [c1 r1; ... ; ck rk]| then |DR| and |DC| are partitioned as:
+%
+%    DR = blkdiag( d1*I_r1, ...,  dk*I_rk )
+%    DC = blkdiag( (1/d1)*I_c1, ...,  (1/dk)*I_ck )
+%
+% where the notation |I_r1= eye(r1)|, represents the r1-by-r1 identity matrix.
+% The block partitioning must be consistent with the dimensions of |A|, i.e.
+% the sum across the rows of |BLK| should equal [M N].
+% 
+% 
+% *|lpvbalance| for |pss|*
+%
+% |[P,D] = lpvbalance(S)| computes a single diagonal similarity transformation 
+% to improve the conditioning of the Ny-by-Nu |pss| |S| at all points in the
+% domain. The transformation |D| is computed using a generalized version of
+% Osborne's iteration. |D| is returned as an Nx-by-Nx diagonal, double 
+% matrix where Nx is the state dimension of |S|. The scaled |pss| |P| is 
+% obtained by applying the similarity transformation |D| at each point in 
+% the domain of |S|.
+%
+% |[P,DR,DC] = lpvbalance(S,BLK)| computes diagonal transformations applied to
+% the states and input/output channels. The state matrices of the scaled 
+% |pss| |P| are obtained from |DR*[A B; C D]*DC| where |A|, |B|, |C|, |D|
+% are the state matrices of |S|. |BLK| is a K-by-2 matrix that specifies 
+% the partitioning dimensions of |DR| and |DC|. If |BLK = [c1 r1; ... ; ck rk]| 
+% then |DR| and |DC| are partitioned as:
+%
+%    DR = blkdiag( D, d1*I_r1, ...,  dk*I_rk )
+%    DC = blkdiag( inv(D), (1/d1)*I_c1, ...,  (1/dk)*I_ck )
+%
+% where |D| is a diagonal, Nx-by-Nx matrix, and the notation |I_r1= eye(r1)|, 
+% represents the r1-by-r1 identity matrix. The block partitioning must be 
+% consistent with the input/output dimensions of |S|, i.e. the sum across 
+% the rows of |BLK| should equal [Nu Ny].
+##### SOURCE END #####
+--></body></html>

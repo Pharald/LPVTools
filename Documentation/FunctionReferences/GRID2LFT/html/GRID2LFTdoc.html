@@ -1,0 +1,280 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>GRID2LFT - Transform a grid-based LPV model into LFT</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-03-02"><meta name="DC.source" content="GRID2LFTdoc.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>GRID2LFT - Transform a grid-based LPV model into LFT</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Syntax</a></li><li><a href="#2">Description</a></li><li><a href="#3">Example: Transform a PMAT to a PLFTMAT</a></li><li><a href="#10">Example: Transform a UPSS to a PLFTSS</a></li></ul></div><h2>Syntax<a name="1"></a></h2><pre>  [L,C,E] = grid2lft(G)
+  [L,C,E] = grid2lft(G,N)
+  [L,C,E] = grid2lft(G,NAMES,DEGREEMAT)</pre><h2>Description<a name="2"></a></h2><p>Transform a grid-based LPV model into a LFT model with polynomial parameter dependence. Use linear regression to fit a polynomial in the parameters to the grid based data.</p><p><tt>L = grid2lft(G)</tt> fits the elements of the matrix or state-space data in <tt>G</tt> with a linear parameter dependence. <tt>G</tt> is a grid based LPV model (e.g. pmat or upss) and <tt>L</tt> is an LFT based LPV model (e.g. plftmat, plftss).</p><p><tt>L = grid2lft(G,N)</tt> fits the elements of the matrix or state-space data in <tt>G</tt> with polynomial parameter dependence of degree <tt>N</tt>.</p><p><tt>L = grid2lft(G,NAMES,DEGREEMAT)</tt> fits the matrix or state-space data in <tt>G</tt> with polynomials, using a linear combination of monomials specified by the data in <tt>DEGREEMAT</tt>.  <tt>NAMES</tt> is a 1-by-P cell array of chars, consisting of the P names of every independent variable in <tt>G</tt>.  <tt>DEGREEMAT</tt> is a D-by-P matrix of nonnegative integers, each 1-by-P row corresponding to a monomial, defined by the nonnegative exponents associated with each independent variable.</p><p><tt>[L,C] = grid2lft(G,...)</tt> returns|C|, the matrix of polynominal coefficients used in the transformation from grid-LPV to LFT. If <tt>G</tt> is a M-by-N matrix that is being fit with a polynominal with B terms, then <tt>C</tt> is a M-by-N-by-B <tt>double</tt> array, in which elements (i,k,:) correspond to (i,k)-th matrix element in <tt>G</tt>, and elements (:,:,r) correspond to the r-th basis function.</p><p><tt>[L,C,E] = grid2lft(G,...)</tt> returns <tt>E</tt>, the root mean square error of the linear fit.</p><h2>Example: Transform a PMAT to a PLFTMAT<a name="3"></a></h2><pre class="codeinput"><span class="comment">% Create PMATs M and M2 with two independent variables x and y.</span>
+x = pgrid(<span class="string">'x'</span>,linspace(-2,2,12),[-1 1]);
+y = pgrid(<span class="string">'y'</span>,1:5,[-4 8] );
+M = [x+y-x*y x;3*y -2*x*y];
+M2 = sqrt(1+x.^2)*y;
+
+<span class="comment">% Transform both M and M2 into LFT based LPV objects. Use a polynomial</span>
+<span class="comment">% containing the factors (1,x,y,x*y) to perform the fitting for M, and</span>
+<span class="comment">% a polynomial (1,x,y,x^2,x*y,x^2*y) to perform the fitting for M2.</span>
+
+<span class="comment">% Call grid2lft and specify that the fitting of M should use the</span>
+<span class="comment">% polynomial (1,x,y,x*y)</span>
+[Mlft,C,E] = grid2lft(M,{<span class="string">'x'</span>,<span class="string">'y'</span>},[0 0;1 0;0 1;1 1]);
+</pre><pre class="codeinput">Mlft
+</pre><pre class="codeoutput">PLFTMAT with 2 rows and 2 columns.                                         
+The PLFTMAT consists of the following blocks:                              
+  x: Time-varying real, range = [-2,2], rate bounds = [-1,1], 2 occurrences
+  y: Time-varying real, range = [1,5], rate bounds = [-4,8], 2 occurrences 
+</pre><pre class="codeinput">C
+</pre><pre class="codeoutput">C(:,:,1) =
+   1.0e-14 *
+   -0.0097    0.0074
+    0.1022   -0.0665
+C(:,:,2) =
+    1.0000    1.0000
+   -0.0000    0.0000
+C(:,:,3) =
+    1.0000   -0.0000
+    3.0000    0.0000
+C(:,:,4) =
+   -1.0000    0.0000
+    0.0000   -2.0000
+</pre><pre class="codeinput">E
+
+<span class="comment">% Call grid2lft and specify that the fitting of M2 should use the</span>
+<span class="comment">% polynomial (1,x,y,x^2,x*y,x^2*y)</span>
+[M2lft,C2,E2] = grid2lft(M2,{<span class="string">'x'</span>,<span class="string">'y'</span>},[0 0;1 0;0 1;2 0;1 1;2 1]);
+</pre><pre class="codeoutput">E =
+   1.0150e-15
+</pre><pre class="codeinput">M2lft
+</pre><pre class="codeoutput">PLFTMAT with 1 rows and 1 columns.                                         
+The PLFTMAT consists of the following blocks:                              
+  x: Time-varying real, range = [-2,2], rate bounds = [-1,1], 2 occurrences
+  y: Time-varying real, range = [1,5], rate bounds = [-4,8], 1 occurrences 
+</pre><pre class="codeinput">C2
+</pre><pre class="codeoutput">C2(:,:,1) =
+   4.6282e-16
+C2(:,:,2) =
+  -3.3723e-16
+C2(:,:,3) =
+    1.0646
+C2(:,:,4) =
+  -1.2078e-16
+C2(:,:,5) =
+   1.0533e-16
+C2(:,:,6) =
+    0.3058
+</pre><pre class="codeinput">E2
+</pre><pre class="codeoutput">E2 =
+    0.1491
+</pre><h2>Example: Transform a UPSS to a PLFTSS<a name="10"></a></h2><pre class="codeinput"><span class="comment">% Create UPSS M that depends on two independent variables x and y.</span>
+x = pgrid(<span class="string">'x'</span>,linspace(-2,2,12),[-1 1]);
+y = pgrid(<span class="string">'y'</span>,1:5,[-4 8] );
+u = ureal(<span class="string">'u'</span>,1);
+M = ss(x+y-x*y*u, x+3*y,-2*x*y,pmat(0));
+
+<span class="comment">% Transform M into a LFT based LPV object. Use a polynomial containing</span>
+<span class="comment">% the factors (1,x,y,x^2,x*y,x^2*y) to perform the fitting for M.</span>
+
+<span class="comment">% Call grid2lft and specify that the fitting of M should use the</span>
+<span class="comment">% polynomial (1,x,y,x^2,x*y,x^2*y)</span>
+[Mlft,C] = grid2lft(M,{<span class="string">'x'</span>,<span class="string">'y'</span>},[0 0;1 0;0 1;2 0;1 1;2 1]);
+</pre><pre class="codeinput">Mlft
+</pre><pre class="codeoutput">Continuous-time PLFTSS with 1 outputs, 1 inputs, 1 states.                 
+The model consists of the following blocks:                                
+  u: Uncertain real, nominal = 1, variability = [-1,1], 1 occurrences      
+  x: Time-varying real, range = [-2,2], rate bounds = [-1,1], 3 occurrences
+  y: Time-varying real, range = [1,5], rate bounds = [-4,8], 2 occurrences 
+</pre><pre class="codeinput">C
+</pre><pre class="codeoutput">C(:,:,1) =
+    0.0000   -0.0000    0.0000
+    1.0000         0         0
+   -0.0000         0         0
+C(:,:,2) =
+    1.0000    0.0000    1.0000
+    0.0000         0         0
+    0.0000         0         0
+C(:,:,3) =
+    1.0000    0.0000    3.0000
+   -0.0000         0         0
+    0.0000         0         0
+C(:,:,4) =
+   1.0e-14 *
+   -0.0204    0.0052   -0.1099
+   -0.0064         0         0
+    0.0103         0         0
+C(:,:,5) =
+   -1.0000   -1.0000   -0.0000
+   -0.0000         0         0
+   -2.0000         0         0
+C(:,:,6) =
+   1.0e-15 *
+    0.0431   -0.0120   -0.2844
+    0.0000         0         0
+   -0.0240         0         0
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% GRID2LFT - Transform a grid-based LPV model into LFT
+% 
+%  
+%% Syntax
+% 
+%    [L,C,E] = grid2lft(G)
+%    [L,C,E] = grid2lft(G,N)
+%    [L,C,E] = grid2lft(G,NAMES,DEGREEMAT) 
+% 
+%% Description
+%
+% Transform a grid-based LPV model into a LFT model  
+% with polynomial parameter dependence. Use linear regression to fit a 
+% polynomial in the parameters to the grid based data.
+%
+% |L = grid2lft(G)| fits the elements of the matrix or state-space data in 
+% |G| with a linear parameter dependence. |G| is a grid based LPV model 
+% (e.g. pmat or upss) and |L| is an LFT based LPV model (e.g. plftmat, plftss).
+% 
+% |L = grid2lft(G,N)| fits the elements of the matrix or state-space data 
+% in |G| with polynomial parameter dependence of degree |N|.
+% 
+% |L = grid2lft(G,NAMES,DEGREEMAT)| fits the matrix or state-space data in 
+% |G| with polynomials, using a linear combination of monomials specified by the
+% data in |DEGREEMAT|.  |NAMES| is a 1-by-P cell array of chars, consisting of
+% the P names of every independent variable in |G|.  |DEGREEMAT| is a D-by-P
+% matrix of nonnegative integers, each 1-by-P row corresponding to a
+% monomial, defined by the nonnegative exponents associated with each
+% independent variable.
+%
+% |[L,C] = grid2lft(G,...)| returns|C|, the matrix of polynominal 
+% coefficients used in the transformation from grid-LPV to LFT. If |G| is a 
+% M-by-N matrix that is being fit with a polynominal with B terms, then |C| 
+% is a M-by-N-by-B |double| array, in which elements (i,k,:) correspond to 
+% (i,k)-th matrix element in |G|, and elements (:,:,r) correspond to the r-th 
+% basis function.
+% 
+% |[L,C,E] = grid2lft(G,...)| returns |E|, the root mean square error 
+% of the linear fit.
+
+%% Example: Transform a PMAT to a PLFTMAT
+
+% Create PMATs M and M2 with two independent variables x and y. 
+x = pgrid('x',linspace(-2,2,12),[-1 1]);
+y = pgrid('y',1:5,[-4 8] );
+M = [x+y-x*y x;3*y -2*x*y];
+M2 = sqrt(1+x.^2)*y;
+
+% Transform both M and M2 into LFT based LPV objects. Use a polynomial 
+% containing the factors (1,x,y,x*y) to perform the fitting for M, and 
+% a polynomial (1,x,y,x^2,x*y,x^2*y) to perform the fitting for M2.
+
+% Call grid2lft and specify that the fitting of M should use the 
+% polynomial (1,x,y,x*y)
+[Mlft,C,E] = grid2lft(M,{'x','y'},[0 0;1 0;0 1;1 1]);
+
+%% 
+Mlft
+
+%%
+C
+
+%%
+E
+
+% Call grid2lft and specify that the fitting of M2 should use the 
+% polynomial (1,x,y,x^2,x*y,x^2*y)
+[M2lft,C2,E2] = grid2lft(M2,{'x','y'},[0 0;1 0;0 1;2 0;1 1;2 1]);
+
+%% 
+M2lft
+
+%%
+C2
+
+%% 
+E2
+
+%% Example: Transform a UPSS to a PLFTSS
+
+% Create UPSS M that depends on two independent variables x and y. 
+x = pgrid('x',linspace(-2,2,12),[-1 1]);
+y = pgrid('y',1:5,[-4 8] );
+u = ureal('u',1);
+M = ss(x+y-x*y*u, x+3*y,-2*x*y,pmat(0));
+
+% Transform M into a LFT based LPV object. Use a polynomial containing
+% the factors (1,x,y,x^2,x*y,x^2*y) to perform the fitting for M.
+
+% Call grid2lft and specify that the fitting of M should use the 
+% polynomial (1,x,y,x^2,x*y,x^2*y)
+[Mlft,C] = grid2lft(M,{'x','y'},[0 0;1 0;0 1;2 0;1 1;2 1]);
+
+%%
+Mlft
+
+%%
+C
+
+
+
+##### SOURCE END #####
+--></body></html>

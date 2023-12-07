@@ -1,0 +1,315 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Deriving LPV models from Analytical Jacobian linearization</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-04-15"><meta name="DC.source" content="LPV_fromAnalyticalLinearization.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Deriving LPV models from Analytical Jacobian linearization</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Introduction</a></li><li><a href="#2">Example</a></li><li><a href="#5">References</a></li></ul></div><h2>Introduction<a name="1"></a></h2><p>Consider a nonlinear system:</p><p><img src="LPV_fromAnalyticalLinearization_eq08702942127775636835.png" alt="$$ \dot x (t) = f(x(t),u(t),\rho(t)) \ \ \ \ \ \ \ (1)$$"></p><p><img src="LPV_fromAnalyticalLinearization_eq00730057094029065470.png" alt="$$ y(t) = h(x(t), u(t),\rho(t)) \ \ \ \ \ \ \ (2)$$"></p><p>Where <img src="LPV_fromAnalyticalLinearization_eq10503651933861830198.png" alt="$x \in \mathcal{R}^{n_x}$">, <img src="LPV_fromAnalyticalLinearization_eq18310886064519335070.png" alt="$y \in \mathcal{R}^{n_y}$">, <img src="LPV_fromAnalyticalLinearization_eq17381826063452410240.png" alt="$u \in \mathcal{R}^{n_u}$">, and <img src="LPV_fromAnalyticalLinearization_eq02347885135145848432.png" alt="$\rho \in \mathcal{R}^{n_{rho}}$">.</p><p>Assume that <img src="LPV_fromAnalyticalLinearization_eq00100070953731454752.png" alt="$\rho(t) = \rho_0$"> and <img src="LPV_fromAnalyticalLinearization_eq16868862076005499172.png" alt="$u(t) = \bar{u}(\rho_0)$"> are constant <img src="LPV_fromAnalyticalLinearization_eq04567404457331971932.png" alt="$\forall t \geq 0$">. Then the solution of the nonlinear system is any <img src="LPV_fromAnalyticalLinearization_eq12282853950098969392.png" alt="$x(t) = \bar{x}(\rho_0)$"> and <img src="LPV_fromAnalyticalLinearization_eq05817677128975269766.png" alt="$y(t) = \bar{y}(\rho_0)$">, such that if <img src="LPV_fromAnalyticalLinearization_eq02713503426095827967.png" alt="$x(0) = \bar{x}(\rho_0)$">, then <img src="LPV_fromAnalyticalLinearization_eq04567404457331971932.png" alt="$\forall t \geq 0$">:</p><p><img src="LPV_fromAnalyticalLinearization_eq11007171754993380619.png" alt="$$ \dot{x}(t) = 0 = f(\bar{x}(\rho_0),\bar{u}(\rho_0),\rho_0)&#xA;\ \ \ \ \ \ \ (3)$$"></p><p><img src="LPV_fromAnalyticalLinearization_eq03357054565162538017.png" alt="$$ y(t) = \bar{y}(\rho_0) = h(\bar{x}(\rho_0),\bar{u}(\rho_0),\rho_0)&#xA;\ \ \ \ \ \ \ (4)$$"></p><p>When <img src="LPV_fromAnalyticalLinearization_eq10967996549329579195.png" alt="$\rho(t)$"> is a function of time, then the equilibrium <img src="LPV_fromAnalyticalLinearization_eq15982681014898599647.png" alt="$\left( \bar{x}(\rho(t)), \bar{u}(\rho(t)), \bar{y}(\rho(t))\right)$"> is, in general, not a solution of the nonlinear system:</p><p><img src="LPV_fromAnalyticalLinearization_eq05472159395108928282.png" alt="$$ \frac{d}{dt}\bar{x}(\rho(t)) \neq 0 =&#xA;f(\bar{x}(\rho(t)),\bar{u}(\rho(t)),\rho(t)) \ \ \ \ \ \ \ (5)$$"></p><p>We can linearize around <img src="LPV_fromAnalyticalLinearization_eq15982681014898599647.png" alt="$\left( \bar{x}(\rho(t)), \bar{u}(\rho(t)), \bar{y}(\rho(t))\right)$"> even though it is not, in general, a solution of the nonlinear system. Lets define perturbed quantities:</p><p><img src="LPV_fromAnalyticalLinearization_eq07531857186906445422.png" alt="$$\delta_x(t) = x(t) - \bar{x}(\rho(t))\ \ \ \ \ \ \ (6)$$"></p><p><img src="LPV_fromAnalyticalLinearization_eq15158761972096737811.png" alt="$$\delta_u(t) = u(t) - \bar{u}(\rho(t))\ \ \ \ \ \ \ (7)$$"></p><p><img src="LPV_fromAnalyticalLinearization_eq01268057416334020285.png" alt="$$\delta_y(t) = y(t) - \bar{y}(\rho(t))\ \ \ \ \ \ \ (8)$$"></p><p>Using Taylor series expansion about <img src="LPV_fromAnalyticalLinearization_eq15982681014898599647.png" alt="$\left( \bar{x}(\rho(t)), \bar{u}(\rho(t)), \bar{y}(\rho(t))\right)$">, the system dynamics can be expressed as (dropping the notational dependence on time):</p><p><img src="LPV_fromAnalyticalLinearization_eq06227260873066948744.png" alt="$$f(x,u,\rho) = f(\bar{x}(\rho),\bar{u}(\rho),\rho)+A(\rho)\delta_x&#xA;+B(\rho)\delta_u + \Delta_f(\delta_x,\delta_u,\rho)&#xA;\ \ \ \ \ \ \ (9)$$"></p><p><img src="LPV_fromAnalyticalLinearization_eq08427546178959733745.png" alt="$$h(x,u,\rho) = h(\bar{x}(\rho),\bar{u}(\rho),\rho)+C(\rho)\delta_x&#xA;+D(\rho)\delta_u + \Delta_h(\delta_x,\delta_u,\rho)&#xA;\ \ \ \ \ \ \ (10)$$"></p><p>where <img src="LPV_fromAnalyticalLinearization_eq13620720798036041802.png" alt="$f(\bar{x}(\rho),\bar{u}(\rho),\rho) = 0$">, <img src="LPV_fromAnalyticalLinearization_eq08190373660548395397.png" alt="$h(\bar{x}(\rho),\bar{u}(\rho),\rho) = \bar{y}(\rho)$">, <img src="LPV_fromAnalyticalLinearization_eq08885302790379126525.png" alt="$\Delta_f(\delta_x,\delta_u,\rho)$"> and <img src="LPV_fromAnalyticalLinearization_eq09100279720571733944.png" alt="$\Delta_h(\delta_x,\delta_u,\rho)$"> terms represent higher-order terms of the Taylor series approximations, and</p><p><img src="LPV_fromAnalyticalLinearization_eq04309910909146435907.png" alt="$$A(\rho) = \frac{\partial}{\partial x}f(x,u,\rho)&#xA;\bigg|_{(x,u)=\left(\bar{x}(\rho),\bar{u}(\rho)\right)}&#xA;\ \ \ \ \ \ \ (11)$$"></p><p><img src="LPV_fromAnalyticalLinearization_eq12082565192614945036.png" alt="$$B(\rho) = \frac{\partial}{\partial u}f(x,u,\rho)&#xA;\bigg|_{(x,u)=\left(\bar{x}(\rho),\bar{u}(\rho)\right)}&#xA;\ \ \ \ \ \ \ (12)$$"></p><p><img src="LPV_fromAnalyticalLinearization_eq12777041587462580701.png" alt="$$C(\rho) = \frac{\partial}{\partial x}h(x,u,\rho)&#xA;\bigg|_{(x,u)=\left(\bar{x}(\rho),\bar{u}(\rho)\right)}&#xA;\ \ \ \ \ \ \ (13)$$"></p><p><img src="LPV_fromAnalyticalLinearization_eq12752179411887769733.png" alt="$$D(\rho) = \frac{\partial}{\partial u}h(x,u,\rho)&#xA;\bigg|_{(x,u)=\left(\bar{x}(\rho),\bar{u}(\rho)\right)}&#xA;\ \ \ \ \ \ \ (14)$$"></p><p>Using this Taylor series approximation to linearize the dynamics of the nonlinear system, yields:</p><p><img src="LPV_fromAnalyticalLinearization_eq16211356194925180949.png" alt="$$ \begin{array}{l@{}l}&#xA; \frac{d}{dt}\delta_x&#xA;&{}= \frac{d}{dt}\left( x - \bar{x}(\rho)\right) \\&#xA;&{}= \dot{x} - \frac{d}{dt}\bar{x}(\rho) \\&#xA;&{}= f(x,u,\rho) - \frac{d}{dt}\bar{x}(\rho) \\&#xA;&{}= A(\rho)\delta_x +B(\rho)\delta_x+&#xA;\Delta_f(\delta_x,\delta_u,\rho)- \frac{d}{dt}\bar{x}(\rho) \end{array}&#xA;\ \ \ \ \ \ \ (15)$$"></p><p>Similarly, the Taylor series approximation of <img src="LPV_fromAnalyticalLinearization_eq06589802991763896931.png" alt="$h(x,y,\rho)$"> can be used to linearize the output equation:</p><p><img src="LPV_fromAnalyticalLinearization_eq12736641448403642244.png" alt="$$\begin{array}{l@{}l} \delta_y&#xA;&{}= y-\bar{y}(\rho)\\&#xA;&{}= h(x,y,\rho)-\bar{y}(\rho)\\&#xA;&{}= \left[ \bar{y}(\rho)+C(\rho)\delta_x +D(\rho)\delta_x+&#xA;\Delta_h(\delta_x,\delta_u,\rho)\right] -\bar{y}(\rho)\\&#xA;&{}= C(\rho)\delta_x +D(\rho)\delta_x+\Delta_h(\delta_x,\delta_u,\rho)&#xA;\end{array}&#xA;\ \ \ \ \ \ \ (16)$$"></p><p>The final LPV model is thus:</p><p><img src="LPV_fromAnalyticalLinearization_eq12351255559388533432.png" alt="$$ \begin{array}{l@{}l}&#xA;\frac{d}{dt}\delta_x&#xA;&{}=A(\rho)\delta_x +B(\rho)\delta_x+&#xA;\Delta_f(\delta_x,\delta_u,\rho)- \frac{d}{dt}\bar{x}(\rho) \\&#xA;\delta_y &{}= C(\rho)\delta_x +D(\rho)\delta_x+\Delta_h(\delta_x,\delta_u,\rho)&#xA;\end{array}&#xA;\ \ \ \ \ \ \ (17)$$"></p><p><b>Approximations</b></p><p>Standard LPV approach is to neglect higher order terms <img src="LPV_fromAnalyticalLinearization_eq06948826040840729281.png" alt="$\Delta_f$"> and <img src="LPV_fromAnalyticalLinearization_eq00721194481062891786.png" alt="$\Delta_h$">, and the <img src="LPV_fromAnalyticalLinearization_eq02632361181312723846.png" alt="$-\dot{\bar{x}}$"> term. However, the <img src="LPV_fromAnalyticalLinearization_eq02632361181312723846.png" alt="$-\dot{\bar{x}}$"> term can be retained and treated as a measurable disturbance. This can be expressed as <img src="LPV_fromAnalyticalLinearization_eq05424789922224049672.png" alt="$-\dot{\bar{x}} = G(\rho)\dot{\rho}$">, where <img src="LPV_fromAnalyticalLinearization_eq02445582686370901924.png" alt="$G(\rho) = -\frac{d\bar{x}(\rho)}{d\rho}$"> The higher order terms <img src="LPV_fromAnalyticalLinearization_eq06948826040840729281.png" alt="$\Delta_f$"> and <img src="LPV_fromAnalyticalLinearization_eq00721194481062891786.png" alt="$\Delta_h$"> are nonlinear functions. They can be handled (locally) as uncertainties using integral quadratic constraints.</p><p>An interested reader, can refer to the work by Takarics and Seiler [1] for additional details on this approach. If an analytical linearization is not possible, an LPV model can be constructed using numerical linearization directly from a nonlinear model (e.g. a Simulink model). Refer to section XXX for details.</p><h2>Example<a name="2"></a></h2><p>Consider the nonlinear system (from [2]):</p><p><img src="LPV_fromAnalyticalLinearization_eq01985388757665986633.png" alt="$$\left[ \begin{array}{c} \dot x_1 (t) \\ \dot x_2 (t)\end{array} \right]&#xA;= \left[ \begin{array}{cc} -1 &amp; 0 \\ 1 &amp; 0&#xA;\end{array} \right] \left[ \begin{array}{c} x_1 (t) \\ x_2 (t)\end{array} \right]&#xA;+ \left[ \begin{array}{c} 1 \\ 0 \end{array} \right] u&#xA;+ \left[ \begin{array}{c} 0 \\ -x_2|x_2|-10\end{array} \right]&#xA;\ \ \ \ \ \ \ (18)$$"></p><p><img src="LPV_fromAnalyticalLinearization_eq14838804585806538703.png" alt="$$y(t) = x_2 \ \ \ \ \ \ \ (19)$$"></p><p>Lets assume that we are given the control objective to make the output <img src="LPV_fromAnalyticalLinearization_eq10822186844117743572.png" alt="$y(t)$"> track a reference command <img src="LPV_fromAnalyticalLinearization_eq01947024802798267750.png" alt="$r(t)$">. We will frame this as a LPV control problem, and derive a LPV model of this nonlinear model for this problem.</p><p>Let the desired operating point be scheduled y <img src="LPV_fromAnalyticalLinearization_eq06103808079359531416.png" alt="$\rho = r$">. In this formulation neither the dynamics (<img src="LPV_fromAnalyticalLinearization_eq18096895394918367257.png" alt="$f$"> in Equation (1)), nor the output equation (<img src="LPV_fromAnalyticalLinearization_eq08062630503172331818.png" alt="$h$"> in Equation (2)) directly depend on <img src="LPV_fromAnalyticalLinearization_eq11905270608999804013.png" alt="$\rho$">.</p><p>The equilibrium point, parameterized by <img src="LPV_fromAnalyticalLinearization_eq11905270608999804013.png" alt="$\rho$"> is given by:</p><p><img src="LPV_fromAnalyticalLinearization_eq12079598889199008115.png" alt="$$ \bar{x}_1(\rho) = \rho|\rho|+10 \ \ \ \ \ \ \ (20)$$"></p><p><img src="LPV_fromAnalyticalLinearization_eq16703556784263028301.png" alt="$$ \bar{x}_2(\rho) = \rho \ \ \ \ \ \ \ (21)$$"></p><p><img src="LPV_fromAnalyticalLinearization_eq05801794670620074500.png" alt="$$ \bar{u}(\rho) = \rho|\rho|+10 = \bar{x}_1(\rho) \ \ \ \ \ \ \ (22)$$"></p><p><img src="LPV_fromAnalyticalLinearization_eq05257324969543138731.png" alt="$$\bar{y}(\rho) = \rho \ \ \ \ \ \ \ (23)$$"></p><p>Applying the approach described above, the nonlinear system in Equations (18)-(19) is linearized about the parameterized equilibrium point to obtain a LPV system:</p><p><img src="LPV_fromAnalyticalLinearization_eq17802797060846030138.png" alt="$$\dot{\delta_x} =&#xA;\left[ \begin{array}{cc} -1 &amp; 0 \\ 1 &amp; -2|\rho|) \end{array} \right] \delta_x&#xA;+ \left[ \begin{array}{c} 1 \\ 0 \end{array} \right] u&#xA;+ \left[ \begin{array}{c} -2|\rho| \\ 1 ) \end{array} \right]&#xA;\ \ \ \ \ \ \ (24)$$"></p><p><img src="LPV_fromAnalyticalLinearization_eq03613442887076533015.png" alt="$$\delta_y = \left[ \begin{array}{cc} 0 &amp; 1 \end{array} \right] \delta_x&#xA;\ \ \ \ \ \ \ (25)$$"></p><p>By formulating the control problem in the form of a LPV system which described the behaviour of the nonlinear system about a desired reference command, we have recast the problem into a regulation problem: <img src="LPV_fromAnalyticalLinearization_eq00540241022561644512.png" alt="$\delta_y = y-\bar{y}(\rho) = y - \rho$"> and the control objective is to regulate <img src="LPV_fromAnalyticalLinearization_eq12769524517518064977.png" alt="$\delta_y(t) \to 0$"> in the LPV model.</p><p>If we neglect the <img src="LPV_fromAnalyticalLinearization_eq02632361181312723846.png" alt="$-\dot{\bar{x}}$"> term in the LPV system of Equations (24)-(25), a grid-based LPV model of the system for <img src="LPV_fromAnalyticalLinearization_eq15322622910014508070.png" alt="$\rho \in [-5 0 10]$"> can be constructed using the following commands:</p><pre class="codeinput"><span class="comment">% Define the parameter</span>
+p = pgrid(<span class="string">'p'</span>,[-5 0 10]);
+
+<span class="comment">% Define the system matrices</span>
+A = [-1 0;1 -2*abs(p)];
+B = [1;0];
+C = [0 1];
+
+<span class="comment">% Define the grid-based LPV model</span>
+sys = ss(A,B,C,0)
+</pre><pre class="codeoutput">PSS with 2 States, 1 Outputs, 1 Inputs, Continuous System.     
+The PSS consists of the following blocks:                      
+  p: Gridded real, 3 points in [-5,10], rate bounds [-Inf,Inf].
+</pre><p>If we treat the <img src="LPV_fromAnalyticalLinearization_eq02632361181312723846.png" alt="$-\dot{\bar{x}}$"> term as a exogenous disturbance to the model then the grid-based LPV system can be modeled as:</p><pre class="codeinput">Bd = [-2*abs(p);-1];
+sys_dis = ss(A,[B Bd],C,0)
+</pre><pre class="codeoutput">PSS with 2 States, 1 Outputs, 2 Inputs, Continuous System.     
+The PSS consists of the following blocks:                      
+  p: Gridded real, 3 points in [-5,10], rate bounds [-Inf,Inf].
+</pre><p>The <img src="LPV_fromAnalyticalLinearization_eq13210591369447348458.png" alt="$\dot{\rho}$"> term in <img src="LPV_fromAnalyticalLinearization_eq02632361181312723846.png" alt="$-\dot{\bar{x}}$"> is now an input to the model. It is being treated as an exogenous disturbance, that is independent of <img src="LPV_fromAnalyticalLinearization_eq11905270608999804013.png" alt="$\rho$">. This assumption is, in general, conservative.</p><h2>References<a name="5"></a></h2><div><ol><li>B. Takarics and P. Seiler, "Gain Scheduling for Nonlinear Systems via Integral Quadratic Constraints," <i>accepted to the American Control Conference</i>, 2015.</li><li>D. J. Leith and W. E. Leithead, "Counter-Example to a Common LPV Gain-Scheduling Design Approach," <i>UKACC International Control Conference</i>, 2000.</li></ol></div><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Deriving LPV models from Analytical Jacobian linearization
+% 
+%% Introduction
+% 
+% Consider a nonlinear system: 
+% 
+% $$ \dot x (t) = f(x(t),u(t),\rho(t)) \ \ \ \ \ \ \ (1)$$
+% 
+% $$ y(t) = h(x(t), u(t),\rho(t)) \ \ \ \ \ \ \ (2)$$
+% 
+% Where $x \in \mathcal{R}^{n_x}$, $y \in \mathcal{R}^{n_y}$, 
+% $u \in \mathcal{R}^{n_u}$, and $\rho \in \mathcal{R}^{n_{rho}}$.
+%
+% Assume that $\rho(t) = \rho_0$ and $u(t) = \bar{u}(\rho_0)$ are 
+% constant $\forall t \geq 0$.
+% Then the solution of the nonlinear system is any 
+% $x(t) = \bar{x}(\rho_0)$ and $y(t) = \bar{y}(\rho_0)$, such that 
+% if $x(0) = \bar{x}(\rho_0)$, then $\forall t \geq 0$:
+%
+% $$ \dot{x}(t) = 0 = f(\bar{x}(\rho_0),\bar{u}(\rho_0),\rho_0)
+% \ \ \ \ \ \ \ (3)$$
+% 
+% $$ y(t) = \bar{y}(\rho_0) = h(\bar{x}(\rho_0),\bar{u}(\rho_0),\rho_0)
+% \ \ \ \ \ \ \ (4)$$
+% 
+% When $\rho(t)$ is a function of time, then the equilibrium 
+% $\left( \bar{x}(\rho(t)), \bar{u}(\rho(t)), \bar{y}(\rho(t))\right)$
+% is, in general, not a solution of the nonlinear system:
+%
+% $$ \frac{d}{dt}\bar{x}(\rho(t)) \neq 0 =
+% f(\bar{x}(\rho(t)),\bar{u}(\rho(t)),\rho(t)) \ \ \ \ \ \ \ (5)$$
+%
+% We can linearize around 
+% $\left( \bar{x}(\rho(t)), \bar{u}(\rho(t)), \bar{y}(\rho(t))\right)$
+% even though it is not, in general, a solution of the nonlinear system. 
+% Lets define perturbed quantities:
+%
+% $$\delta_x(t) = x(t) - \bar{x}(\rho(t))\ \ \ \ \ \ \ (6)$$
+% 
+% $$\delta_u(t) = u(t) - \bar{u}(\rho(t))\ \ \ \ \ \ \ (7)$$
+% 
+% $$\delta_y(t) = y(t) - \bar{y}(\rho(t))\ \ \ \ \ \ \ (8)$$
+% 
+% Using Taylor series expansion about 
+% $\left( \bar{x}(\rho(t)), \bar{u}(\rho(t)), \bar{y}(\rho(t))\right)$,
+% the system dynamics can be expressed as
+% (dropping the notational dependence on time):
+% 
+% $$f(x,u,\rho) = f(\bar{x}(\rho),\bar{u}(\rho),\rho)+A(\rho)\delta_x
+% +B(\rho)\delta_u + \Delta_f(\delta_x,\delta_u,\rho)
+% \ \ \ \ \ \ \ (9)$$
+% 
+% $$h(x,u,\rho) = h(\bar{x}(\rho),\bar{u}(\rho),\rho)+C(\rho)\delta_x
+% +D(\rho)\delta_u + \Delta_h(\delta_x,\delta_u,\rho)
+% \ \ \ \ \ \ \ (10)$$
+% 
+% where $f(\bar{x}(\rho),\bar{u}(\rho),\rho) = 0$,
+% $h(\bar{x}(\rho),\bar{u}(\rho),\rho) = \bar{y}(\rho)$,
+% $\Delta_f(\delta_x,\delta_u,\rho)$ and
+% $\Delta_h(\delta_x,\delta_u,\rho)$ terms represent higher-order terms
+% of the Taylor series approximations, and
+% 
+% $$A(\rho) = \frac{\partial}{\partial x}f(x,u,\rho)
+% \bigg|_{(x,u)=\left(\bar{x}(\rho),\bar{u}(\rho)\right)}
+% \ \ \ \ \ \ \ (11)$$
+%
+% $$B(\rho) = \frac{\partial}{\partial u}f(x,u,\rho)
+% \bigg|_{(x,u)=\left(\bar{x}(\rho),\bar{u}(\rho)\right)}
+% \ \ \ \ \ \ \ (12)$$
+%
+% $$C(\rho) = \frac{\partial}{\partial x}h(x,u,\rho)
+% \bigg|_{(x,u)=\left(\bar{x}(\rho),\bar{u}(\rho)\right)}
+% \ \ \ \ \ \ \ (13)$$
+%
+% $$D(\rho) = \frac{\partial}{\partial u}h(x,u,\rho)
+% \bigg|_{(x,u)=\left(\bar{x}(\rho),\bar{u}(\rho)\right)}
+% \ \ \ \ \ \ \ (14)$$
+% 
+% Using this Taylor series approximation to linearize the dynamics of the 
+% nonlinear system, yields:
+% 
+% $$ \begin{array}{l@{}l}
+%  \frac{d}{dt}\delta_x  
+% &{}= \frac{d}{dt}\left( x - \bar{x}(\rho)\right) \\
+% &{}= \dot{x} - \frac{d}{dt}\bar{x}(\rho) \\
+% &{}= f(x,u,\rho) - \frac{d}{dt}\bar{x}(\rho) \\
+% &{}= A(\rho)\delta_x +B(\rho)\delta_x+
+% \Delta_f(\delta_x,\delta_u,\rho)- \frac{d}{dt}\bar{x}(\rho) \end{array}
+% \ \ \ \ \ \ \ (15)$$
+% 
+% 
+%
+% Similarly, the Taylor series approximation of $h(x,y,\rho)$ can be used
+% to linearize the output equation:
+%
+% $$\begin{array}{l@{}l} \delta_y
+% &{}= y-\bar{y}(\rho)\\
+% &{}= h(x,y,\rho)-\bar{y}(\rho)\\
+% &{}= \left[ \bar{y}(\rho)+C(\rho)\delta_x +D(\rho)\delta_x+
+% \Delta_h(\delta_x,\delta_u,\rho)\right] -\bar{y}(\rho)\\
+% &{}= C(\rho)\delta_x +D(\rho)\delta_x+\Delta_h(\delta_x,\delta_u,\rho)
+% \end{array}
+% \ \ \ \ \ \ \ (16)$$
+%
+% The final LPV model is thus:
+% 
+% $$ \begin{array}{l@{}l}
+% \frac{d}{dt}\delta_x 
+% &{}=A(\rho)\delta_x +B(\rho)\delta_x+
+% \Delta_f(\delta_x,\delta_u,\rho)- \frac{d}{dt}\bar{x}(\rho) \\
+% \delta_y &{}= C(\rho)\delta_x +D(\rho)\delta_x+\Delta_h(\delta_x,\delta_u,\rho)
+% \end{array}
+% \ \ \ \ \ \ \ (17)$$
+%
+% *Approximations*
+% 
+% Standard LPV approach is to neglect higher order terms $\Delta_f$ and
+% $\Delta_h$, and the $-\dot{\bar{x}}$ term. However, the $-\dot{\bar{x}}$
+% term can be retained and treated as a measurable disturbance. This
+% can be expressed as $-\dot{\bar{x}} = G(\rho)\dot{\rho}$, 
+% where $G(\rho) = -\frac{d\bar{x}(\rho)}{d\rho}$ 
+% The higher order terms $\Delta_f$ and $\Delta_h$ are
+% nonlinear functions. They can be handled (locally) as uncertainties using
+% integral quadratic constraints. 
+% 
+% An interested reader, can refer to the work by Takarics and Seiler [1] 
+% for additional details on this approach. If an analytical linearization
+% is not possible, an LPV model can be constructed using numerical
+% linearization directly from a nonlinear model (e.g. a Simulink model).
+% Refer to section XXX for details.
+
+
+%% Example
+% 
+% Consider the nonlinear system (from [2]): 
+%
+% $$\left[ \begin{array}{c} \dot x_1 (t) \\ \dot x_2 (t)\end{array} \right]
+% = \left[ \begin{array}{cc} -1 & 0 \\ 1 & 0
+% \end{array} \right] \left[ \begin{array}{c} x_1 (t) \\ x_2 (t)\end{array} \right]
+% + \left[ \begin{array}{c} 1 \\ 0 \end{array} \right] u
+% + \left[ \begin{array}{c} 0 \\ -x_2|x_2|-10\end{array} \right]
+% \ \ \ \ \ \ \ (18)$$
+%
+% $$y(t) = x_2 \ \ \ \ \ \ \ (19)$$
+% 
+% Lets assume that we are given the control objective to make the output 
+% $y(t)$ track a reference command $r(t)$. We will frame this as a LPV
+% control problem, and derive a LPV model of this nonlinear model for this
+% problem.
+% 
+% Let the desired operating point be scheduled y $\rho = r$. In this 
+% formulation neither the dynamics ($f$ in Equation (1)), nor the output equation
+% ($h$ in Equation (2)) directly depend on $\rho$.
+%
+% The equilibrium point, parameterized by $\rho$ is given by:
+%
+% $$ \bar{x}_1(\rho) = \rho|\rho|+10 \ \ \ \ \ \ \ (20)$$
+% 
+% $$ \bar{x}_2(\rho) = \rho \ \ \ \ \ \ \ (21)$$
+%
+% $$ \bar{u}(\rho) = \rho|\rho|+10 = \bar{x}_1(\rho) \ \ \ \ \ \ \ (22)$$
+% 
+% $$\bar{y}(\rho) = \rho \ \ \ \ \ \ \ (23)$$
+% 
+% Applying the approach described above, the nonlinear system in
+% Equations (18)-(19) is linearized about the parameterized equilibrium point
+% to obtain a LPV system:
+%
+% $$\dot{\delta_x} = 
+% \left[ \begin{array}{cc} -1 & 0 \\ 1 & -2|\rho|) \end{array} \right] \delta_x 
+% + \left[ \begin{array}{c} 1 \\ 0 \end{array} \right] u
+% + \left[ \begin{array}{c} -2|\rho| \\ 1 ) \end{array} \right]
+% \ \ \ \ \ \ \ (24)$$
+%
+% $$\delta_y = \left[ \begin{array}{cc} 0 & 1 \end{array} \right] \delta_x
+% \ \ \ \ \ \ \ (25)$$
+% 
+% By formulating the control problem in the form of a LPV system which
+% described the behaviour of the nonlinear system about a desired reference
+% command, we have recast the problem into a regulation problem: $\delta_y
+% = y-\bar{y}(\rho) = y - \rho$ and the control objective is to regulate
+% $\delta_y(t) \to 0$ in the LPV model.
+% 
+% If we neglect the $-\dot{\bar{x}}$ term in the LPV system of Equations (24)-(25), 
+% a grid-based LPV model of the system for $\rho \in [-5 0 10]$ can be
+% constructed using the following commands:
+
+% Define the parameter
+p = pgrid('p',[-5 0 10]);
+
+% Define the system matrices
+A = [-1 0;1 -2*abs(p)];
+B = [1;0];
+C = [0 1];
+
+% Define the grid-based LPV model
+sys = ss(A,B,C,0)
+
+%% 
+% If we treat the $-\dot{\bar{x}}$ term as a exogenous disturbance to the 
+% model then the grid-based LPV system can be modeled as:
+Bd = [-2*abs(p);-1];
+sys_dis = ss(A,[B Bd],C,0)
+
+%%
+% The $\dot{\rho}$ term in $-\dot{\bar{x}}$ is now an input to the model. 
+% It is being treated as an exogenous disturbance, that is independent of 
+% $\rho$. This assumption is, in general, conservative.
+
+
+
+%% References
+% 
+% # B. Takarics and P. Seiler, "Gain Scheduling for Nonlinear Systems 
+% via Integral Quadratic Constraints," _accepted to the American Control
+% Conference_, 2015.
+% # D. J. Leith and W. E. Leithead, "Counter-Example to a Common LPV
+% Gain-Scheduling Design Approach," _UKACC International Control 
+% Conference_, 2000. 
+
+
+
+
+
+
+##### SOURCE END #####
+--></body></html>

@@ -1,0 +1,144 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>LPVBALANCMR -  Balanced truncation of quadratically stable pss models</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-03-01"><meta name="DC.source" content="LPVBALANCMRdoc.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>LPVBALANCMR -  Balanced truncation of quadratically stable <tt>pss</tt> models</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Syntax</a></li><li><a href="#2">Description</a></li></ul></div><h2>Syntax<a name="1"></a></h2><pre>  [PRED,INFO] = lpvbalancmr(SYS,N)
+  [PRED,INFO] = lpvbalancmr(SYS,N,OPTION1,VAL1,OPTION2,VAL2,...)</pre><h2>Description<a name="2"></a></h2><p><tt>[PRED,INFO] = lpvbalancmr(SYS,N)</tt> performs balanced truncation model reduction on a PSS <tt>SYS</tt>. A <tt>pss</tt> <tt>SYS</tt>, with <tt>Nx</tt> states, is balanced by computing a single balancing transformation for <tt>SYS</tt> and applying it at every point in its domain. The output <tt>PRED</tt> has <tt>N</tt> states and is obtained by truncating from the balanced system the <tt>(Nx-N)</tt> states which contribute least to its input-output mapping. <tt>INFO</tt> contains two fields <tt>'StabSV'</tt> and <tt>'ErrorBound'</tt>.  <tt>INFO.StabSV</tt> is a vector of singular values describing the input-output mapping of <tt>SYSB</tt> (comparable to Hankel singular values for LTI systems). <tt>INFO.ErrorBound</tt> contains the <img src="LPVBALANCMRdoc_eq14766676290793252675.png" alt="$L_2$"> norm of the difference between <tt>SYS</tt> and <tt>PRED</tt>: <tt>INFO.ErrorBound</tt> = induced <img src="LPVBALANCMRdoc_eq14766676290793252675.png" alt="$L_2$"> norm of <tt>SYS</tt> - <tt>PRED</tt>.</p><p>Note that <tt>lpvbalancmr</tt> only works for quadratically stable systems. For unstable <tt>pss</tt> models use <tt>lpvncfmr</tt>.</p><p><tt>[PRED,INFO] = lpvbalancmr(SYS,N,OPTION1,VAL1,OPTION2,VAL2,...)</tt> provides additional options for the balanced truncation model reduction. The current implementation supports the following options:</p><p>
+<table border=1>
+<tr>
+<td>OPTION</td>
+<td>VAL</td>
+<td>Explanation</td>
+</tr>
+<tr>
+<td>'weight'</td>
+<td>{Wout,Win}</td>
+<td>LTI weights on input (Win) and output (Wout). Used to emphasize
+    accuracy in different I/O and frequency ranges.
+    Must be invertable if method 'invgram' is used. </td>
+</tr>
+<tr>
+<td>'method'</td>
+<td>'gram' or 'invgram'</td>
+<td>Solve using either gramians or the inverse gramians.</td>
+</tr>
+</table>
+</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% LPVBALANCMR -  Balanced truncation of quadratically stable |pss| models
+%
+%  
+%% Syntax
+%
+%    [PRED,INFO] = lpvbalancmr(SYS,N)
+%    [PRED,INFO] = lpvbalancmr(SYS,N,OPTION1,VAL1,OPTION2,VAL2,...)
+%
+%% Description
+%
+% |[PRED,INFO] = lpvbalancmr(SYS,N)| performs balanced truncation model 
+% reduction on a PSS |SYS|. A |pss| |SYS|, with |Nx| states, is balanced by 
+% computing a single balancing transformation for |SYS| and applying it at 
+% every point in its domain. The output |PRED| has |N| states and is obtained 
+% by truncating from the balanced system the |(Nx-N)| states which contribute 
+% least to its input-output mapping. |INFO| contains two fields |'StabSV'| and 
+% |'ErrorBound'|.  |INFO.StabSV| is a vector of singular values describing the 
+% input-output mapping of |SYSB| (comparable to Hankel singular values for 
+% LTI systems). |INFO.ErrorBound| contains the $L_2$ norm of the difference 
+% between |SYS| and |PRED|: |INFO.ErrorBound| = induced $L_2$ norm of |SYS| - |PRED|. 
+%
+% Note that |lpvbalancmr| only works for quadratically stable systems. For
+% unstable |pss| models use |lpvncfmr|.
+%
+% |[PRED,INFO] = lpvbalancmr(SYS,N,OPTION1,VAL1,OPTION2,VAL2,...)| provides
+% additional options for the balanced truncation model reduction. 
+% The current implementation supports the following options:
+%
+% <html>
+% <table border=1>
+% <tr>
+% <td>OPTION</td>
+% <td>VAL</td>
+% <td>Explanation</td>
+% </tr>
+% <tr>
+% <td>'weight'</td>
+% <td>{Wout,Win}</td>
+% <td>LTI weights on input (Win) and output (Wout). Used to emphasize 
+%     accuracy in different I/O and frequency ranges. 
+%     Must be invertable if method 'invgram' is used. </td>
+% </tr>
+% <tr>
+% <td>'method'</td>
+% <td>'gram' or 'invgram'</td>
+% <td>Solve using either gramians or the inverse gramians.</td>
+% </tr>
+% </table>
+% </html>
+% 
+
+##### SOURCE END #####
+--></body></html>

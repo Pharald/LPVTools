@@ -1,0 +1,191 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Deriving LPV models from Nonlinear Simulation Models</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-04-15"><meta name="DC.source" content="LPV_fromNonlinearSim.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Deriving LPV models from Nonlinear Simulation Models</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Introduction</a></li><li><a href="#2">Gridding the Parameter Space</a></li><li><a href="#3">Trimming in MATLAB/Simulink</a></li><li><a href="#4">Linearization in MATLAB/Simulink</a></li></ul></div><h2>Introduction<a name="1"></a></h2><p>Numerical linearization can be used to derive grid-based LPV models from nonlinear simulation models. The goal is then to approximate the nonlinear model as a grid-based LPV system by generating a array of state-space models with <a href="..\..\..\Concepts\StateConsistency\html\StateConsistency.html">consistent</a> state vectors, inputs and outputs. This section will outline one approach to generating an array of state-space models from a Simulink model. The process is as follows:</p><p><b>Overview of Modeling Process</b></p><div><ol><li>Desired LPV model depends on <img src="LPV_fromNonlinearSim_eq04724309825176207703.png" alt="$n_\rho$"> parameters, <img src="LPV_fromNonlinearSim_eq04699245618552696836.png" alt="$\rho \in \mathcal{R}^{n_\rho}$">.</li><li>Create a grid of parameter values <img src="LPV_fromNonlinearSim_eq02661806082982697695.png" alt="$P$">.</li><li>Trim the nonlinear model at each grid point.</li><li>Linearize the nonlienar model at each trim point.</li></ol></div><h2>Gridding the Parameter Space<a name="2"></a></h2><p>The choice of scheduling parameter <img src="LPV_fromNonlinearSim_eq11905270608999804013.png" alt="$\rho$"> is at the users's discretion. A common choice for aircraft applications is Mach and altitude, due to the change in aircraft dynamics as a function of these two parameters.</p><p>Once the set of scheduling parameters has been chosen the set is gridded to form <img src="LPV_fromNonlinearSim_eq02661806082982697695.png" alt="$P$">. The grid should be made dense enough to capture significant dynamics in the model. The trade-off is that too dense a grid will be cumbersome from a computational perspective.</p><p><b>Example</b></p><p>Given an aircraft model with Mach and altitude chosen as the scheduling parameters, we are interested in developing a model for the aircraft at Mach values between 0.5 and 0.8, and at altitudes between 5,000 ft and 15,000 ft.</p><p>Lets assume that the dynamic of the aircraft vary smoothly inside this flight envelope. A first attempt at deriving an LPV model for this system might grid the parameters as follows:</p><p><img src="LPV_fromNonlinearSim_eq13781800784398694707.png" alt="$$Mach \in \left[ 0.5, 0.6, 0.7, 0.8 \right]$$"></p><p><img src="LPV_fromNonlinearSim_eq09124233324319538005.png" alt="$$Altitude \in \left[ 5,000~ft,10,000~ft, 15,000~ft\right]$$"></p><p>The set of gridded parameter values <img src="LPV_fromNonlinearSim_eq02661806082982697695.png" alt="$P$"> consists of 12 points arranged in a 4x3 grid defined as follows:</p><p><img src="LPV_fromNonlinearSim_eq02921862781921585164.png" alt="$$P = \left [Mach,altitute \right] \in&#xA; \left[ 0.5, 0.6, 0.7, 0.8 \right] \times&#xA; \left[ 5,000~ft,10,000~ft, 15,000~ft\right]$$"></p><p>This grid can be defined as an <tt>rgrid</tt> object in LPVTools using the following commands:</p><pre class="codeinput">Mach = [0.5:0.1:0.8];
+Altitude = [5000:5000:15000];
+P = rgrid({<span class="string">'Mach'</span>,<span class="string">'Altitude'</span>},{Mach,Altitude})
+</pre><pre class="codeoutput">RGRID with the following parameters:                                          
+  Mach: Gridded real, 4 points in [0.5,0.8], rate bounds [-Inf,Inf].          
+  Altitude: Gridded real, 3 points in [5e+03,1.5e+04], rate bounds [-Inf,Inf].
+</pre><h2>Trimming in MATLAB/Simulink<a name="3"></a></h2><p>Once a desired grid of parameter values, <img src="LPV_fromNonlinearSim_eq02661806082982697695.png" alt="$P$">, has been chosen. The nonlinear simulation model will need to be trimmed and linearized at each grid point.</p><p>The process of trimming a Simulink model relies on the following proceedures and MATLAB commands:</p><div><ul><li>Start by manually adding the desired model input/output points to the relevant signal lines in the Simulink model (see the help for <a href="matlab:doc('getlinio')"><tt>getlinio</tt></a> for details). Then use <a href="matlab:doc('getlinio')"><tt>getlinio</tt></a> to create a object that describes the input/output points of the desired linearized model.</li><li>Use <a href="matlab:doc('operspec')"><tt>operspec</tt></a> to grab the operating point specification of the Simulink model. The resulting object contains fields for each input/output point and state in the Simulink model.</li><li>Loop through the parameter grid, <img src="LPV_fromNonlinearSim_eq02661806082982697695.png" alt="$P$">, and at each point: (1) Configure the <a href="matlab:doc('operspec')"><tt>operspec</tt></a> object to specify the desired trim point (i.e. set bounds on inputs, outputs, states, and their derivatives). (2) Use <a href="matlab:doc('findop')"><tt>findop</tt></a> to trim the Simulink model at the desired grid point. The process is shown graphically in Figure 1.</li></ul></div><p><img vspace="5" hspace="5" src="trim.png" alt=""> </p><p><i>Figure 1: Trimming a Simulink model.</i></p><h2>Linearization in MATLAB/Simulink<a name="4"></a></h2><p>Once a valid trim point has been created for each point in the parameter grid <img src="LPV_fromNonlinearSim_eq02661806082982697695.png" alt="$P$">. The function <a href="matlab:doc('linearize')"><tt>linearize</tt></a> is used to derive a linearized model at each point. The process is shown in Figure 2. Care must be taken that the linearized models that are being generated share a <a href="..\..\..\Concepts\StateConsistency\html\StateConsistency.html">consistent</a> input, output, and state vector. The resulting array of state-space models can be combined with an <tt>rgrid</tt> object that described the parameter grid <img src="LPV_fromNonlinearSim_eq02661806082982697695.png" alt="$P$"> to form a grid-based LPV model. Refer to <a href="..\..\..\GettingStarted\MiniTutorials\Grid_Modeling\html\Grid_Modeling.html">the grid-based LPV modeling tutorial</a> for details on how a grid-based LPV model is assembled out of state-space model data.</p><p><img vspace="5" hspace="5" src="linearize.png" alt=""> </p><p><i>Figure 2: Linearizing a Simulink model on a grid of parameter values.</i></p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Deriving LPV models from Nonlinear Simulation Models
+
+%% Introduction
+% 
+% Numerical linearization can be used to derive grid-based LPV models from 
+% nonlinear simulation models. The goal is then to approximate the 
+% nonlinear model as a grid-based LPV system by generating a array of
+% state-space models with 
+% <..\..\..\Concepts\StateConsistency\html\StateConsistency.html consistent> 
+% state vectors, inputs and outputs. This section will outline one approach 
+% to generating an array of state-space models from a Simulink model.
+% The process is as follows:
+% 
+% *Overview of Modeling Process*
+% 
+% # Desired LPV model depends on $n_\rho$ parameters, $\rho \in
+% \mathcal{R}^{n_\rho}$.
+% # Create a grid of parameter values $P$.
+% # Trim the nonlinear model at each grid point.
+% # Linearize the nonlienar model at each trim point.
+% 
+% 
+%% Gridding the Parameter Space
+% 
+% The choice of scheduling parameter $\rho$ is at the users's discretion.
+% A common choice for aircraft applications is Mach and altitude, due to
+% the change in aircraft dynamics as a function of these two parameters.
+% 
+% Once the set of scheduling parameters has been chosen the set is gridded
+% to form $P$. The grid should be made dense enough to capture significant
+% dynamics in the model. The trade-off is that too dense a grid will be
+% cumbersome from a computational perspective.
+% 
+% *Example* 
+% 
+% Given an aircraft model with Mach and altitude chosen as the scheduling 
+% parameters, we are interested in developing a model for the aircraft at 
+% Mach values between 0.5 and 0.8, and at altitudes between 5,000 ft and 
+% 15,000 ft. 
+% 
+% Lets assume that the dynamic of the aircraft vary smoothly
+% inside this flight envelope. A first attempt at deriving an LPV model for
+% this system might grid the parameters as follows:
+% 
+% $$Mach \in \left[ 0.5, 0.6, 0.7, 0.8 \right]$$
+%
+% $$Altitude \in \left[ 5,000~ft,10,000~ft, 15,000~ft\right]$$
+%
+% The set of gridded parameter values $P$ consists of 12 points arranged in 
+% a 4x3 grid defined as follows:
+%
+% $$P = \left [Mach,altitute \right] \in
+%  \left[ 0.5, 0.6, 0.7, 0.8 \right] \times
+%  \left[ 5,000~ft,10,000~ft, 15,000~ft\right]$$
+% 
+% This grid can be defined as an |rgrid| object in LPVTools using the 
+% following commands:
+
+Mach = [0.5:0.1:0.8];
+Altitude = [5000:5000:15000];
+P = rgrid({'Mach','Altitude'},{Mach,Altitude})
+
+%% Trimming in MATLAB/Simulink
+%
+% Once a desired grid of parameter values, $P$, has been chosen. The 
+% nonlinear simulation model will need to be trimmed and linearized at each 
+% grid point. 
+% 
+% The process of trimming a Simulink model relies on the following
+% proceedures and MATLAB commands:
+%
+% * Start by manually adding the desired model input/output points to the
+% relevant signal lines in the Simulink model (see the help for 
+% <matlab:doc('getlinio') |getlinio|> for details). Then use 
+% <matlab:doc('getlinio') |getlinio|> to 
+% create a object that describes the input/output points of the desired 
+% linearized model. 
+% * Use <matlab:doc('operspec') |operspec|> to grab the operating point
+% specification of the Simulink model. The resulting object contains fields
+% for each input/output point and state in the Simulink model. 
+% * Loop through the parameter grid, $P$, and at each point: (1) Configure the
+% <matlab:doc('operspec') |operspec|> object to specify the desired trim
+% point (i.e. set bounds on inputs, outputs, states, and their
+% derivatives). (2) Use <matlab:doc('findop') |findop|> to trim the
+% Simulink model at the desired grid point. The process is shown
+% graphically in Figure 1.
+% 
+%
+% <<trim.png>>
+% 
+% _Figure 1: Trimming a Simulink model._
+%
+%% Linearization in MATLAB/Simulink
+%
+% Once a valid trim point has been created for each point in the parameter
+% grid $P$. The function <matlab:doc('linearize') |linearize|> is used to
+% derive a linearized model at each point. The process is shown in Figure 2.
+% Care must be taken that the linearized models that are being generated 
+% share a 
+% <..\..\..\Concepts\StateConsistency\html\StateConsistency.html consistent>
+% input, output, and state vector. The resulting array of state-space 
+% models can be combined with an |rgrid| object that described the parameter 
+% grid $P$ to form a grid-based LPV model. Refer to 
+% <..\..\..\GettingStarted\MiniTutorials\Grid_Modeling\html\Grid_Modeling.html 
+% the grid-based LPV modeling tutorial>
+% for details on how a grid-based LPV model is assembled out of state-space 
+% model data.
+%
+% 
+% <<linearize.png>>
+% 
+% _Figure 2: Linearizing a Simulink model on a grid of parameter values._
+
+##### SOURCE END #####
+--></body></html>

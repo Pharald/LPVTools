@@ -1,0 +1,501 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Worst-Case Gain Analysis of LPV System</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-04-19"><meta name="DC.source" content="WCGAIN.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Worst-Case Gain Analysis of LPV System</h1><!--introduction--><p>The following example is originally from [1], and was posed as an LPV analysis problem in [2].</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">An uncertain parameter dependent system</a></li><li><a href="#2">Construct LPV system</a></li><li><a href="#3">Worst case analysis without rate-bounds</a></li><li><a href="#7">Worst-case analysis with rate-bounds</a></li><li><a href="#15">References:</a></li></ul></div><h2>An uncertain parameter dependent system<a name="1"></a></h2><p>Consider a first order parameter dependent system <img src="WCGAIN_eq00171321353201330515.png" alt="$G(\rho)$">:</p><p><img src="WCGAIN_eq07424342983765057880.png" alt="$$\begin{array}{l@{}l}&#xA; \dot{x}_G &{}= -\frac{1}{\tau(\rho)}x_G +\frac{1}{\tau(\rho)}u_G \\&#xA; y &{}= K(\rho)x_G&#xA;\end{array} \ \ \ \ \ \ \ (1)$$"></p><p>where the elements <img src="WCGAIN_eq17980209502872100955.png" alt="$\tau(rho)$"> and <img src="WCGAIN_eq06896535308299427086.png" alt="$K(\rho)$"> are dependent on the parameter <img src="WCGAIN_eq11905270608999804013.png" alt="$\rho$"> as follows:</p><p><img src="WCGAIN_eq09130915348206003139.png" alt="$$&#xA;\tau(\rho) = \sqrt{133.6-16.8\rho}&#xA;\ \ \ \ \ \ \ (3)$$"></p><p><img src="WCGAIN_eq15501575017066955922.png" alt="$$&#xA;K(\rho)= \sqrt{4.8\rho-8.6}&#xA;\ \ \ \ \ \ \ (4)$$"></p><p>The following analysis will study the system when the parameter is restricted to the interval <img src="WCGAIN_eq08131235823372490199.png" alt="$\left[2,7\right]$">. <img src="WCGAIN_eq00171321353201330515.png" alt="$G(\rho)$"> is placed into an interconnection with a time delay <img src="WCGAIN_eq13976494786340160823.png" alt="$T_d =0.5$"> sec, and a multiplicative uncertainty <img src="WCGAIN_eq14413057877136744318.png" alt="$\Delta$">, as shown in Figure 1.</p><p><img vspace="5" hspace="5" src="IC.png" alt=""> </p><p><i>Figure 1: Interconnection for analysis.</i></p><p>The induced <img src="WCGAIN_eq14766676290793252675.png" alt="$L_2$"> norm of the uncertainty is bounded by <img src="WCGAIN_eq16768665532613463564.png" alt="$\|\Delta \|_2 \leq 0.1$">, and the time delay is modeled by a second order Pad&eacute; approximation <img src="WCGAIN_eq03609048974280977453.png" alt="$T_{del}(s)$">:</p><p><img src="WCGAIN_eq12971662362440006240.png" alt="$$ T_{del}(s) = \frac{\frac{(T_d s)^2}{12} - \frac{T_d s}{2} +1}&#xA;{\frac{(T_d s)^2}{12} + \frac{T_d s}{2} +1} \ \ \ \ \ \ \ (5)$$"></p><p>A gain-scheduled Proportional-Integral controller <img src="WCGAIN_eq14918722436854860137.png" alt="$C_\rho(\rho)$"> has been designed for this system. It is designed to achieve a a closed loop damping <img src="WCGAIN_eq01982342744200803462.png" alt="$\zeta_{cl} = 0.7$"> and a closed loop frequency of <img src="WCGAIN_eq00947034945053222016.png" alt="$\omega_{cl} = 0.25$"> at each point in the domain. The controller <img src="WCGAIN_eq13488926980497820203.png" alt="$C_\rho$"> has the followig form:</p><p><img src="WCGAIN_eq02728107915498451869.png" alt="$$\begin{array}{l@{}l}&#xA; \dot{x}_c &{}= K_i(\rho)x_c e \\&#xA; u &{}= x_c + K_p(\rho) e&#xA;\end{array} \ \ \ \ \ \ \ (6)$$"></p><p>where the gains <img src="WCGAIN_eq01238904006029722037.png" alt="$K_i(\rho)$"> and <img src="WCGAIN_eq16823863581487234791.png" alt="$K_p(\rho)$"> are chosen as:</p><p><img src="WCGAIN_eq04125267900684808882.png" alt="$$&#xA;K_p(\rho) = \frac{2 \zeta_{cl} \omega_{cl} \tau(\rho) -1}{K(\rho)}&#xA;\ \ \ \ \ \ \ (7)$$"></p><p><img src="WCGAIN_eq07492619716302164558.png" alt="$$&#xA;K_i(\rho) = \frac{\omega_{cl}^2 \tau(\rho)}{K(\rho)}&#xA;\ \ \ \ \ \ \ (8)$$"></p><p>The analysis problem is to compute the worst-case induced <img src="WCGAIN_eq14766676290793252675.png" alt="$L_2$"> norm from <img src="WCGAIN_eq17615571056258974497.png" alt="$d$"> to <img src="WCGAIN_eq12226254761175012236.png" alt="$e$"> in the interconnection shown in Figure 1.</p><h2>Construct LPV system<a name="2"></a></h2><p>The first step in the analysis is to construct an LPV model that represents the interconnection of systems in Figure 1.</p><pre class="codeinput"><span class="comment">% Define the parameter as a gridded real with 6 evenly space grid points:</span>
+p = pgrid(<span class="string">'p'</span>,2:7);
+
+<span class="comment">% Define the plant</span>
+tau = sqrt(133.6-16.8*p);
+K = sqrt(4.8*p-8.6);
+G = ss(-1/tau,1/tau,K,0);
+
+<span class="comment">% Define the time delay:</span>
+Td = 0.5;
+Tdel = tf([Td^2/12 -Td/2 1],[Td^2/12 Td/2 1]);
+
+<span class="comment">% Define the controller:</span>
+sigma = 0.7;
+wcl = 0.25;
+Kp = (2*sigma*wcl*tau-1)/K;
+Ki = wcl^2*tau/K;
+C = ss(0,Ki,1,Kp);
+
+<span class="comment">% Define the uncertainty:</span>
+Delta= ureal(<span class="string">'Delta'</span>,0,<span class="string">'Range'</span>,[-.1 .1]);
+
+<span class="comment">% Apply a multiplicative uncertainty and time delay to input of plant:</span>
+Plant = G*Tdel*(1+Delta);
+
+<span class="comment">% Form closed-loop interconnection</span>
+systemnames = <span class="string">'C Plant'</span>;
+inputvar = <span class="string">'[d]'</span>;
+outputvar = <span class="string">'[d-Plant]'</span>;
+input_to_Plant = <span class="string">'[C]'</span>;
+input_to_C = <span class="string">'[d-Plant]'</span>;
+CL = sysic
+</pre><pre class="codeoutput">UPSS with 4 States, 1 Outputs, 1 Inputs, Continuous System.            
+The UPSS consists of the following blocks:                             
+  p: Gridded real, 6 points in [2,7], rate bounds [-Inf,Inf].          
+  Delta: Uncertain real, nominal = 0, range = [-0.1,0.1], 1 occurrences
+</pre><h2>Worst case analysis without rate-bounds<a name="3"></a></h2><pre class="codeinput"><span class="comment">% Lets compute the worst-case induced $L_2$ norm of the closed-loop</span>
+<span class="comment">% interconnection |CL|. We will use the function |lpvwcgain| to achieve this.</span>
+<span class="comment">% First, we will compute the norm when we assume that there are no bounds</span>
+<span class="comment">% on the parameter rate ($\dot{\rho}$):</span>
+
+GAM = lpvwcgain(CL)
+</pre><pre class="codeoutput">GAM =
+   63.8659
+</pre><p>The worst-case induced <img src="WCGAIN_eq14766676290793252675.png" alt="$L_2$"> norm of the closed-loop interconnection is 63.87. This means that for all norm bounded uncertainties <img src="WCGAIN_eq06864771342474860068.png" alt="$\|\Delta\| \leq 0.1$">, and all norm bounded inputs <img src="WCGAIN_eq01138378030003152841.png" alt="$\|d\|_2 \leq 1$">, and all parameter trajectories such that <img src="WCGAIN_eq16488370337921203980.png" alt="$2 \leq \rho(t) \leq 7$">, the induced <img src="WCGAIN_eq14766676290793252675.png" alt="$L_2$"> norm of the output <img src="WCGAIN_eq12226254761175012236.png" alt="$e$"> is guaranteed to be no larger than 63.87. This is an upper bound.</p><p>To arrive at a lower bound, we can compute the largest worst-case norm of the Linear Time-Invariant (LTI) systems at each frozen parameter value, insert the value of the correspondig worst-case uncertainty into the LPV interconnection in <tt>CL</tt>, and compute the induced <img src="WCGAIN_eq14766676290793252675.png" alt="$L_2$"> norm of the resulting nominal (no uncertainty) LPV system using <tt>lpvnorm</tt>:</p><pre class="codeinput"><span class="comment">% Compute the worst-case induced $L_2$ norm of the LTI systems</span>
+<span class="comment">% corresponding to each grid point of p:</span>
+[WCG,WCU,INFO] = wcgain(CL);
+
+<span class="comment">% Identify and extract the worst-case uncertainty:</span>
+[V,I]=lpvmax(WCG.LowerBound,<span class="string">'p'</span>);
+wc_delta = WCU.index(<span class="string">'p'</span>,6);
+wc_delta = wc_delta.Delta
+</pre><pre class="codeoutput">wc_delta =
+    0.1000
+</pre><p>Reform the interconnection in Figure 1, using the worst-case multiplicative uncertainty:</p><pre class="codeinput"><span class="comment">% Apply a multiplicative uncertainty and time delay to input of plant:</span>
+wc_Plant = G*Tdel*(1+wc_delta);
+
+<span class="comment">% Form closed-loop interconnection</span>
+systemnames = <span class="string">'C wc_Plant'</span>;
+inputvar = <span class="string">'[d]'</span>;
+outputvar = <span class="string">'[d-wc_Plant]'</span>;
+input_to_wc_Plant = <span class="string">'[C]'</span>;
+input_to_C = <span class="string">'[d-wc_Plant]'</span>;
+wc_CL = sysic;
+
+<span class="comment">% Compute the induced L2 norm of the nominal (no uncertainty) LPV system</span>
+<span class="comment">% wc_CL:</span>
+[Gamma,X] = lpvnorm(wc_CL);
+Gamma
+</pre><pre class="codeoutput">Gamma =
+   20.1476
+</pre><p>The results indicate that the worst-case induced <img src="WCGAIN_eq14766676290793252675.png" alt="$L_2$"> norm of <tt>CL</tt> lies between 20.1476 and 63.8659.</p><h2>Worst-case analysis with rate-bounds<a name="7"></a></h2><p>Lets assume that the parameter can not change arbitrarily fast with time, that it is rate-bounded: <img src="WCGAIN_eq04919561180582830298.png" alt="$\|\dot{rho}\| \leq 0.1$">. In this case the previous result is conservative, because it assumes that there is no limit to how fast the parameter can change with time. A more accurate results can be achived if we take into account the rate-bound on the parameter. To do this we again use <tt>lpvwcgain</tt>, but now the rate-bounded analysis requires parameter dependent basis functions to compute the induced <img src="WCGAIN_eq14766676290793252675.png" alt="$L_2$"> norm (the reason that these basis functions are needed can be found in <a href="..\..\..\Concepts\StabilityAndInducedGain\html\StabilityAndInducedGain.html">a description of the LPV analysis conditions,</a> elsewhere in this manual</p><p><tt>basis</tt> objects are used to represent basis functions in LPVTools. There are no firm rules about the choice of basis functions, but a good rule of thumb is to keep them as simple as possible, due to the added computational burden associated with each independent basis function that is added. For this example we will compare results for a set of four basis functions <img src="WCGAIN_eq17512871745956524775.png" alt="$f_1(\rho)$">, <img src="WCGAIN_eq06827374898641300238.png" alt="$f_2(\rho)$">, <img src="WCGAIN_eq06317564089364739870.png" alt="$f_3(\rho$">, and <img src="WCGAIN_eq09305408853107354098.png" alt="$f_4(\rho)$">: * Set 1: <img src="WCGAIN_eq11557482335841583995.png" alt="$f_1(\rho) = [1,\rho]$"> * Set 2: <img src="WCGAIN_eq11542585528473042585.png" alt="$f_2(\rho) = [1,\rho,\rho^2]$"> * Set 3: <img src="WCGAIN_eq10256972857231949120.png" alt="$f_3(\rho) = [1,\rho,\rho^2,\frac{1}{\rho}]$"> * Set 4: <img src="WCGAIN_eq02459888032098416398.png" alt="$f_4(\rho) = [1,\rho,\rho^2,\frac{1}{\rho},\sqrt{\rho}]$"></p><p>We will not repeat the previous analysis and compute the worst-case induced <img src="WCGAIN_eq14766676290793252675.png" alt="$L_2$"> norm of the closed-loop interconnection <tt>CL</tt>, while taking into accound the parameter's rate bound <img src="WCGAIN_eq04919561180582830298.png" alt="$\|\dot{rho}\| \leq 0.1$">:</p><pre class="codeinput"><span class="comment">% Change the rate-bounds of p in the closed-loop interconnection:</span>
+rb = 0.1;
+CLrb = CL;
+CLrb.Parameter.p.RateBounds = [-rb rb];
+
+<span class="comment">% Define three basis objects: b0 = 1, b1 = p, and b2 = sqrt(p).</span>
+<span class="comment">% The first argument to |basis| is the value of the basis function at each</span>
+<span class="comment">% grid point. The second argument is the value of the partial derivative of</span>
+<span class="comment">% the basis function with respect to the parameter:</span>
+b0 = basis(1,0);
+b1 = basis(p,1);
+b2 = basis(sqrt(p),1/(2*sqrt(p)));
+</pre><p>Start by computing the worst-case induced <img src="WCGAIN_eq14766676290793252675.png" alt="$L_2$"> norm of the closed-loop interconnection <tt>CL</tt> using the set of basis functions: <img src="WCGAIN_eq11557482335841583995.png" alt="$f_1(\rho) = [1,\rho]$"></p><pre class="codeinput"><span class="comment">% Define set of basis functions:</span>
+basis1 = [b0,b1];
+<span class="comment">% Perform rate-bounded worst-case LPV analysis:</span>
+GAM = lpvwcgain(CLrb,basis1)
+</pre><pre class="codeoutput">GAM =
+    3.0906
+</pre><p>Repeat the analysis with basis functions: <img src="WCGAIN_eq12940726123100419958.png" alt="$f_2(\rho) =[1,\rho,\rho^2]$">, <img src="WCGAIN_eq10256972857231949120.png" alt="$f_3(\rho) = [1,\rho,\rho^2,\frac{1}{\rho}]$">, and <img src="WCGAIN_eq02459888032098416398.png" alt="$f_4(\rho) = [1,\rho,\rho^2,\frac{1}{\rho},\sqrt{\rho}]$"></p><pre class="codeinput">basis2 = [b0,b1,b1^2];
+GAM = lpvwcgain(CLrb,basis2)
+</pre><pre class="codeoutput">GAM =
+    2.0080
+</pre><pre class="codeinput">basis3 = [b0,b1,b1^2,1/b1];
+GAM = lpvwcgain(CLrb,basis3)
+</pre><pre class="codeoutput">GAM =
+    1.9363
+</pre><pre class="codeinput">basis4 = [b0,b1,b1^2,1/b1,b2];
+GAM = lpvwcgain(CLrb,basis4)
+</pre><pre class="codeoutput">GAM =
+    1.8925
+</pre><p>The rate-bounded analysis results in a far lower worst-case norm. Clearly it is important to take into account the permissible parameter rate of variation. The upper bound on the worst-case norm appears to converge close to 1.89.</p><p>Adding terms to the basis function improves the bound on the worst-case norm. In this example, the effect is drastic when going from a simple linear basis function to a quadratic basis function, but modest when more complicated terms are added.</p><p>The result computed by <tt>lpvwcgain</tt> is only an upper bound. We can repeat the process we used before to arrive at a lower bound:</p><pre class="codeinput"><span class="comment">% Compute the worst-case induced $L_2$ norm of the LTI systems</span>
+<span class="comment">% corresponding to each grid point of p:</span>
+[WCG,WCU,INFO] = wcgain(CL);
+
+<span class="comment">% Identify and extract the worst-case uncertainty:</span>
+[V,I]=lpvmax(WCG.LowerBound,<span class="string">'p'</span>);
+wc_delta = WCU.index(<span class="string">'p'</span>,6);
+wc_delta = wc_delta.Delta
+</pre><pre class="codeoutput">wc_delta =
+    0.1000
+</pre><p>Reform the interconnection in Figure 1, using the worst-case multiplicative uncertainty:</p><pre class="codeinput"><span class="comment">% Apply a multiplicative uncertainty and time delay to input of plant:</span>
+wc_Plant = G*Tdel*(1+wc_delta);
+
+<span class="comment">% Form closed-loop interconnection</span>
+systemnames = <span class="string">'C wc_Plant'</span>;
+inputvar = <span class="string">'[d]'</span>;
+outputvar = <span class="string">'[d-wc_Plant]'</span>;
+input_to_wc_Plant = <span class="string">'[C]'</span>;
+input_to_C = <span class="string">'[d-wc_Plant]'</span>;
+wc_CLrb = sysic;
+
+<span class="comment">% Set rate-bound:</span>
+wc_CLrb.Parameter.p.RateBounds = [-rb rb];
+
+<span class="comment">% Compute the induced L2 norm of the nominal (no uncertainty) LPV system</span>
+<span class="comment">% wc_CL:</span>
+[Gamma,X] = lpvnorm(wc_CLrb,basis4);
+Gamma
+</pre><pre class="codeoutput">Gamma =
+    1.2968
+</pre><p>The worst-case induced <img src="WCGAIN_eq14766676290793252675.png" alt="$L_2$"> norm lies somewhere between 1.2968 and 1.8925.</p><h2>References:<a name="15"></a></h2><div><ol><li>S. Tan, C. C. Hang, and J. S. Chai, &#8220;Gain scheduling from conventional to neuro-fuzzy,&#8221; <i>Automatica</i>, Vol. 33, pp. 411&#8211;419, 1997.</li><li>H. Pfifer and P. Seiler, &#8220;Robustness analysis of linear parameter varying systems using integral quadratic constraints,&#8221; in <i>American Control Conference</i>, 2014.</li></ol></div><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Worst-Case Gain Analysis of LPV System
+%
+% The following example is originally from [1], and was posed as an LPV analysis 
+% problem in [2]. 
+% 
+%% An uncertain parameter dependent system
+% 
+% Consider a first order parameter dependent system $G(\rho)$:
+% 
+% $$\begin{array}{l@{}l}
+%  \dot{x}_G &{}= -\frac{1}{\tau(\rho)}x_G +\frac{1}{\tau(\rho)}u_G \\
+%  y &{}= K(\rho)x_G 
+% \end{array} \ \ \ \ \ \ \ (1)$$
+%
+% where the elements $\tau(rho)$ and $K(\rho)$ are dependent on the
+% parameter $\rho$ as follows:
+%
+% $$
+% \tau(\rho) = \sqrt{133.6-16.8\rho} 
+% \ \ \ \ \ \ \ (3)$$
+%
+% $$
+% K(\rho)= \sqrt{4.8\rho-8.6}
+% \ \ \ \ \ \ \ (4)$$
+% 
+% The following analysis will study the system when the parameter is 
+% restricted to the interval $\left[2,7\right]$.
+% $G(\rho)$ is placed into an interconnection with a time delay
+% $T_d =0.5$ sec, and a multiplicative uncertainty $\Delta$, as shown in Figure 1. 
+% 
+% <<IC.png>>
+%
+% _Figure 1: Interconnection for analysis._
+% 
+% The induced $L_2$ norm of the uncertainty is bounded by
+% $\|\Delta \|_2 \leq 0.1$, and the time delay is modeled by a 
+% second order Padé approximation $T_{del}(s)$:
+% 
+% $$ T_{del}(s) = \frac{\frac{(T_d s)^2}{12} - \frac{T_d s}{2} +1}
+% {\frac{(T_d s)^2}{12} + \frac{T_d s}{2} +1} \ \ \ \ \ \ \ (5)$$
+% 
+% 
+% A gain-scheduled Proportional-Integral controller $C_\rho(\rho)$ 
+% has been designed for this system. It is designed to achieve a 
+% a closed loop damping $\zeta_{cl} = 0.7$ and a closed
+% loop frequency of $\omega_{cl} = 0.25$ at each point in the domain.
+% The controller $C_\rho$ has the followig form:
+% 
+% $$\begin{array}{l@{}l}
+%  \dot{x}_c &{}= K_i(\rho)x_c e \\
+%  u &{}= x_c + K_p(\rho) e 
+% \end{array} \ \ \ \ \ \ \ (6)$$
+%
+% where the gains $K_i(\rho)$ and $K_p(\rho)$ are chosen as:
+% 
+% $$
+% K_p(\rho) = \frac{2 \zeta_{cl} \omega_{cl} \tau(\rho) -1}{K(\rho)} 
+% \ \ \ \ \ \ \ (7)$$
+% 
+% $$
+% K_i(\rho) = \frac{\omega_{cl}^2 \tau(\rho)}{K(\rho)}
+% \ \ \ \ \ \ \ (8)$$
+%
+% 
+% The analysis problem is to compute the worst-case
+% induced $L_2$ norm from $d$ to $e$ in the interconnection shown in 
+% Figure 1. 
+
+%% Construct LPV system
+% 
+% The first step in the analysis is to construct an LPV model that
+% represents the interconnection of systems in Figure 1.
+
+% Define the parameter as a gridded real with 6 evenly space grid points:
+p = pgrid('p',2:7);
+
+% Define the plant
+tau = sqrt(133.6-16.8*p);
+K = sqrt(4.8*p-8.6);
+G = ss(-1/tau,1/tau,K,0);
+
+% Define the time delay:
+Td = 0.5;
+Tdel = tf([Td^2/12 -Td/2 1],[Td^2/12 Td/2 1]);
+
+% Define the controller:
+sigma = 0.7;
+wcl = 0.25;
+Kp = (2*sigma*wcl*tau-1)/K;
+Ki = wcl^2*tau/K;
+C = ss(0,Ki,1,Kp);
+
+% Define the uncertainty:
+Delta= ureal('Delta',0,'Range',[-.1 .1]);
+
+% Apply a multiplicative uncertainty and time delay to input of plant:
+Plant = G*Tdel*(1+Delta);
+
+% Form closed-loop interconnection
+systemnames = 'C Plant';
+inputvar = '[d]';
+outputvar = '[d-Plant]';
+input_to_Plant = '[C]';
+input_to_C = '[d-Plant]';
+CL = sysic
+
+
+%% Worst case analysis without rate-bounds
+
+% Lets compute the worst-case induced $L_2$ norm of the closed-loop
+% interconnection |CL|. We will use the function |lpvwcgain| to achieve this.
+% First, we will compute the norm when we assume that there are no bounds 
+% on the parameter rate ($\dot{\rho}$):
+
+GAM = lpvwcgain(CL)
+
+%% 
+% The worst-case induced $L_2$ norm of the closed-loop interconnection is 
+% 63.87. This means that for all norm bounded 
+% uncertainties $\|\Delta\| \leq 0.1$, and all norm bounded 
+% inputs $\|d\|_2 \leq 1$, and all parameter trajectories such that $2 \leq
+% \rho(t) \leq 7$, the induced $L_2$ norm of the output $e$ is guaranteed 
+% to be no larger than 63.87. This is an upper bound. 
+% 
+% To arrive at a lower
+% bound, we can compute the largest worst-case norm of the 
+% Linear Time-Invariant (LTI) systems at each frozen parameter value,
+% insert the value of the correspondig worst-case uncertainty 
+% into the LPV interconnection in |CL|, and compute the 
+% induced $L_2$ norm of the resulting nominal (no uncertainty) LPV system
+% using |lpvnorm|:
+
+% Compute the worst-case induced $L_2$ norm of the LTI systems
+% corresponding to each grid point of p:
+[WCG,WCU,INFO] = wcgain(CL);
+
+% Identify and extract the worst-case uncertainty:
+[V,I]=lpvmax(WCG.LowerBound,'p');
+wc_delta = WCU.index('p',6);
+wc_delta = wc_delta.Delta
+
+%% 
+% Reform the interconnection in Figure 1, using the worst-case 
+% multiplicative uncertainty:
+
+% Apply a multiplicative uncertainty and time delay to input of plant:
+wc_Plant = G*Tdel*(1+wc_delta);
+
+% Form closed-loop interconnection
+systemnames = 'C wc_Plant';
+inputvar = '[d]';
+outputvar = '[d-wc_Plant]';
+input_to_wc_Plant = '[C]';
+input_to_C = '[d-wc_Plant]';
+wc_CL = sysic;
+
+% Compute the induced L2 norm of the nominal (no uncertainty) LPV system
+% wc_CL:
+[Gamma,X] = lpvnorm(wc_CL);
+Gamma
+
+%%
+% The results indicate that the worst-case induced $L_2$ norm of |CL| lies
+% between 20.1476 and 63.8659.
+
+
+%% Worst-case analysis with rate-bounds
+%
+% Lets assume that the parameter can not change arbitrarily fast with time,
+% that it is rate-bounded: $\|\dot{rho}\| \leq 0.1$.
+% In this case the previous result is conservative, because it assumes 
+% that there is no limit to how fast the parameter can change with time. 
+% A more accurate results can be achived if we take into account the
+% rate-bound on the parameter. To do this we again use |lpvwcgain|, but now 
+% the rate-bounded analysis requires parameter dependent basis functions to
+% compute the induced $L_2$ norm (the reason that these basis functions are
+% needed can be found in 
+% <..\..\..\Concepts\StabilityAndInducedGain\html\StabilityAndInducedGain.html 
+% a description of the LPV analysis conditions,> elsewhere in this manual
+% 
+% |basis| objects are used to represent basis functions in LPVTools. There
+% are no firm rules about the choice of basis functions, but a good rule of
+% thumb is to keep them as simple as possible, due to the added 
+% computational burden associated with each independent basis function 
+% that is added. For this example we will compare results for a set of four
+% basis functions $f_1(\rho)$, $f_2(\rho)$, $f_3(\rho$, and $f_4(\rho)$:
+% * Set 1: $f_1(\rho) = [1,\rho]$
+% * Set 2: $f_2(\rho) = [1,\rho,\rho^2]$
+% * Set 3: $f_3(\rho) = [1,\rho,\rho^2,\frac{1}{\rho}]$
+% * Set 4: $f_4(\rho) = [1,\rho,\rho^2,\frac{1}{\rho},\sqrt{\rho}]$
+% 
+% We will not repeat the previous analysis and compute the worst-case 
+% induced $L_2$ norm of the closed-loop interconnection |CL|, while taking
+% into accound the parameter's rate bound $\|\dot{rho}\| \leq 0.1$:
+
+
+% Change the rate-bounds of p in the closed-loop interconnection:
+rb = 0.1;
+CLrb = CL;
+CLrb.Parameter.p.RateBounds = [-rb rb];
+
+% Define three basis objects: b0 = 1, b1 = p, and b2 = sqrt(p).
+% The first argument to |basis| is the value of the basis function at each
+% grid point. The second argument is the value of the partial derivative of
+% the basis function with respect to the parameter:
+b0 = basis(1,0);
+b1 = basis(p,1);
+b2 = basis(sqrt(p),1/(2*sqrt(p)));
+
+
+%% 
+% Start by computing the worst-case 
+% induced $L_2$ norm of the closed-loop interconnection |CL| using the
+% set of basis functions: $f_1(\rho) = [1,\rho]$ 
+
+% Define set of basis functions:
+basis1 = [b0,b1];
+% Perform rate-bounded worst-case LPV analysis:
+GAM = lpvwcgain(CLrb,basis1)
+
+%%
+% Repeat the analysis with basis functions: $f_2(\rho) =[1,\rho,\rho^2]$, 
+% $f_3(\rho) = [1,\rho,\rho^2,\frac{1}{\rho}]$, and 
+% $f_4(\rho) = [1,\rho,\rho^2,\frac{1}{\rho},\sqrt{\rho}]$
+
+basis2 = [b0,b1,b1^2];
+GAM = lpvwcgain(CLrb,basis2)
+
+%%
+basis3 = [b0,b1,b1^2,1/b1];
+GAM = lpvwcgain(CLrb,basis3)
+
+%%
+basis4 = [b0,b1,b1^2,1/b1,b2];
+GAM = lpvwcgain(CLrb,basis4)
+
+%% 
+% The rate-bounded analysis results in a far lower worst-case norm. Clearly
+% it is important to take into account the permissible parameter rate of
+% variation. The upper bound on the worst-case norm appears to converge 
+% close to 1.89.
+% 
+% Adding terms to the basis function improves the bound on the worst-case
+% norm. In this example, the effect is drastic when going from a simple
+% linear basis function to a quadratic basis function, but modest when more
+% complicated terms are added.
+% 
+% 
+% The result computed by |lpvwcgain| is only an upper bound. We can 
+% repeat the process we used before to arrive at a lower bound:
+
+% Compute the worst-case induced $L_2$ norm of the LTI systems
+% corresponding to each grid point of p:
+[WCG,WCU,INFO] = wcgain(CL);
+
+% Identify and extract the worst-case uncertainty:
+[V,I]=lpvmax(WCG.LowerBound,'p');
+wc_delta = WCU.index('p',6);
+wc_delta = wc_delta.Delta
+
+%%
+% Reform the interconnection in Figure 1, using the worst-case 
+% multiplicative uncertainty:
+
+% Apply a multiplicative uncertainty and time delay to input of plant:
+wc_Plant = G*Tdel*(1+wc_delta);
+
+% Form closed-loop interconnection
+systemnames = 'C wc_Plant';
+inputvar = '[d]';
+outputvar = '[d-wc_Plant]';
+input_to_wc_Plant = '[C]';
+input_to_C = '[d-wc_Plant]';
+wc_CLrb = sysic;
+
+% Set rate-bound:
+wc_CLrb.Parameter.p.RateBounds = [-rb rb];
+
+% Compute the induced L2 norm of the nominal (no uncertainty) LPV system
+% wc_CL:
+[Gamma,X] = lpvnorm(wc_CLrb,basis4);
+Gamma
+
+%% 
+% The worst-case induced $L_2$ norm lies somewhere between 1.2968 and
+% 1.8925. 
+
+
+%% References:
+%
+% # S. Tan, C. C. Hang, and J. S. Chai, “Gain scheduling from conventional
+% to neuro-fuzzy,” _Automatica_, Vol. 33, pp. 411–419, 1997.
+% # H. Pfifer and P. Seiler, “Robustness analysis of linear parameter
+% varying systems using integral quadratic constraints,” in _American
+% Control Conference_, 2014.
+
+
+
+##### SOURCE END #####
+--></body></html>
