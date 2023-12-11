@@ -35,7 +35,7 @@ function [F,Gamma,Info] = lpvsfsyn(P,ncont,Xb,alg,opt)
 % XXX Check later
 % XXX OPT is not being used.
 nin = nargin;
-narginchk(2, 4)
+narginchk(2, 5)
 nout = nargout;
 if nin==2
     opt = lpvsynOptions;

@@ -103,7 +103,7 @@ ginvI = lmivar(3,ndec*eye(nd));
 
 if isequal(Method,'MaxFeas')
     % LBC is lower bound on X
-    [LBC,ndec] = lmivar(1,[nX 0]);
+    [LBC,ndec] = lmivar(1,[nx 0]);
 end
 
 % LMI for Dissipation Inequality - Loop through array of models
@@ -154,7 +154,7 @@ for k1 = 1:nmod
     if ratebndflg || k1 == 1
         % xpdlow*I < X < xpdupp*I
         if opt.Xlb > 0 
-            xpdlow = opt.Xlv;
+            xpdlow = opt.Xlb;
         else
             xpdlow = 1e-6;
         end
@@ -215,7 +215,7 @@ elseif isequal(opt.Solver,'lmilab')
     %LMIopt(1) = 1/(gmax-gmin); % Tol setting in old code
     if isequal(Method,'MaxFeas')
         LMIopt(2) = 50;   % Max # of iters for MaxFeas problem
-    elseif RateBndFlag
+    elseif ratebndflg
         %LMIopt(2) = 600;  % Setting in old LPVOFSYN1
         LMIopt(2) = 350;  % Max # of iters for rate bounded syn
     else
@@ -244,7 +244,7 @@ if ~isequal(opt.Solver,'lmilab')
 end
 
 [copt,xopt] = mincx(lmisys,c,LMIopt,x0);
-gam = 1/xopt(end);
+gam = 1/dec2mat(lmisys,xopt,ginv);
 info = [];
 
 % Handle Infeasible LMI Case
@@ -258,10 +258,11 @@ else
         opt2 = opt;
         opt2.Method = 'MaxFeas';
         opt2.Gammaub = opt.BackOffFactor*gam;
-        info1 = struct('xopt',xopt,'copt',copt,'lmisys',lmisys,'X',X,'Y',Y);
+        opt2.SolverInit = [xopt;0];
+        info1 = struct('xopt',xopt,'copt',copt,'lmisys',lmisys,'X',X);
         gam1 = gam;
-        [F,gam,info2] = lpvsyn(sys,nmeas,ncont,Xb,Yb,opt2);
-        info = struct('MinGamma',Gamma1,'Stage1Info',info1,'Stage2Info',info2);
+        [F,gam,info2] = lpvL2sfsynengine(G,nu,Fbasis,Fgrad,RateBounds,opt2);
+        info = struct('MinGamma',gam1,'Stage1Info',info1,'Stage2Info',info2);
 
     else
         % Controller reconstruction
@@ -286,6 +287,8 @@ else
             % Undo orthog transformation
             F(:,:,k1) = r2inv(:,:,k1)*F(:,:,k1);
         end
+        info = struct('xopt',xopt,'copt',copt,'lmisys',lmisys);
+
     end
 end
    
