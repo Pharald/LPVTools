@@ -18,7 +18,7 @@ LPVTools requires MATLAB®, Simulink®, the Control System Toolbox®, and the Ro
 To add LPVTools to MATLAB path run the addlpv script
 
 ## Support
-For any suggestions on future enhancement or nice to have features of these tools and reporting bugs, please email Harald Pfifer (harald.pfifer@tu-dresden.de)
+For any suggestions on future enhancement or nice to have features of these tools and reporting bugs, please email Harald Pfifer (harald.pfifer@tu-dresden.de) or Emily Burgin (emily.burgin@tu-dresden.de)
 
 ## Authors and acknowledgment
 
