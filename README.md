@@ -24,7 +24,7 @@ For any suggestions on future enhancement or nice to have features of these tool
 
 Current Developers: Harald Pfifer, Emily Burgin
 
-The toolbox has been originally developed by G. Balas, A. Hjartarson, A. Packard, and P. Seiler. We are grateful for them to allow us taking over working on this tools.
+The toolbox has been originally developed by G. Balas, A. Hjartarson, A. Packard, and P. Seiler. We are grateful for them to allow us taking over working on these tools.
 
 ## License
 GNU Affero General Public License v3.0
