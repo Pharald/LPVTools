@@ -26,6 +26,9 @@ Current Developers: Harald Pfifer, Emily Burgin
 
 The toolbox has been originally developed by G. Balas, A. Hjartarson, A. Packard, and P. Seiler. We are grateful for them to allow us taking over working on these tools.
 
+## Donation
+Gary Balas passed away on November 12, 2014. If you like the toolbox then please consider donating to the [Gary Balas Memorial Fund](https://makingagift.umn.edu/give/fund.html?fundCode=20671&desc_source=UWXXCSEBALAS).
+
 ## License
 GNU Affero General Public License v3.0
 
