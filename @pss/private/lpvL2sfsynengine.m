@@ -19,7 +19,6 @@
 
 % XXX Currently no error checking. The file assumes that all dimensions
 % are compatible.
-% XXX Add options object to pass through solver options
 
 function [F,gam,info] = lpvL2sfsynengine(G,nu,Fbasis,Fgrad,RateBounds,opt)
 

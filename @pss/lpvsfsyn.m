@@ -99,7 +99,7 @@ if strcmpi(alg,'L2')
     % The options are only used for L2 synthesis at the moment
 elseif strcmpi(alg,'LQG')
     % Run the Stochastic synthesis engine:
-    [F,Gamma,Info] = lpvLQGsfsynengine(Pdata,ncont,Fbasis,Fgrad,RateBounds);
+    [F,Gamma,Info] = lpvLQGsfsynengine(Pdata,ncont,Fbasis,Fgrad,RateBounds,opt);
 end
 
 

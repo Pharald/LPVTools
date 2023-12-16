@@ -1,4 +1,4 @@
-% function [F,GAM,INFO] = lpvLQGsfsynengine(G,ncont,Fbasis,Fgrad,RateBounds)
+% function [F,GAM,INFO] = lpvLQGsfsynengine(G,ncont,Fbasis,Fgrad,RateBounds,Opt)
 %
 % Engine to synthesize a state-feedback controller for grid-based
 % LPV systems.
@@ -10,6 +10,7 @@
 % Fgrad: Gradient of the basis functions wrt. the parameters:
 %        Nbasis-by-Nparameters-by-nmod
 % RateBounds: Upper and lower bounds on the parameter rates: Nparameter-by-2
+% Opt: LPVSYNOPTIONS object
 %
 % OUTPUTS
 % F: nu-by-nx-nmod array of state feedback gains
@@ -18,10 +19,12 @@
 
 % XXX Currently no error checking. The file assumes that all dimensions
 % are compatible.
-% XXX Add options object to pass through solver options
+% XXX Currently no suboptimal synthesis
 
-function [F,gam,Info] = lpvLQGsfsynengine(G,nu,Fbasis,Fgrad,RateBounds)
+function [F,gam,Info] = lpvLQGsfsynengine(G,nu,Fbasis,Fgrad,RateBounds,opt)
 
+% Parse Input
+Method = opt.Method;
 
 % Dimensions
 G = G(:,:,:);
@@ -90,6 +93,8 @@ X = zeros(nbasis,1);
 for i1 = 1:nbasis
     X(i1) = lmivar(1,[nx 1]);
 end
+
+
 [Z,ndec,Zdec] = lmivar(1,[nd 1]);
 
 % LMI for Dissipation Inequality - Loop through array of models
@@ -136,8 +141,15 @@ for k1 = 1:nmod
     end
     
     if ratebndflg || k1 == 1
-        % xpdlow*I < X < xpdupp*I
-        xpdlow = 1e-6;
+         % xpdlow*I < [X, B1k; B1k' Z] 
+         % HP 15/12/2023: no upper bound included. Need to check if this is
+         % useful.
+        if opt.Xlb > 0
+            xpdlow = opt.Xlb;
+        else
+            xpdlow = 1e-6;
+        end
+
         lmiterm([cnt 1 1 0],xpdlow*eye(nx));
         lmiterm([cnt 2 2 0],xpdlow*eye(nd));
         for k=1:nbasis
@@ -146,17 +158,51 @@ for k1 = 1:nmod
         lmiterm([-cnt 1 2 0],B1k);
         lmiterm([-cnt 2 2 Z],1,1);
         cnt = cnt+1;
+
+
     end
 end
 
-% Create objective function: min gam
+% Create objective function: min gam = trace(Z)
 cobj = zeros(ndec,1);
 cobj(diag(Zdec)) = 1;
 
 % Solve LMI
 lmisys = getlmis;
-opt = [0 0 0 0 1];
-[copt,xopt] = mincx(lmisys,cobj,opt);
+
+% Get LMI Options
+if ~isempty(opt.SolverOptions)
+    LMIopt = opt.SolverOptions;
+elseif isequal(opt.Solver,'lmilab')
+    % Default settings for LMI Lab
+    LMIopt = zeros(5,1);
+    %LMIopt(1) = 1/(gmax-gmin); % Tol setting in old code
+    if isequal(Method,'MaxFeas')
+        LMIopt(2) = 50;   % Max # of iters for MaxFeas problem
+    elseif ratebndflg
+        %LMIopt(2) = 600;  % Setting in old LPVOFSYN1
+        LMIopt(2) = 350;  % Max # of iters for rate bounded syn
+    else
+        LMIopt(2) = 250;  % Max # of iters for non-rate bounded syn
+    end
+    LMIopt(5) = 1;        % Toggle display
+else
+    LMIopt = [];
+end
+
+% Get LMI Initial Condition
+if ~isempty(opt.SolverInit)
+    x0 = opt.SolverInit;
+else
+    x0 = [];
+end
+
+% TODO HP 07/12/2023: so far only lmilab supported. Add other solvers?
+if ~isequal(opt.Solver,'lmilab')
+    error('Specified solver is currently not available.');
+end
+
+[copt,xopt] = mincx(lmisys,cobj,LMIopt);
 gam = sqrt(copt);
 info = [];
 if ~isempty(xopt)
