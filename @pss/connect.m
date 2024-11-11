@@ -21,15 +21,19 @@ if isa(varargin{end},'char')
     
     % Populate all items with same domain
     [varcell{:,1}] = domunion(varcell{:,1});
-    Dom = varcell{1,1}.DomainPrivate;
+    Dom = varcell{1,1}.Domain;
     
     % Get underlying data
     for i = 1:numel(varcell(:,1))
         varargin{varcell{i,2}} = varcell{i,1}.Data;
     end
-else
+else 
+    % when syntax connect(blksys,connections,in,out); is used
+    % in,out are not characters
+
     % Get domain:
     Dom = varargin{1}.Domain;
+    
     % Get underlying data:
     varargin{1} = varargin{1}.Data;
 end
