@@ -37,6 +37,7 @@ clc
 
 try
 sum1 = sumblk('u = r-y');
+Pconnect = connect(P,sum1,'r','y');
 Pconnect = connect(sum1,P,'r','y');
 catch 
 sprintf('connect not working with pss connected to sumblk')
@@ -52,16 +53,12 @@ sprintf('connect is not working with pss and in/out defined by matrix of connect
 end
 %%
 
-try
-Psys = append(Kpss,P);
-connections = [2 1; 1 -2];
-connect(P,Kpss,connections,1,2);
-catch
-sprintf('connect is not working for combining pss objects defined by matrix of connections')
-end
+% connect(P,Kpss,connections,1,2); % wrong syntax
+
 
 try
-Pconnect = connect(sum1,P,Kpss,'r','y');
+    sum2 = sumblk('e = r-y');
+Pconnect = connect(P,Kpss,sum2,'r','y');
 catch
 sprintf('connect is not working for combining pss objects')
 end
