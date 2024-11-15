@@ -1,75 +1,83 @@
-function [K,GAM,INFO]=lpvmixsyn(G,W1,W2,W3,varargin)
-% LPVMIXSYN  Parameter-varying mixed-sensitivity synthesis for PSS.
-% 
-% [K,GAM,INFO]=LPVMIXSYN(G,W1,W2,W3) synthesizes the parameter-varying
-% mixed-sensitivity controller K, which minimizes the induced L2 norm of  
-% W1*S, W2*K*S and W3*T, where S = inv(I+G*K), T = G*K*inv(I+G*K), and 
-% W1, W2 and W3 are stable PSS, PMAT or DOUBLE weights of appropriate size. 
-% GAM is the induced L2 norm acheived by K. INFO is a structure containing 
-% data from the Linear Matrix Inequalities that are solved to obtain K. 
-% A call to LPVMIXSYN without a BASIS function argument generates a 
-% controller assuming no bounds on the parameter rate of variation. 
+function [K,CL,GAM,INFO] = lpvmixsyn(G,varargin)
+
+% LPVMIXSYN Mixed-sensitivity synthesis for PSS
 %
-% [K,GAM,INFO]=LPVMIXSYN(G,W1,W2,W3,Xb,Yb) computes the rate-bounded 
-% mixed-sensitivity controller K, where the rate-bounds of the independent 
-% variables of G, W1, W2 and W3 are incuded in the synthesis conditions. 
-% Xb and Yb are BASIS objects, which describe the assumed parameter 
+% lft(P,K): [z1] = [W1 0 ][S  -SG ][W2 0 ][w1]
+%           [z2]   [0  W3][KS -KSG][0  W4][w2]
+%
+% CL: closed loop, feedback connection of G and K with additional performance
+% inputs and outputs. inputs={r,d,n}, outputs={e,u,y}
+%
+% [K,CL,GAM,INFO]=mixsyn(G,W1,W2,W3,W4,...) calculates the controller K by
+% minimising the induces L2 norm of lft(P,K) as depicted above 
+%
+% [K,CL,GAM,INFO]=mixsyn(G,W1,W2,W3,W4,Xb,Yb) calculates the controller K by
+% minimising the induces L2 norm of lft(P,K) as depicted above. Xb and Yb
+% are BASIS objects, which describe the assumed parameter 
 % dependence of the lyapunov matrices used in solving for K.
 %
-% [K,GAM,INFO]=LPVMIXSYN(G,...,OPT) allows the user to pass in a 
-% LPVSYNOPTIONS object. 
-%  
-% See also: lpvsynOptions, lpvsyn, lpvsfsyn, lpvestsyn,  lpvncfsyn, lpvloopshape.
+% See also: lpvsyn, mixsyn, loopsyn.
 
-% Parse inputs
+
 nin = nargin;
-if nin==1
-    W1=[];
-    W2=[];
-    W3=[];
-    varargin = cell(0,0);
-elseif nin==2
-    W2=[];
-    W3=[];
-    varargin = cell(0,0);
-elseif nin==3
-    W3=[];    
-    varargin = cell(0,0);
-elseif nin==4
-    varargin = cell(0,0);         
+nout = nargout;
+narginchk(2, inf)
+nargoutchk(0, 4)
+
+if ~isa(varargin(end),'basis')
+Xb = [];
+Yb = Xb;
+else
+Xb = varargin{5};
+Yb = varargin{6};
 end
 
-% Default weights
-[ny,nu] = size(G);
-Iy = eye(ny);
-Iu = eye(nu);
-if isempty(W1)
-    W1 = ss(zeros(0,ny));
-end
-if isempty(W2)
-    W2 = ss(zeros(0,nu));
-end
-if isempty(W3)
-    W3 = ss(zeros(0,ny));
+% assign weights
+We = varargin{1};
+Wr = varargin{2};
+Wu = varargin{3};
+Wd = varargin{4};
+nmeas = size(G,1); % e
+ncon = size(G,2); % u
+
+% all output signals are in the feeback channel
+if ~((size(Wr,1) == size(We,2)) == nmeas)
+error('the output of W2 and input to W1 must have the same dimensions as each other and as the output from G')
 end
 
-if isscalar(W1)
-    W1 = W1*Iy;
-end
-if isscalar(W2)
-    W2 = W2*Iu;
-end
-if isscalar(W3)
-    W3 = W3*Iy;
+if ~((size(Wd,1) == size(Wu,2))== ncon)
+error('the output of W4 and input to W3 must have the same dimensions as each other and as the input to G')
 end
 
+% checks
+if ~isa(Wd,'double')
+    error('W4 must be a scalar (type double)')
+end
 
-% Build generalized interconnection structure
-col1 = [Iy;zeros(nu+ny,ny);Iy];
-col2 = [zeros(ny,nu);Iu;zeros(2*ny,nu)]+[-Iy;zeros(nu,ny);Iy;-Iy]*G;
-allw = blkdiag(W1,W2,W3,Iy);
-Pic = allw*[col1,col2];
+% construct generalised plant
+systemnames = 'G Wr We Wu Wd';
+inputvar = strcat('[w1{',num2str(size(Wd,2)),'}; w2{',num2str(size(Wd,2)),'}; u{',num2str(ncon),'}]');
+outputvar = strcat('[We; Wu; Wr-G]');
+input_to_G = '[u + Wd]';
+input_to_Wr = '[w1]';
+input_to_We = '[Wr - G]';
+input_to_Wu = '[u]';
+input_to_Wd = '[w2]';
+cleanupsysic = 'yes';
 
-% Synthesize controller Ks for shaped plant
-[K,GAM,INFO] = lpvsyn(Pic,ny,nu,varargin{:}); 
+Pgen = sysic;
 
+% perform synthesis
+[K,GAM,INFO] = lpvsyn(Pgen,nmeas,ncon,Xb,Yb);
+
+% close loop
+systemnames = 'G K';
+inputvar = strcat('[r{',num2str(nmeas),'}; d{',num2str(ncon),'}; n{',num2str(nmeas),'}]');
+outputvar = '[r-G; K; G]';
+input_to_G = '[K + d]';
+input_to_K = '[r-G-n]';
+cleanupsysic = 'yes';
+
+CL = sysic;
+
+end
