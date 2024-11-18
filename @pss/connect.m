@@ -6,14 +6,14 @@ function out = connect(varargin)
 %
 % See also: connect, append, series, parallel, sysic, feedback, lft.
 
-if isa(varargin{end},'char')
+if isa(varargin{end},'char') || isa(varargin{end},'cell')
         
     % Cycle through inputs
     varcell = cell(0,2);
     for i = 1:numel(varargin)
         vi = varargin{i};
         
-        if ~isa(vi,'char')
+        if ~isa(vi,'char') && ~isa(vi,'cell')
             varcell = [varcell;{vi,i}];
         end
         
