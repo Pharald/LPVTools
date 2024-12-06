@@ -1,75 +1,58 @@
-function [Kopt,gamopt,Info] = lpvsyn(P,nmeas,ncont,opt)
+
+function [Kopt,gamopt,Info] = lpvsyn(P,nmeas,ncont,Xb,Yb,opt)
 % LPVSYN  Parameter-dependent controller synthesis for PLFTSS
 %
-% [K,GAM,INFO] = LPVSYN(P,NMEAS,NCON) computes a parameter-varying
-% controller K which minimizes the L2 norm of the interconnection 
-% defined by lft(P,K). K is a PLFTSS with NMEAS inputs and NCON outputs. 
-% GAM is the L2 norm of lft(P,K). INFO is a structure containing data from 
-% the Linear Matrix Inequalities that are solved to obtain K.
-%
-% [K,GAM,INFO] = LPVSYN(P,NMEAS,NCON,OPT) allows the user to pass in
-% a LPVSYNOPTIONS object. 
-%
-% The default algorithm for LPVSYN will solve the given synthesis problem
-% twice. The first iteration attempts to find a solution that minimizes the
-% induced L2 norm of lft(P,K). The second iteration will solve the 
-% optimization problem again, with the caveat that any solution that is 
-% found to lie within 15% of the optimal induced L2 norm of lft(P,K) from 
-% the first iteration, is satisfactory. This formulation has been found to 
-% yield controllers that are better numerically conditioned. The back-off 
-% factor of 15% can be set in LPVSYNOPTIONS.
 %
 % See also: lpvsynOptions.
 
+% sysb = P; % no balancing occurs
+narginchk(5,6);
+nin = nargin;
 
 
-% PJS 12/31/2012: Initial Implementation
-%
-% References
-%  1. Gain Scheduling via LFTs by Packard, Sys. and Control Letters, 1994.
-%  2. A Convex Characterization of Gain-Scheduled Hinfty Controllers,
-%       by Apkarian and Gahinet, IEEE TAC, 1995.
-%  3. Erratum to "A Convex Characterization of Gain-Scheduled Hinfty
-%       Controllers," by Apkarian and Gahinet, IEEE TAC, 1995, p1681.
-%  4. Explicit Controller Formulas for LMI-based Hinfty Synthesis,
-%       by Gahinet, Automatica, 1996.
-%
-% This function essentially implements the LMI conditions in Ref 2 for
-% continuous-time LPV synthesis (Thm 5.1). Note Ref 3 corrects an error
-% in LMI conditions given in Ref. The conditions in the
-% reference are for a robust performance condition:
-%      min gam subject to  Induced Gain <= gam for |theta(t)|<=1/gam
-% This function slightly modifies the LMI conditions to solve the
-% related worst-case gain condition with normalized parameters:
-%      min gam subject to  Induced Gain <= gam for |theta(t)|<=1
-%
-
-%%
-% Error Checking
-narginchk(3,4);
-if nargin == 3
+if nin<=4
+    % EB 06.12.24: How is no basis function case handled?
+%     if nin==3
+%         % K = lpvsyn(sys,nmeas,ncont)
+%         opt = lpvsynOptions;
+%     else
+%         % K = lpvsyn(sys,nmeas,ncont,opt)
+%         opt = Xb;
+%     end
+%     Yb = [];
+%     Xb = Yb;
+elseif nin==5
+    % K = lpvsyn(sys,nmeas,ncont,Xb,Yb)
     opt = lpvsynOptions;
+elseif nin~=6
+    error('Incorrect number of input arguments.')
 end
-
-%%
-% Initialize Outputs
-Kopt = [];
-gamopt = [];
-Info = [];
-
-%% Parse the lpvsynOptions
 
 Method = opt.Method;
 
-%%
-% Problem Dimensions
+% Dimensions
 szP = iosize(P);
-ny = nmeas;
 nu = ncont;
-ne = szP(1) -  ny;
-nd = szP(2) - nu;
+ne = nmeas;
+nd = nu; % disturbance is summative on input
 
-[M,DELTA,BLKSTRUCT,NORMUNC] = lftdata(P,[],'Parameters');
+%%
+
+sysb = P; % no balancing
+
+params = fieldnames(sysb.Parameter);
+for ii = 1:length(params)
+    domRange(ii,:) = sysb.Parameter.(params{ii}).range;
+    domRB(ii,:) = sysb.Parameter.(params{ii}).ratebounds;
+    domData{ii,:} = linspace(domRange(ii,1),domRange(ii,2),30); % 30 grid points per param
+end
+rgridPlaceholder = rgrid(params,domData',domRB);
+
+% Orthogonalize general OLIC interconnection
+[sysb,TL,TR,FT] = orthog4syn_plftss(sysb,rgridPlaceholder,nmeas,ncont);
+%%
+
+[M,DELTA,BLKSTRUCT,NORMUNC] = lftdata(sysb,[],'Parameters');
 Nblk = length(BLKSTRUCT);
 nri = zeros(Nblk,1);
 for i=1:Nblk
@@ -84,224 +67,252 @@ end
 nr = sum(nri);
 nx = order(M);
 
-%% Balance the system
-% % XXX Balance I/O channels associated with parameters?
-% Min = M;
-% M = ssbal(M);
+simplifyopt = 'full'; % EB 31.07: Reduces number of occurences in lft blocks
 
-%%
-% Unpack Data: Follows notation in Eq 2.16 of Ref 2
-[A,B,C,D] = ssdata(M);
-it = 1:nr;
-i1d = nr+1:nr+nd;
-i2u = nr+nd+1:nr+nd+nu;
-i1e = nr+1:nr+ne;
-i2y = nr+ne+1:nr+ne+ny;
-
-Bt = B(:,it);
-B1 = B(:,i1d);
-B2 = B(:,i2u);
-
-Ct = C(it,:);
-C1 = C(i1e,:);
-C2 = C(i2y,:);
-
-Dtt = D(it,it);
-Dt1 = D(it,i1d);
-Dt2 = D(it,i2u);
-
-D1t = D(i1e,it);
-D11 = D(i1e,i1d);
-D12 = D(i1e,i2u);
-
-D2t = D(i2y,it);
-D21 = D(i2y,i1d);
-D22 = D(i2y,i2u);
-
-%%
-% XXX PJS: Handle ill-conditioned D12 and D21
-% (See comment 1 in Section 3.5 of Ref 4)
-
-
-%%
-% Compute optimal L2 gain bound
-% Follows notation in Thm 5.1 of Ref 2 except that gam is the induced
-% L2 gain bound assuming the parameter range is normalized to [-1,1].
-NR = null([B2; Dt2; D12]');
-NR = blkdiag(NR,eye(nr+nd));
-
-NS = null([C2 D2t D21]);
-NS = blkdiag(NS,eye(nr+ne));
-
-B1hat = [Bt B1];
-C1hat = [Ct;C1];
-D11hat = [Dtt Dt1; D1t D11];
-
-
-% Set up the LMIs
-setlmis([]);
-
-R = lmivar(1,[nx 1]);
-S = lmivar(1,[nx 1]);
-if nr>0
-    J3 = lmivar(1,[nri(:) ones(Nblk,1)]);
-    L3 = lmivar(1,[nri(:) ones(Nblk,1)]);
+%% Basis functions
+% define basis functions for feedback
+nbasisX = size(Xb.basis,1); % # of basis functions X
+xbNames = fieldnames(Xb.basis.Data.Uncertainty);
+nparx = size(xbNames,1); % # of params in basis X
+Gp = Xb.basis(1)*eye(nx);
+partialGp = Xb.partial(1)*eye(nx);
+for ii = 2:nbasisX
+    Gp = [Gp; Xb.basis(ii)*eye(nx)];
+    partialGp = [partialGp; Xb.partial(ii)*eye(nx)];
 end
+
+Gp_0 = Gp.Data.nominalValue;
+np_g = size(Gp,1);
+
+% define basis functions for filter
+nbasisY = size(Yb.basis,1); % # of basis functions Y
+ybNames = fieldnames(Yb.basis.Data.Uncertainty);
+npary = size(ybNames,1); % # of params in basis Y
+Hp = Yb.basis(1)*eye(nx);
+partialHp = Yb.partial(1)*eye(nx);
+
+for ii = 2:nbasisY
+    Hp = [Hp; Yb.basis(ii)*eye(nx)];
+    partialHp = [partialHp; Yb.partial(ii)*eye(nx)];
+end
+
+Hp_0 = Hp.Data.nominalValue;
+np_h = size(Hp,1);
+
+%%
+
+% State-space data
+[A,B,C,D] = ssdata(sysb);
+
+% partitioned
+% General form following notation in thesis of Wu
+C11 = C(1:ne,:);
+C12 = C(ne+1:ne+nu,:);
+C2 = C(ne+nu+1:ne+nu+ne,:); 
+
+B11 = B(:,1:nd);
+B12 = B(:,nd+1:nd+ne);
+Bof2 = B(:,ne+nd+1:ne+nd+nu);
+
+D1111 = D(1:ne,1:nd);
+D1112 = D(1:ne,nd+1:nd+ne);
+D1121 = D(ne+1:ne+nu, 1:nd);
+D1122 = D(ne+1:ne+nu,nd+1:nd+ne);
+
+B1 = [B11 B12];
+B2 = Bof2;
+C1 = [C11; C12];
+D111dot = [D1111 D1112];
+D112dot = [D1121 D1122];
+Dmat = [D111dot; D112dot];
+D11dot1 = [D1111; D1121];
+D11dot2 = [D1112; D1122];
+D11 = [D111dot; D112dot];
+D12 = D(1:ne+nu, nd+ne+1:end);
+D21 = D(ne+nu+1:end, 1:nd+ne);
+D22 = D(ne+nu+1:end, nd+ne+1:end);
+
+Ahat = A- B2*C12;
+Abar = A-B12*C2;
+
+Bhat = B1 - B2*D112dot;
+Cbar = C1 - D11dot2*C2;
+
+
+%% LMI matrices
+RpXmat = [Gp*Ahat' - partialGp, Gp*C11', zeros(sum(np_g),nd+ne); Gp, zeros(sum(np_g),2*ne + nd); B2', zeros(nu,2*ne+nd); zeros(ne,nx), eye(ne), zeros(ne,ne+nd); zeros(nx,nx+ne), Bhat; eye(nx), zeros(nx,2*ne+nd); zeros(ne+nd,nx+ne),eye(ne+nd); zeros(ne+nd,nx), D111dot', zeros(ne+nd,ne+nd)]; 
+RpYmat = [Hp*Abar + partialHp, Hp*B11, zeros(sum(np_h),nu+ne); Hp, zeros(sum(np_h),nd +ne + nu); C2 zeros(ne,nd +ne + nu); zeros(nd, nx), eye(nd), zeros(nd,ne+nu); zeros(nx,nx+ne), Cbar'; eye(nx), zeros(nx,nd+ne+nu); zeros(ne+nu,nx+nd), eye(ne+nu); zeros(ne+nu,nx), D11dot1, zeros(ne+nu,ne+nu)];
+GHxy = [Gp zeros(sum(np_g),nx); zeros(nx,nx), eye(nx); eye(nx), zeros(nx,nx); zeros(sum(np_h),nx), Hp];
+
+RpXmat = simplify(RpXmat.Data,simplifyopt);
+RpYmat = simplify(RpYmat.Data,simplifyopt);
+GHxy = simplify(GHxy,simplifyopt);
+
+
+% cast outer factors into LFTs
+[RRY,ndeltary] = partition_mat(RpYmat);
+[RRX,ndeltarx] = partition_mat(RpXmat);
+[RRXY,ndeltaxy] = partition_mat(GHxy);
+
+nxy = size(RRXY,2);
+
+% Create LMI variables
+setlmis([])
+
+kx = size(np_g,1);
+if kx > 1
+    [X_0,~,sX_0] = lmivar(1,[np_g ones(kx,1)]);  % blkdiag, npxnp
+else
+    [X_0,~,sX_0] = lmivar(1,[np_g 1]);  % symmetric, npxnp
+end
+
+ky = size(np_h,1);
+if ky > 1
+[Y_0,ndec,sY_0] = lmivar(1,[np_h ones(ky,1)]);  % blkdiag, npxnp
+else
+[Y_0,ndec,sY_0] = lmivar(1,[np_h 1]);  % symmetric, npxnp
+end
+
+% mult 1
+sSx = skewdec(ndeltarx,ndec);
+[Sx,ndec,sSx] = lmivar(3,sSx);         % skew symmetric
+sRx = diag(ndec+1:ndeltarx+ndec);
+[Rx,ndec,~] = lmivar(3,sRx);                 % diagonal
+PiRX = lmivar(3,[-sRx, sSx; sSx', sRx]);
+
+% mult 2
+sSy = skewdec(ndeltary,ndec);
+[Sy,ndec,sSy] = lmivar(3,sSy);         % skew symmetric
+sRy = diag(ndec+1:ndeltary+ndec);
+[Ry,ndec,~] = lmivar(3,sRy);                 % diagonal
+PiRY = lmivar(3,[-sRy, sSy; sSy', sRy]);
+
+% mult 3
+sSxy = skewdec(ndeltaxy,ndec);
+[Sxy,ndec,sSxy] = lmivar(3,sSxy);      % skew symmetric
+sRxy = diag(ndec+1:ndeltaxy+ndec);
+Rxy = lmivar(3,sRxy);               % diagonal
+PiXY = lmivar(3,[-sRxy, sSxy; sSxy', sRxy]);
+
+
 [gam,ndec] = lmivar(1,[1 1]);
 
-if isequal(Method,'MaxFeas');
-    % FV is an upper bound on R, S, J3 and L3.
+if isequal(opt.Method,'MaxFeas')
     [FV,ndec] = lmivar(1,[1 1]);
+% [FVone,ndec,sFVone] = lmivar(1,[1 1]);
+% [FV,ndec,sFV] = lmivar(3,sFVone*eye(nxy))
 end
 
-% LMI in R (Eqn 5.2 in Ref 2 has an error. See Ref 3)
-lmiterm([1 0 0 0],NR);
-tmp = [eye(nx) zeros(nx,nr+ne)];
-lmiterm([1 1 1 R],[A; C1hat],tmp,'s');
-tmp = [zeros(nx,ne); zeros(nr,ne); eye(ne)];
-lmiterm([1 1 1 gam],-tmp,tmp');
-tmp = [zeros(nx,nr) B1; zeros(nr+ne,nr) [Dt1; D11]];
-lmiterm([1 1 2 0],tmp);
-tmp = [zeros(nr,nd); eye(nd)];
-lmiterm([1 2 2 gam],-tmp,tmp');
-if nr>0
-    tmp = [zeros(nx,nr); eye(nr); zeros(ne,nr)];
-    lmiterm([1 1 1 J3],-tmp,tmp');
-    tmpl = [Bt; Dtt; D1t];
-    tmpr = [eye(nr) zeros(nr,nd)];
-    lmiterm([1 1 2 J3],tmpl,tmpr);
-    tmp = [eye(nr); zeros(nd,nr)];
-    lmiterm([1 2 2 J3],-tmp,tmp');
-end
+% LMI conditions
+cnt = 0;
 
-% LMI in S (Eqn 5.3 in Ref 2 has an error. See Ref 3)
-lmiterm([2 0 0 0],NS);
-tmp = [eye(nx) zeros(nx,nr+nd)];
-lmiterm([2 1 1 S],[A'; B1hat'],tmp,'s');
-tmp = [zeros(nx,nd); zeros(nr,nd); eye(nd)];
-lmiterm([2 1 1 gam],-tmp,tmp');
-tmp = [zeros(nx,nr) C1'; zeros(nr+nd,nr) [D1t'; D11']];
-lmiterm([2 1 2 0],tmp);
-tmp = [zeros(nr,ne); eye(ne)];
-lmiterm([2 2 2 gam],-tmp,tmp');
-if nr>0
-    tmp = [zeros(nx,nr); eye(nr); zeros(nd,nr)];
-    lmiterm([2 1 1 L3],-tmp,tmp');
-    tmpl = [Ct'; Dtt'; Dt1'];
-    tmpr = [eye(nr) zeros(nr,ne)];
-    lmiterm([2 1 2 L3],tmpl,tmpr);
-    tmp = [eye(nr); zeros(ne,nr)];
-    lmiterm([2 2 2 L3],-tmp,tmp');
+if nnz(sqrt(Dmat.data.nominal'*Dmat.data.nominal) > eye(ne + nu)) > 0
+    % Dmat is plftmat but should have no blocks so equal to nominal
+warning('Dmat^T*Dmat^0.5 > I, first condition does not hold')
 end
+% 
 
-% (R,S) Coupling LMI (Eq 5.4)
-lmiterm([-3 1 1 R],1,1);
-lmiterm([-3 2 1 0],eye(nx));
-lmiterm([-3 2 2 S],1,1);
-
-% (L3,J3) Coupling LMI (Eq 5.5)
-cnt = 4;
-if nr>0
-    lmiterm([-4 1 1 L3],1,1);
-    lmiterm([-4 2 1 0],eye(nr));
-    lmiterm([-4 2 2 J3],1,1);
-    cnt = 5;
-end
-
-
-% Xlb*I < R < Xub*I
-if opt.Xlb>0
-    lmiterm([cnt 1 1 0],opt.Xlb*eye(nx));
-    lmiterm([-cnt 1 1 R],1,1);
-    cnt = cnt+1;
-end
-if isfinite(opt.Xub)
-    lmiterm([-cnt 1 1 0],opt.Xub*eye(nx));    
-    lmiterm([cnt 1 1 R],1,1);
-    cnt = cnt+1;
-end
-
-% Ylb*I < S < Yub*I
-if opt.Ylb>0
-    lmiterm([cnt 1 1 0],opt.Ylb*eye(nx));
-    lmiterm([-cnt 1 1 S],1,1);
-    cnt = cnt+1;
-end
-if isfinite(opt.Yub)
-    lmiterm([-cnt 1 1 0],opt.Yub*eye(nx));    
-    lmiterm([cnt 1 1 S],1,1);
-    cnt = cnt+1;
-end
-
-% Jlb*I < J3 < Jub*I
-if nr> 0 && opt.Jlb>0
-    lmiterm([cnt 1 1 0],opt.Jlb*eye(nr));
-    lmiterm([-cnt 1 1 J3],1,1);
-    cnt = cnt+1;
-end
-if nr> 0 && isfinite(opt.Jub)
-    lmiterm([-cnt 1 1 0],opt.Jub*eye(nr));    
-    lmiterm([cnt 1 1 J3],1,1);
-    cnt = cnt+1;
-end
-
-% Llb*I < L3 < Lub*I
-if nr> 0 && opt.Llb>0
-    lmiterm([cnt 1 1 0],opt.Llb*eye(nr));
-    lmiterm([-cnt 1 1 L3],1,1);
-    cnt = cnt+1;
-end
-if nr> 0 && isfinite(opt.Lub)
-    lmiterm([-cnt 1 1 0],opt.Lub*eye(nr));    
-    lmiterm([cnt 1 1 L3],1,1);
-    cnt = cnt+1;
-end
+% 0 < gam
+cnt = cnt + 1;
+lmiterm([-cnt 1 1 gam],1,1);
 
 % Gammalb*I < gam < Gammaub*I
 if opt.Gammalb>0
+    cnt = cnt+1;
     lmiterm([cnt 1 1 0],opt.Gammalb);
     lmiterm([-cnt 1 1 gam],1,1);
-    cnt = cnt+1;
 end
 if isfinite(opt.Gammaub)
+    cnt = cnt+1;
     lmiterm([-cnt 1 1 0],opt.Gammaub);    
     lmiterm([cnt 1 1 gam],1,1);
-    cnt = cnt+1;
 end
 
 
-% Max feasability constraint = minimize bound on R, S, J3 and L3.
+% X and Y positive definite
+% 0 < Y_0
+cnt = cnt + 1;
+lmiterm([-cnt 1 1 Y_0],1,1);
+
+% 0 < Hp_0'*Y_0*Hp_0
+cnt = cnt + 1;
+lmiterm([-cnt 1 1 Y_0],Hp_0',Hp_0);
+
+% 0 < X_0
+cnt = cnt + 1;
+lmiterm([-cnt 1 1 X_0],1,1);
+
+% 0 < Gp_0'*X_0*Gp_0
+cnt = cnt + 1;
+lmiterm([-cnt 1 1 X_0],Gp_0',Gp_0);
+
+% 0 < Rxy
+cnt = cnt + 1;
+lmiterm([-cnt 1 1 Rxy],1,1);
+
+%     0 < RRXY'*blkdiag(PiXY,XY_0mat)*RRXY
+cnt = cnt + 1;
+lmiterm([-cnt 0 0 0],RRXY);  % RRXY'__RRXY outer factor
+lmiterm([-cnt 1 1 PiXY],1,1);
+lmiterm([-cnt 2 2 X_0],1,1);
+lmiterm([-cnt 3 4 0],eye(nx));
+lmiterm([-cnt 5 5 Y_0],1,1);
+% if isequal(Method,'MaxFeas')
+% lmiterm([cnt 0 0 FV],eye(nxy));
+% end
 if isequal(Method,'MaxFeas')
-    lmiterm([-cnt 1 1 FV],eye(nx),eye(nx));
-    lmiterm([cnt 1 1 R],1,1);
+   cnt = cnt+1;
+    lmiterm([-cnt 1 1 FV],eye(np_h),eye(np_h));
+    lmiterm([cnt 1 1 X_0],1,1);
     cnt = cnt+1;
-    lmiterm([-cnt 1 1 FV],eye(nx),eye(nx));
-    lmiterm([cnt 1 1 S],1,1);
-    cnt = cnt+1;
-    if nr>0
-        lmiterm([-cnt 1 1 FV],eye(nr),eye(nr));
-        lmiterm([cnt 1 1 J3],1,1);
-        cnt = cnt+1;
-        lmiterm([-cnt 1 1 FV],eye(nr),eye(nr));
-        lmiterm([cnt 1 1 L3],1,1);
-        cnt = cnt+1;        
-    end
-    
+    lmiterm([-cnt 1 1 FV],eye(np_g),eye(np_g));
+    lmiterm([cnt 1 1 Y_0],1,1);
 end
 
-% Set Objective:  
-cobj = zeros(ndec,1);
-if isequal(Method,'MaxFeas')   
-    % Method = 'MaxFeas':   minimize FV
-    cobj(end) = 1;    
-    
-    % Add small penalty to gamma to force gamma near its lower bound
-    % XXX What to choose for this penalty?
-    cobj(end-1) = 1e-8;
-else
-    % Method = 'MinGamma' or 'BackOff'
-    cobj(end) = 1;    
-end
+% Rx < 0
+cnt = cnt + 1;
+lmiterm([cnt 1 1 Rx],1,1);
+
+% RRX'*blkdiag(PiRX,X_0mat)*RRX < 0
+cnt = cnt + 1;
+lmiterm([cnt 0 0 0],RRX);  % RRX'__RRX outer factor
+lmiterm([cnt 1 1 PiRX],1,1); % PiRX multiplier
+% X_0mat
+lmiterm([cnt 2 3 X_0],1,1);
+lmiterm([cnt 4 4 gam],-eye(nu),1);
+lmiterm([cnt 5 5 gam],-eye(ne),1);
+lmiterm([cnt 6 7 0],eye(nx));
+lmiterm([cnt 8 8  gam],-eye(ne + nd),1);
+lmiterm([cnt 8 9 0],eye(ne + nd));
+
+% Ry < 0
+cnt = cnt + 1;
+lmiterm([cnt 1 1 Ry],1,1);
+
+% RRY'*blkdiag(PiRY,Y_0mat)*RRY < 0
+cnt = cnt + 1;
+lmiterm([cnt 0 0 0],RRY);  % RRY'__RRY outer factor
+lmiterm([cnt 1 1 PiRY],1,1); % PiRY multiplier
+% Y_0mat
+lmiterm([cnt 2 3 Y_0],1,1);
+lmiterm([cnt 4 4 gam],-eye(ne),1);
+lmiterm([cnt 5 5 gam],-eye(nd),1);
+lmiterm([cnt 6 7 0],eye(nx));
+lmiterm([cnt 8 8 gam],-eye(ne + nu),1);
+lmiterm([cnt 8 9 0],eye(ne + nu));
+
+
+
+% Set Objective
+ cobj= zeros(ndec,1);
+
+ if isequal(opt.Method,'MaxFeas')
+     % Method = 'MaxFeas':   min bound on X_0 Y_0 
+    cobj(end) = 1;
+ else
+     % Method = 'BackOff' or 'MinGamma'
+     cobj(end) = 1;
+ end
 
 % Get LMI Options
 % TODO PJS 5/29/2011: Default options for other solvers?
@@ -310,8 +321,12 @@ if ~isempty(opt.SolverOptions)
 elseif isequal(opt.Solver,'lmilab')
     % Default settings for LMI Lab
     LMIopt = zeros(5,1);
+    %LMIopt(1) = 1/(gmax-gmin); % Tol setting in old code
     if isequal(Method,'MaxFeas')
-        LMIopt(2) = 40;   % Max # of iters for MaxFeas problem
+        LMIopt(2) = 50;   % Max # of iters for MaxFeas problem
+%     elseif RateBndFlag
+%         %LMIopt(2) = 600;  % Setting in old LPVOFSYN1
+%         LMIopt(2) = 350;  % Max # of iters for rate bounded syn
     else
         LMIopt(2) = 250;  % Max # of iters for non-rate bounded syn
     end
@@ -330,9 +345,16 @@ end
 
 % Solve LMI
 lmisys = getlmis;
-% [gamopt,xopt]=mincx(lmisys,cobj,LMIopt);
 FeasFlag = 1;
-if isequal(opt.Solver,'lmilab')
+if isequal(Method,'PoleCon')
+    % Pole constraint is a GEVP
+    % Currently only implemented using LMILAB/GEVP
+    nlfc = nmod;
+    [copt,xopt] = gevp(lmisys,nlfc,LMIopt);
+    
+    % TODO: Add initial conditions
+    %[copt,copt] = gevp(lmisys,nlfc,LMIopt,t0,x0);
+elseif isequal(opt.Solver,'lmilab')
     [copt,xopt] = mincx(lmisys,cobj,LMIopt,x0);
     if isempty(copt)
         FeasFlag = 0;
@@ -343,11 +365,12 @@ elseif isequal(opt.Solver,'sedumi')
     [F0,Fi,blk] = lmitrans(lmisys);
     K.s = blk;
     [xdual,xopt,info]=sedumi(Fi,-cobj,F0,K,LMIopt);
-    copt = cobj'*xopt;    
+    copt = cobj'*xopt;
     if info.pinf==1 || info.dinf==1 || info.numerr~=0
         % TODO PJS 5/29/2011: Also check info.feasratio?
         FeasFlag = 0;
-    end    
+    end
+    
 else
     % TODO PJS 5/20/2011: Implement other solvers with LMITRANS
     error('Specified solver is currently not available.');
@@ -356,146 +379,138 @@ end
 % Handle Infeasible LMI Case
 % TODO PJS 5/20/2011: What should we return in this case?
 if ~FeasFlag
-    Kopt = [];
+    K = [];
     gamopt = inf;
-    Info = struct('xopt',xopt,'copt',copt,'lmisys',lmisys,'Ropt',[],...
-                  'Sopt',[],'Lopt',[],'Jopt',[]);
+    Info = struct('xopt',xopt,'copt',copt,'lmisys',lmisys);
     return;
 end
 
-gamopt=dec2mat(lmisys,xopt,gam);
-Ropt=dec2mat(lmisys,xopt,R);
-Sopt=dec2mat(lmisys,xopt,S);
-if nr>0
-    L3opt=dec2mat(lmisys,xopt,L3);
-    J3opt=dec2mat(lmisys,xopt,J3);
-else 
-    L3opt = [];
-    J3opt = [];
-end
+% Get optimal X/Y/Gamma variables
+% if ~isequal(Method,'PoleCon')
+    gamopt = dec2mat(lmisys,xopt,gam);
+% end
 
-Info = struct('xopt',xopt,'copt',copt,'lmisys',lmisys,...
-               'Ropt',Ropt,'Sopt',Sopt,'Jopt',J3opt,'Lopt',L3opt);
+   Yp = Hp'*dec2mat(lmisys,xopt,Y_0)*Hp;
+   partialYp = partialHp'*dec2mat(lmisys,xopt,Y_0)*Hp + Hp'*dec2mat(lmisys,xopt,Y_0)*partialHp;
+   Xp = Gp'*dec2mat(lmisys,xopt,X_0)*Gp;
+   partialXp = partialGp'*dec2mat(lmisys,xopt,X_0)*Gp + Gp'*dec2mat(lmisys,xopt,X_0)*partialGp;
 
+    Info = struct('xopt',xopt,'copt',copt,'lmisys',lmisys);
 
-if isequal(Method,'BackOff');
+if isequal(opt.Method,'BackOff')
     % Solve Stage 2 LMI: Maximize the Min Eig of X/Y Coupling Constraint   
     opt2 = opt;
     opt2.Method = 'MaxFeas';
     opt2.Gammaub = opt.BackOffFactor*gamopt;
       
     % Construct feasible solution from optimal Stage 1 LMI answer
-    FV0 = 1.1*max( eig( blkdiag(Ropt,Sopt,L3opt,J3opt) ) );
-    x0 = [xopt; FV0];
-    opt2.SolverInit = x0;
+    % TO DO
+%     x0 = [xopt];
+    opt2.SolverInit = []; %x0;
     
     % Solve Stage 2 Relaxed LMI
     Info1 = Info;
     gamopt1 = gamopt;    
+   
     [Kopt,gamopt,Info2] = lpvsyn(P,nmeas,ncont,opt2);
+%  lmisys = setmvar(lmisys,gam,opt2.Gammaub);
+% [tfeas,xfeas] = feasp(lmisys,[0 1000 0 10 0]);
+
     Info = struct('MinGamma',gamopt1,'Stage1Info',Info1,'Stage2Info',Info2);
     return
-end
-
-
-%%
-% Controller Reconstruction
-Kopt = klpv(M,nmeas,ncont,nri,Ropt,Sopt,J3opt,L3opt,gamopt);
-Kopt = lft( Kopt, DELTA );
-Kopt = feedback( Kopt, D22 );
-
-%keyboard
-
-
-return
-% Step 1: Compute M,N such that MN' = I-RS
-% nk is the order of the controller
-[U,Sig,V] = svd( eye(nx) - Ropt*Sopt );
-nk = sum( diag(Sig) > tol );
-Srt = Sig(1:nk,1:nk).^0.5;
-M = U(:,1:nk)*Srt;
-N = V(:,1:nk)*Srt;
-
-% Step 2: Compute Xcl
-X22 = -N'*Ropt/(M');
-Xcl = [Sopt N; N' X22];
-
-% Step 3: Compute L
-% nsi is the number of copies of parameter i used by the controller
-L1 = cell(Nblk,1);
-L2 = cell(Nblk,1);
-ptr = 0;
-nsi = zeros(Nblk,1);
-for i=1:Nblk
-    % Index for ith block
-    idx = ptr+(1:nri(i));
-    ptr = idx(end);
-    
-    % Compute M,N such that MN' = I-L3*J3 for i^th block
-    [U,Sig,V] = svd( eye(nri(i)) - L3opt(idx,idx)*J3opt(idx,idx) );
-    nsi(i) = sum( diag(Sig) > tol );
-    Srt = Sig(1:nsi(i),1:nsi(i)).^0.5;
-    M = U(:,1:nsi(i))*Srt;
-    N = V(:,1:nsi(i))*Srt;
-    
-    % Solve for i^th block of L1 and L2
-    L2{i} = N;
-    L1{i} = -N'*J3opt(idx,idx)/(M');
-end
-if nr>0
-    ns = sum(nsi);
-    L1 = blkdiag( L1{:} );
-    L2 = blkdiag( L2{:} );
-    L = [L1 L2; L2' L3opt];
 else
-    ns = 0;
-    L = [];
+%     Construct controller (see thesis of Wu)
+
+% 02.12.2024 EB: there is a controller construction function klpv()
+% is this the same reconstruction?
+
+ % the following controller formulation uses the Y and X defined in the
+ % thesis of Wu, the above optimisation rearranged to have non-inverse
+ % gamma terms -> this has to be reversed for the next step
+     YP = 1/gamopt*Yp;
+     XP = 1/gamopt*Xp;
+     partialXP = 1/gamopt*partialXp;
+
+g2 = gamopt^(2);
+g_2 = 1/g2;
+
+XPinv = XP\eye(size(XP,1));
+partialXPinv = -XP\(partialXP/XP);
+
+Q = YP-g_2*XPinv;
+
+Om = - D1122 - D1121*((g2*eye(size(D1111,2))\eye(size(D1111,2))) - D1111'* D1111)*D1111'*D1112;
+
+A_ = A + B2*Om*C2;
+B1_ = B1 + B2*Om*D21;
+C1_ = C1 + D12*Om*C2;
+D11_ = D11 + D12*Om*D21;
+
+Dh = (eye(size(D11_,1)) - g_2*(D11_*D11_'))\eye(size(D11_,1));
+Dt = (eye(size(D11_,2)) - g_2*(D11_'*D11_))\eye(size(D11_,2));
+
+    F = (-D12'*Dh*D12)\((B2+B1_*D11_'*Dh*D12*g2)'/XP + D12'*Dh*C1_);
+    L = -(YP\(C2+D21*Dt*D11_'*C1_*g_2)' + B1_*Dt*D21')/(D21*Dt*D21');
+
+    Af = A_ + B2*F;
+    Cf = C1_ + D12*F;
+
+    Afx = XP\Af;
+    left = XP\B1_ + Cf'*D11_;
+    
+    H = -(Afx+Afx'+partialXPinv+Cf'*Cf+g_2*left*Dt*left');
+
+    q = YP - g_2*XPinv;
+    qiy = q\YP;
+
+        m1 = H + F'*(B2'/XP + D12'*Cf);
+        m2 = (q*(-qiy*L*D21 - B1_) + g_2*F'*D12'*D11_)*Dt*left';
+        m = m1 + m2;  
+
+        %% 02.12.24 EB: there must be a better way to reduce number of occurences
+        
+        K.a = Af + qiy*L*C2 - g_2*(q\m);
+        K.b = -qiy*L;
+        K.c = F;
+        K.d = Om;
+        Kopt = plftss(K.a,K.b,K.c,K.d);
+     
+        Info = struct('xopt',xopt,'lmisys',lmisys,...
+               'Xopt',Xp,'Yopt',Yp);
+
+end
 end
 
-% Step 4: Solve Basic LMI  (Eqns 6.3, 6.6-6.8)
-% Modify equations to account for possible differences in nsi and nri
-calL = -blkdiag(L,gamopt*eye(nd));
-calJ = -blkdiag(inv(L),gamopt*eye(ne));
 
-A0 = blkdiag(A,zeros(nk));
-B0 = [zeros(nx,ns) Bt B1; zeros(nk,ns+nr+nd)];
-calB = [zeros(nx,nk) B2 zeros(nx,ns); eye(nk) zeros(nk,nu+ns)];
-C0 = [zeros(ns,nx+nk); Ct zeros(nr,nk); C1 zeros(ne,nk)];
-calD11 = blkdiag(zeros(ns),D11hat);
-calD12 = [zeros(ns,nk+nu) eye(ns); zeros(nr,nk) Dt2 zeros(nr,ns); ...
-    zeros(ne,nk) D12 zeros(ne,ns)];
-calC = [zeros(nk,nx) eye(nk); C2 zeros(ny,nk); zeros(ns,nx+nk)];
-calD21 = [zeros(nk,ns+nr+nd); zeros(ny,ns) D2t D21; eye(ns) zeros(ns,nr+nd)];
+function [RR1,ndelta] = partition_mat(G)
 
-PSI = [A0'*Xcl+Xcl*A0 Xcl*B0 C0'; B0'*Xcl calL calD11'; C0 calD11 calJ];
-Q = [calC calD21 zeros(nk+ny+ns,nr+ns+ne)];
-PX = [calB' zeros(nk+nu+ns,nr+ns+nd) calD12'];
-PX = PX*blkdiag(Xcl,eye(2*nr+2*ns+nd+ne));
-
-OMEGA=basiclmi(PSI,PX,Q);
-if isempty(OMEGA)
-    Kopt = [];
-    return
+% ------------Partition R1 -----------------------------------------------
+if isa(G,'uss') || isa(G,'umat')
+[G0,delta] = lftdata(G);
+elseif isa(G,'plftss') || isa(G,'plftmat')
+[G0,delta,~,~] = lftdata(G,[],'Parameters');
 end
 
-% Pack controller as a PSSLFT (Eq 6.2)
-AK = OMEGA(1:nk,1:nk);
-BK = OMEGA(1:nk,nk+1:end);
-CK = OMEGA(nk+1:end,1:nk);
-DK = OMEGA(nk+1:end,nk+1:end);
-K = ss(AK,BK,CK,DK);
+% lft(G0,deltar); 
 
-idx = [];
-ptr = 0;
-for i=1:Nblk
-    % Index for ith block
-    idx = [idx ptr+(1:nsi(i))];
-    ptr = ptr+nri(i);
+n_in = size(G,2);
+n_out = size(G,1);
+ndelta = size(delta,1);
+
+G011 = G0(1:ndelta,1:ndelta);
+G021 = G0(ndelta+1:end,1:ndelta);
+G022 = G0(ndelta+1:end,ndelta+1:end);
+G012 = G0(1:ndelta,ndelta+1:end);
+
+% check partition
+if size(G011) ~= [ndelta ndelta] | size(G021) ~= [n_out ndelta] | size(G012) ~= [ndelta n_in] | size(G022) ~= [n_out n_in]
+    error('dimensions of partitions incorrect')
 end
-K = lft( K, DELTA(idx,idx) );
 
-% Add back D22 term from plant
-Kopt = feedback( K, D22 );
+RR1 = [G011, G012; eye(ndelta), zeros(ndelta,n_in); G021, G022];
+end
+
+
 
 
 
