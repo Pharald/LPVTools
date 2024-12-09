@@ -189,6 +189,8 @@ Psfweighted = blkdiag(W1,eye(ncont))*tmp;
 
 [F,Gamma,Info] = lpvsfsyn(Psfweighted,ncont,Yb,'L2',opt);
 
+Info.L = L;
+
 % reconstruct controller
 nx = size(A,1);
 nxWu = size(Wu.a,1);
