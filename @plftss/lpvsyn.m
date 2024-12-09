@@ -40,7 +40,7 @@ nd = nu; % disturbance is summative on input
 
 sysb = P; % no balancing
 
-params = fieldnames(sysb.Parameter);
+params = fieldnames(sysb.Parameter); % 09.12.24: Error sysb.Parameter no longer exists?
 for ii = 1:length(params)
     domRange(ii,:) = sysb.Parameter.(params{ii}).range;
     domRB(ii,:) = sysb.Parameter.(params{ii}).ratebounds;
@@ -140,13 +140,25 @@ Cbar = C1 - D11dot2*C2;
 
 
 %% LMI matrices
-RpXmat = [Gp*Ahat' - partialGp, Gp*C11', zeros(sum(np_g),nd+ne); Gp, zeros(sum(np_g),2*ne + nd); B2', zeros(nu,2*ne+nd); zeros(ne,nx), eye(ne), zeros(ne,ne+nd); zeros(nx,nx+ne), Bhat; eye(nx), zeros(nx,2*ne+nd); zeros(ne+nd,nx+ne),eye(ne+nd); zeros(ne+nd,nx), D111dot', zeros(ne+nd,ne+nd)]; 
-RpYmat = [Hp*Abar + partialHp, Hp*B11, zeros(sum(np_h),nu+ne); Hp, zeros(sum(np_h),nd +ne + nu); C2 zeros(ne,nd +ne + nu); zeros(nd, nx), eye(nd), zeros(nd,ne+nu); zeros(nx,nx+ne), Cbar'; eye(nx), zeros(nx,nd+ne+nu); zeros(ne+nu,nx+nd), eye(ne+nu); zeros(ne+nu,nx), D11dot1, zeros(ne+nu,ne+nu)];
-GHxy = [Gp zeros(sum(np_g),nx); zeros(nx,nx), eye(nx); eye(nx), zeros(nx,nx); zeros(sum(np_h),nx), Hp];
+RpX_G_col1 = [eye(sum(np_g)); zeros(sum(np_g))]*Gp; % need two repeats of Gp as they are diagonal
+RpX_G_col2 = [zeros(sum(np_g)); eye(sum(np_g))]*Gp; 
+RpX_G = [RpX_G_col1,RpX_G_col2];
+RpX_mult = [Ahat' , C11', zeros(nx,nd+ne); eye(nx), zeros(nx,2*ne + nd)];
+RpX_rest =   [B2', zeros(nu,2*ne+nd); zeros(ne,nx), eye(ne), zeros(ne,ne+nd); zeros(nx,nx+ne), Bhat; eye(nx), zeros(nx,2*ne+nd);zeros(ne+nd,nx+ne),eye(ne+nd); zeros(ne+nd,nx), D111dot', zeros(ne+nd,ne+nd)];
+RpX_Gpart = [-partialGp, zeros(sum(np_g),nd+2*ne); zeros(sum(np_g) + 4*ne+2*nd+2*nx, nx+2*ne+nd)];
 
-RpXmat = simplify(RpXmat.Data,simplifyopt);
-RpYmat = simplify(RpYmat.Data,simplifyopt);
-GHxy = simplify(GHxy,simplifyopt);
+RpXmat = [RpX_G*RpX_mult; RpX_rest] + RpX_Gpart;
+
+RpY_H_col1 = [eye(sum(np_h)); zeros(sum(np_h))]*Hp;
+RpY_H_col2 = [zeros(sum(np_h)); eye(sum(np_h))]*Hp; 
+RpY_H = [RpY_H_col1,RpY_H_col2];
+RpY_mult = [Abar, B11, zeros(nx,nu+ne); eye(nx), zeros(nx,nd +ne + nu)];
+RpY_rest =  [C2 zeros(ne,nd +ne + nu); zeros(nd, nx), eye(nd), zeros(nd,ne+nu); zeros(nx,nx+ne), Cbar'; eye(nx), zeros(nx,nd+ne+nu); zeros(ne+nu,nx+nd), eye(ne+nu);zeros(ne+nu,nx), D11dot1, zeros(ne+nu,ne+nu)];
+RpY_Hpart = [partialHp, zeros(sum(np_h),nd+nu+ne); zeros(sum(np_h) + nd + 2*nx + 3*ne + 2*nu, nx+nd+nu+ne)];
+
+RpYmat = [RpY_H*RpY_mult; RpY_rest] + RpY_Hpart;
+
+GHxy = [Gp zeros(sum(np_g),nx); zeros(nx,nx), eye(nx); eye(nx), zeros(nx,nx); zeros(sum(np_h),nx), Hp];
 
 
 % cast outer factors into LFTs
@@ -467,7 +479,7 @@ Dt = (eye(size(D11_,2)) - g_2*(D11_'*D11_))\eye(size(D11_,2));
         m2 = (q*(-qiy*L*D21 - B1_) + g_2*F'*D12'*D11_)*Dt*left';
         m = m1 + m2;  
 
-        %% 02.12.24 EB: there must be a better way to reduce number of occurences
+        %% 02.12.24 EB: a way to reduce number of occurences than using simplify
         
         K.a = Af + qiy*L*C2 - g_2*(q\m);
         K.b = -qiy*L;
@@ -486,9 +498,12 @@ function [RR1,ndelta] = partition_mat(G)
 
 % ------------Partition R1 -----------------------------------------------
 if isa(G,'uss') || isa(G,'umat')
-[G0,delta] = lftdata(G);
+G = simplify(G,'full');
+    [G0,delta] = lftdata(G);
+
 elseif isa(G,'plftss') || isa(G,'plftmat')
-[G0,delta,~,~] = lftdata(G,[],'Parameters');
+    G = simplify(G.Data,'full');
+[G0,delta,~,~] = lftdata(G);
 end
 
 % lft(G0,deltar); 
