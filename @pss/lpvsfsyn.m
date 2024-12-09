@@ -14,10 +14,10 @@ function [F,Gamma,Info] = lpvsfsyn(P,ncont,Xb,alg,opt)
 % instantaneous power of the output of P, assuming its inputs are zero mean, 
 % white-noise processes with unit intensity.
 %
-% [F,GAM,INFO] = LPVSFSYN(P,NCON,Xb,Yb,ALG) performs a rate-bounded synthesis.
+% [F,GAM,INFO] = LPVSFSYN(P,NCON,Xb,ALG,OPT) performs a rate-bounded synthesis.
 % Xb and Yb are BASIS objects specifying the basis functions to be used in 
 % the synthesis. ALG can be either 'L2' or 'LQG'. A call without the ALG
-% argument is equivalent to [F,GAM,INFO] = LPVSFSYN(P,NCON,Xb,Yb,'L2').
+% argument is equivalent to [F,GAM,INFO] = LPVSFSYN(P,NCON,Xb,'L2').
 %
 % See also: lpvsynOptions, lpvestsyn, lpvsyn, lpvncfyn, lpvmixsyn, lpvloopshape.
 
