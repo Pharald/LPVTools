@@ -161,15 +161,10 @@ RpYmat = [RpY_H*RpY_mult; RpY_rest] + RpY_Hpart;
 GHxy = [Gp zeros(sum(np_g),nx); zeros(nx,nx), eye(nx); eye(nx), zeros(nx,nx); zeros(sum(np_h),nx), Hp];
 
 
-% cast outer factors into LFTs
-[RRY,ndeltary] = partition_mat(RpYmat);
-[RRX,ndeltarx] = partition_mat(RpXmat);
-[RRXY,ndeltaxy] = partition_mat(GHxy);
-
-nxy = size(RRXY,2);
-
 % Create LMI variables
 setlmis([])
+
+cnt = 0;
 
 kx = size(np_g,1);
 if kx > 1
@@ -185,27 +180,18 @@ else
 [Y_0,ndec,sY_0] = lmivar(1,[np_h 1]);  % symmetric, npxnp
 end
 
-% mult 1
-sSx = skewdec(ndeltarx,ndec);
-[Sx,ndec,sSx] = lmivar(3,sSx);         % skew symmetric
-sRx = diag(ndec+1:ndeltarx+ndec);
-[Rx,ndec,~] = lmivar(3,sRx);                 % diagonal
-PiRX = lmivar(3,[-sRx, sSx; sSx', sRx]);
 
-% mult 2
-sSy = skewdec(ndeltary,ndec);
-[Sy,ndec,sSy] = lmivar(3,sSy);         % skew symmetric
-sRy = diag(ndec+1:ndeltary+ndec);
-[Ry,ndec,~] = lmivar(3,sRy);                 % diagonal
-PiRY = lmivar(3,[-sRy, sSy; sSy', sRy]);
+% get outer factors and multipliers
+% LMIs relating to multipliers also defined in fullBlockS
+cnt = cnt+1;
+[RRX,PiRX,ndec,cnt] = fullBlockS(RpXmat,ndec,cnt);
 
-% mult 3
-sSxy = skewdec(ndeltaxy,ndec);
-[Sxy,ndec,sSxy] = lmivar(3,sSxy);      % skew symmetric
-sRxy = diag(ndec+1:ndeltaxy+ndec);
-Rxy = lmivar(3,sRxy);               % diagonal
-PiXY = lmivar(3,[-sRxy, sSxy; sSxy', sRxy]);
+cnt = cnt+1;
+[RRY,PiRY,ndec,cnt] = fullBlockS(RpYmat,ndec,cnt);
 
+cnt = cnt+1;
+[RRXY,PiXY,ndec,cnt] = fullBlockS(GHxy,ndec,-cnt); % XY xondition is 0 <
+cnt = -cnt;
 
 [gam,ndec] = lmivar(1,[1 1]);
 
@@ -215,8 +201,8 @@ if isequal(opt.Method,'MaxFeas')
 % [FV,ndec,sFV] = lmivar(3,sFVone*eye(nxy))
 end
 
-% LMI conditions
-cnt = 0;
+% % LMI conditions
+% cnt = 0;
 
 if nnz(sqrt(Dmat.data.nominal'*Dmat.data.nominal) > eye(ne + nu)) > 0
     % Dmat is plftmat but should have no blocks so equal to nominal
@@ -258,9 +244,7 @@ lmiterm([-cnt 1 1 X_0],1,1);
 cnt = cnt + 1;
 lmiterm([-cnt 1 1 X_0],Gp_0',Gp_0);
 
-% 0 < Rxy
-cnt = cnt + 1;
-lmiterm([-cnt 1 1 Rxy],1,1);
+% 0 < Rxy % in fullBlockS
 
 %     0 < RRXY'*blkdiag(PiXY,XY_0mat)*RRXY
 cnt = cnt + 1;
@@ -281,9 +265,7 @@ if isequal(Method,'MaxFeas')
     lmiterm([cnt 1 1 Y_0],1,1);
 end
 
-% Rx < 0
-cnt = cnt + 1;
-lmiterm([cnt 1 1 Rx],1,1);
+% % Rx < 0 % in fullBlockS
 
 % RRX'*blkdiag(PiRX,X_0mat)*RRX < 0
 cnt = cnt + 1;
@@ -297,9 +279,7 @@ lmiterm([cnt 6 7 0],eye(nx));
 lmiterm([cnt 8 8  gam],-eye(ne + nd),1);
 lmiterm([cnt 8 9 0],eye(ne + nd));
 
-% Ry < 0
-cnt = cnt + 1;
-lmiterm([cnt 1 1 Ry],1,1);
+% Ry < 0 % in fullBlockS
 
 % RRY'*blkdiag(PiRY,Y_0mat)*RRY < 0
 cnt = cnt + 1;
