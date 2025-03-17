@@ -9,11 +9,12 @@ function [Kopt,gamopt,Info] = lpvsyn(P,nmeas,ncont,Xb,Yb,opt)
 %
 % See also: lpvsynOptions.
 
-narginchk(5,6);
+narginchk(4,6);
 nin = nargin;
 
 
 if nin<=4
+    opt = Xb;
     % EB 06.12.24: How is no basis function case handled?
 %     if nin==3
 %         % K = lpvsyn(sys,nmeas,ncont)
@@ -70,7 +71,7 @@ end
 nr = sum(nri);
 nx = order(M);
 
-simplifyopt = 'full'; % EB 31.07: Reduces number of occurences in lft blocks
+simplifyopt = 'full'; % EB 31.07.24: Reduces number of occurences in lft blocks
 
 %% Basis functions
 % define basis functions for feedback
