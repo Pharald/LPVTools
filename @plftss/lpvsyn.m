@@ -2,10 +2,13 @@
 function [Kopt,gamopt,Info] = lpvsyn(P,nmeas,ncont,Xb,Yb,opt)
 % LPVSYN  Parameter-dependent controller synthesis for PLFTSS
 %
+% P is a plftss
+% Xb and Yb are structures with fields basis containing the basis functions
+% and partial containting the partial derivatives of the basis functions.
+% The basis and partial fields must be plft or double.
 %
 % See also: lpvsynOptions.
 
-% sysb = P; % no balancing occurs
 narginchk(5,6);
 nin = nargin;
 
@@ -72,31 +75,59 @@ simplifyopt = 'full'; % EB 31.07: Reduces number of occurences in lft blocks
 %% Basis functions
 % define basis functions for feedback
 nbasisX = size(Xb.basis,1); % # of basis functions X
-xbNames = fieldnames(Xb.basis.Data.Uncertainty);
-nparx = size(xbNames,1); % # of params in basis X
-Gp = Xb.basis(1)*eye(nx);
-partialGp = Xb.partial(1)*eye(nx);
-for ii = 2:nbasisX
-    Gp = [Gp; Xb.basis(ii)*eye(nx)];
-    partialGp = [partialGp; Xb.partial(ii)*eye(nx)];
+if ~isa(Xb.basis,'double')
+    Xbb = Xb.basis.Data;
+    xbNames = fieldnames(Xbb.Uncertainty);
+    nparx = size(xbNames,1); % # of params in basis X
+else
+    Xbb = Xb.basis;
+    nparx = 0;
 end
 
-Gp_0 = Gp.Data.nominalValue;
+if ~isa(Xb.partial,'double')
+    Xbp = Xb.partial.Data;
+else
+    Xbp = Xb.partial;
+    nparx = 0;
+end
+
+
+Gp = Xbb(1)*eye(nx);
+partialGp = Xbp(1)*eye(nx);
+for ii = 2:nbasisX
+    Gp = [Gp; Xbb(ii)*eye(nx)];
+    partialGp = [partialGp; Xbp(ii)*eye(nx)];
+end
+
+Gp_0 = Gp.nominalValue; % Gp is a umat
 np_g = size(Gp,1);
 
 % define basis functions for filter
 nbasisY = size(Yb.basis,1); % # of basis functions Y
-ybNames = fieldnames(Yb.basis.Data.Uncertainty);
-npary = size(ybNames,1); % # of params in basis Y
-Hp = Yb.basis(1)*eye(nx);
-partialHp = Yb.partial(1)*eye(nx);
-
-for ii = 2:nbasisY
-    Hp = [Hp; Yb.basis(ii)*eye(nx)];
-    partialHp = [partialHp; Yb.partial(ii)*eye(nx)];
+if ~isa(Xb.basis,'double')
+    Ybb = Yb.basis.Data;
+    ybNames = fieldnames(Ybb.Uncertainty);
+    npary = size(ybNames,1); % # of params in basis Y
+else
+    Ybb = Yb.basis;
+    npary = 0;
 end
 
-Hp_0 = Hp.Data.nominalValue;
+if ~isa(Yb.partial,'double')
+    Ybp = Yb.partial.Data;
+else
+    Ybp = Yb.partial;
+    npary = 0;
+end
+
+Hp = Ybb(1)*eye(nx);
+partialHp = Ybp(1)*eye(nx);
+for ii = 2:nbasisY
+    Hp = [Hp; Ybb(ii)*eye(nx)];
+    partialHp = [partialHp; Ybp(ii)*eye(nx)];
+end
+
+Hp_0 = Hp.nominalValue;
 np_h = size(Hp,1);
 
 %%
