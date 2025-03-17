@@ -26,33 +26,33 @@ classdef (InferiorClasses={?frd, ?ss,?tf,?zpk,?ureal,?ucomplex,...
     % Class definition for parameter varying matrix in LFT framework       
 
     properties (Dependent)        
-        Parameter = [];
-        Uncertainty = [];
-        NominalValue = [];
+        Parameter;
+        Uncertainty;
+        NominalValue;
         
         % Properties from USS (list as dependent to support tab complete)
         % Unsupported: 'SamplingGrid'; 'Blocks'
-        a
-        b
-        c
-        d
-        e
-        StateName
-        StateUnit
-        InputDelay
-        OutputDelay
-        Ts
-        TimeUnit
-        InputName
-        InputUnit
-        InputGroup
-        OutputName
-        OutputUnit
-        OutputGroup
-        Name
-        Notes
-        UserData
-        InternalDelay
+        a;
+        b;
+        c;
+        d;
+        e;
+        StateName;
+        StateUnit;
+        InputDelay;
+        OutputDelay;
+        Ts;
+        TimeUnit;
+        InputName;
+        InputUnit;
+        InputGroup;
+        OutputName;
+        OutputUnit;
+        OutputGroup;
+        Name;
+        Notes;
+        UserData;
+        InternalDelay;
     end
     
     
@@ -168,6 +168,60 @@ classdef (InferiorClasses={?frd, ?ss,?tf,?zpk,?ureal,?ucomplex,...
                 error(errstr);
             end
         end
+
+
+    % get
+    function Uncertainty = get.Uncertainty(obj)
+    
+        Uncertainty = obj.Data.Uncertainty;
+
+    end
+
+    % get
+    function Parameter = get.Parameter(obj)
+    
+    params = fieldnames(obj.Uncertainty);
+        
+        for ii = 1:length(params)
+            domRange(ii,:) = obj.Uncertainty.(params{ii}).range;
+%             domRB(ii,:) = obj.Uncertainty.(params{ii}).ratebounds;
+            Parameter.(params{ii}) = tvreal(params{ii},domRange,obj.RateBounds{ii,2}); 
+        end
+    
+    end
+
+%     function Parameter = get.Parameter(obj)
+%     paramnames = fieldnames(obj.Data.Uncertainty);
+%     paramdata = obj.Data.Uncertainty;
+%     Parameter = cell2struct()
+%     end
+
+%         NominalValue;
+%         
+%         % Properties from USS (list as dependent to support tab complete)
+%         % Unsupported: 'SamplingGrid'; 'Blocks'
+%         a;
+%         b;
+%         c;
+%         d;
+%         e;
+%         StateName;
+%         StateUnit;
+%         InputDelay;
+%         OutputDelay;
+%         Ts;
+%         TimeUnit;
+%         InputName;
+%         InputUnit;
+%         InputGroup;
+%         OutputName;
+%         OutputUnit;
+%         OutputGroup;
+%         Name;
+%         Notes;
+%         UserData;
+%         InternalDelay;
+
         
         % Display
         % XXX PJS: Initial implementation. Needs further consideration.
