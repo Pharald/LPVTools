@@ -529,11 +529,6 @@ G021 = G0(ndelta+1:end,1:ndelta);
 G022 = G0(ndelta+1:end,ndelta+1:end);
 G012 = G0(1:ndelta,ndelta+1:end);
 
-% check partition
-if size(G011) ~= [ndelta ndelta] | size(G021) ~= [n_out ndelta] | size(G012) ~= [ndelta n_in] | size(G022) ~= [n_out n_in]
-    error('dimensions of partitions incorrect')
-end
-
 RR1 = [G011, G012; eye(ndelta), zeros(ndelta,n_in); G021, G022];
 end
 
