@@ -1,4 +1,4 @@
-function [Gpart,Pi,ndec,cnt] = fullBlockS(Gp,ndec,cnt)
+function [Gpart,Pi,ndec,cnt,info] = fullBlockS(Gp,ndec,cnt)
 
 % for X(p) < 0 that satisfies X(p) = G'(p) X0 G(p) and G(p) = Fu(G0,Delta(p))
 % and X0 is symmetrical
@@ -12,10 +12,12 @@ function [Gpart,Pi,ndec,cnt] = fullBlockS(Gp,ndec,cnt)
 
 % cnt is the current LMI number
 
-
+nargoutchk(4,5); % not necessary to output info
 
 % partition Gp and determine size of Delta(p)
 [Gpart,ndelta] = partition_mat(Gp);
+
+info.ndelta = ndelta;
 
 % Define multiplier
 % ---- Can add options and more types of multipliers
@@ -27,10 +29,14 @@ sR = diag(ndec+1:ndelta+ndec);
 [R,ndec,~] = lmivar(3,sR);                 % diagonal
 Pi = lmivar(3,[-sR, sS; sS', sR]);
 
+info.Pidim = [ndelta*2, ndelta*2]; % dimensions of multiplier
+
 % lmi condition
 lmiterm([cnt 1 1 R],1,1); 
 % only one condition so cnt doesn't change
 % -------------------------------------------------
+
+
 
 end
 

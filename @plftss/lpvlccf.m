@@ -70,8 +70,8 @@ ny = size(C,1);    % # of measurements
 nu = size(B,2);    % # of inputs
 nstate = size(A,1);
 nbasis = size(Zb.basis,1); % # of basis functions
-ybNames = fieldnames(Zb.basis.Uncertainty);
-npary = size(ybNames,1); % # of params in basis Y
+zbNames = fieldnames(Zb.basis.Uncertainty);
+nparz = size(zbNames,1); % # of params in basis Z
 np = Zb.bSplit*nstate;
 
 R = eye(ny); %eye(ny)+D*D'; % assuming D == 0, for operation R^(0.5) later, R cannot be an lft
