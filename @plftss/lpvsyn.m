@@ -9,22 +9,24 @@ function [Kopt,gamopt,Info] = lpvsyn(P,nmeas,ncont,Xb,Yb,opt)
 %
 % See also: lpvsynOptions.
 
-narginchk(4,6);
+narginchk(3,6);
 nin = nargin;
 
 
-if nin<=4
+if nin==3
+        % K = lpvsyn(sys,nmeas,ncont)
+        opt = lpvsynOptions;
+elseif nin<=4
     opt = Xb;
-    % EB 06.12.24: How is no basis function case handled?
-%     if nin==3
-%         % K = lpvsyn(sys,nmeas,ncont)
-%         opt = lpvsynOptions;
-%     else
+    % EB 06.12.24: How is no basis function case handled? -> will error if
+    % attempted
+%     
 %         % K = lpvsyn(sys,nmeas,ncont,opt)
 %         opt = Xb;
 %     end
-%     Yb = [];
-%     Xb = Yb;
+    Yb.basis = [];
+    Yb.partial = [];
+    Xb = Yb;
 elseif nin==5
     % K = lpvsyn(sys,nmeas,ncont,Xb,Yb)
     opt = lpvsynOptions;
@@ -228,7 +230,7 @@ cnt = -cnt;
 [gam,ndec] = lmivar(1,[1 1]);
 
 if isequal(opt.Method,'MaxFeas')
-    [FV,ndec] = lmivar(1,[1 1]);
+    [LBC,ndec] = lmivar(1,[nx 0]);
 % [FVone,ndec,sFVone] = lmivar(1,[1 1]);
 % [FV,ndec,sFV] = lmivar(3,sFVone*eye(nxy))
 end
@@ -288,12 +290,13 @@ lmiterm([-cnt 5 5 Y_0],1,1);
 % if isequal(Method,'MaxFeas')
 % lmiterm([cnt 0 0 FV],eye(nxy));
 % end
+
 if isequal(Method,'MaxFeas')
    cnt = cnt+1;
-    lmiterm([-cnt 1 1 FV],eye(np_h),eye(np_h));
+    lmiterm([-cnt 1 1 LBC],eye(np_h),eye(np_h));
     lmiterm([cnt 1 1 X_0],1,1);
     cnt = cnt+1;
-    lmiterm([-cnt 1 1 FV],eye(np_g),eye(np_g));
+    lmiterm([-cnt 1 1 LBC],eye(np_g),eye(np_g));
     lmiterm([cnt 1 1 Y_0],1,1);
 end
 
@@ -436,7 +439,7 @@ if isequal(opt.Method,'BackOff')
     Info1 = Info;
     gamopt1 = gamopt;    
    
-    [Kopt,gamopt,Info2] = lpvsyn(P,nmeas,ncont,opt2);
+    [Kopt,gamopt,Info2] = lpvsyn(P,nmeas,ncont,Xb,Yb,opt2);
 %  lmisys = setmvar(lmisys,gam,opt2.Gammaub);
 % [tfeas,xfeas] = feasp(lmisys,[0 1000 0 10 0]);
 
