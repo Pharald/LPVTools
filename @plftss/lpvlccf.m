@@ -98,10 +98,10 @@ Qz_matrix = simplify(G_matrix*Q_matrix,simplifyopt);
 Gw = [zeros(nstate,nstate) eye(nstate); eye(nstate) zeros(nstate,nstate); zeros(sum(np),nstate), Hp]; 
 
 % Qz
-[QQ,ndeltaq] = partition_mat(Qz_matrix);
+% [QQ,ndeltaq] = partition_mat(Qz_matrix);
 
 % Gw
-[GW,ndeltagw] = partition_mat(Gw);
+% [GW,ndeltagw] = partition_mat(Gw);
 
 %% LMI Setup
 
@@ -118,17 +118,17 @@ end
 [W,n,sW] = lmivar(1,[nstate 1]);
 
 % defining multipliers
-sS_1w = skewdec(ndeltagw,n);
-[S_1w,n,~] = lmivar(3,sS_1w); % skew symmetric
-sR_1w = diag(n+1:ndeltagw+n);
-[R_1w,n,~] = lmivar(3,sR_1w); % diagonal
-PiGw = lmivar(3,[-sR_1w, sS_1w; sS_1w',sR_1w]);
-
-sS_1q = skewdec(ndeltaq,n);
-[S_1q,n,sS_1q] = lmivar(3,sS_1q); % skew symmetric
-sR_1q = diag(n+1:ndeltaq+n);
-R_1q = lmivar(3,sR_1q); % diagonal
-PiQz = lmivar(3,[-sR_1q, sS_1q; sS_1q', sR_1q]);
+% sS_1w = skewdec(ndeltagw,n);
+% [S_1w,n,~] = lmivar(3,sS_1w); % skew symmetric
+% sR_1w = diag(n+1:ndeltagw+n);
+% [R_1w,n,~] = lmivar(3,sR_1w); % diagonal
+% PiGw = lmivar(3,[-sR_1w, sS_1w; sS_1w',sR_1w]);
+% 
+% sS_1q = skewdec(ndeltaq,n);
+% [S_1q,n,sS_1q] = lmivar(3,sS_1q); % skew symmetric
+% sR_1q = diag(n+1:ndeltaq+n);
+% R_1q = lmivar(3,sR_1q); % diagonal
+% PiQz = lmivar(3,[-sR_1q, sS_1q; sS_1q', sR_1q]);
 
 %% LMI conditions
 cnt = 1;
@@ -143,8 +143,10 @@ lmiterm([-cnt 1 1 Z_0],Hp_0',Hp_0);   % H_p'*Z_0*Hp_0
 cnt = cnt+1;
 
 % second LMI condition
+% full block S procedure multipliers defined in fullBlockS
 % R_1q < 0;
-lmiterm([cnt 1 1 R_1q],1,1);  % R_1q
+% lmiterm([cnt 1 1 R_1q],1,1);  % R_1q
+[QQ,PiQz,n,cnt] = fullBlockS(Qz_matrix,n,cnt);
 cnt = cnt+1;
 
 % QQ'*blkdiag(PiQz, Z_0mat)*QQ < 0
@@ -157,17 +159,18 @@ cnt = cnt+1;
 
 % inversion condition
 % 0 < R_1w
-lmiterm([-cnt 1 1 R_1w],1,1); % R_1w
-cnt = cnt+1;
+% lmiterm([-cnt 1 1 R_1w],1,1); % R_1w
+[GW,PiGw,n,cnt] = fullBlockS(Gw,n,-cnt);
+cnt = -cnt;
+cnt = cnt + 1;
 
 % 0 < GW'*blkdiag(PiGw, W_mat)*GW
 lmiterm([-cnt 0 0 0],GW)          % GW'__GW outer factor
 lmiterm([-cnt 1 1 PiGw],1,1);     % PiGw
-
 % W_mat
-lmiterm([-6 2 3 0],1);
-lmiterm([-6 3 3 W],1,1);
-lmiterm([-6 4 4 Z_0],1,1);
+lmiterm([-cnt 2 3 0],1);
+lmiterm([-cnt 3 3 W],1,1);
+lmiterm([-cnt 4 4 Z_0],1,1);
 
 % % % ------------------------------------------------------------------------
 % % positive definiteness of W
