@@ -103,7 +103,12 @@ for ii = 2:nbasisX
 end
 
 Gp_0 = Gp.nominalValue; % Gp is a umat
-np_g = size(Gp,1);
+
+if nnz(strcmp(fieldnames(Xb),'bSplit')) ~= 0
+    np_g = Xb.bSplit*nx;
+else
+    np_g = size(Gp,1);    
+end
 
 % define basis functions for filter
 nbasisY = size(Yb.basis,1); % # of basis functions Y
@@ -131,7 +136,14 @@ for ii = 2:nbasisY
 end
 
 Hp_0 = Hp.nominalValue;
-np_h = size(Hp,1);
+
+if nnz(strcmp(fieldnames(Yb),'bSplit')) ~= 0
+    np_h = Yb.bSplit*nx;
+else
+    np_h = size(Hp,1);    
+end
+
+
 
 %%
 
@@ -224,13 +236,13 @@ cnt = cnt+1;
 [RRY,PiRY,ndec,cnt] = fullBlockS(RpYmat,ndec,cnt);
 
 cnt = cnt+1;
-[RRXY,PiXY,ndec,cnt] = fullBlockS(GHxy,ndec,-cnt); % XY xondition is 0 <
+[RRXY,PiXY,ndec,cnt,XYinfo] = fullBlockS(GHxy,ndec,-cnt); % XY xondition is 0 <
 cnt = -cnt;
 
 [gam,ndec] = lmivar(1,[1 1]);
 
 if isequal(opt.Method,'MaxFeas')
-    [LBC,ndec] = lmivar(1,[nx 0]);
+    [LBC,ndec] = lmivar(1,[np_g 0]);
 % [FVone,ndec,sFVone] = lmivar(1,[1 1]);
 % [FV,ndec,sFV] = lmivar(3,sFVone*eye(nxy))
 end
@@ -287,17 +299,14 @@ lmiterm([-cnt 1 1 PiXY],1,1);
 lmiterm([-cnt 2 2 X_0],1,1);
 lmiterm([-cnt 3 4 0],eye(nx));
 lmiterm([-cnt 5 5 Y_0],1,1);
-% if isequal(Method,'MaxFeas')
-% lmiterm([cnt 0 0 FV],eye(nxy));
-% end
 
 if isequal(Method,'MaxFeas')
-   cnt = cnt+1;
-    lmiterm([-cnt 1 1 LBC],eye(np_h),eye(np_h));
-    lmiterm([cnt 1 1 X_0],1,1);
-    cnt = cnt+1;
-    lmiterm([-cnt 1 1 LBC],eye(np_g),eye(np_g));
-    lmiterm([cnt 1 1 Y_0],1,1);
+    lmiterm([cnt 2 2 LBC],1,1);
+    ndt = XYinfo.ndelta;        % dimensions from partition of LFT
+    outerFact = zeros(size(RRXY));
+    outerFact(1:ndt,1:ndt) = eye(ndt);
+    lmiterm([cnt 0 0 0],outerFact);   
+% lmiterm([cnt 0 0 LBC],eye(size(RRXY,2))); % doesn't allow dimensions
 end
 
 % % Rx < 0 % in fullBlockS
@@ -334,8 +343,8 @@ lmiterm([cnt 8 9 0],eye(ne + nu));
  cobj= zeros(ndec,1);
 
  if isequal(opt.Method,'MaxFeas')
-     % Method = 'MaxFeas':   min bound on X_0 Y_0 
-    cobj(end) = 1;
+     % Method = 'MaxFeas':   max LBC
+    cobj(end) = -1;
  else
      % Method = 'BackOff' or 'MinGamma'
      cobj(end) = 1;
