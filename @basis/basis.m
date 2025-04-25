@@ -46,26 +46,39 @@ classdef basis
             elseif nargin==1 && isa(BasisFunction,'basis');
                 obj = BasisFunction;
             elseif nargin==2
-                BasisFunction = pmat(BasisFunction);
-                nvar = BasisFunction.Domain.NumIV;
-                Partials = pmat(varargin{1});
-                if nvar == 0 && numel(Partials.Data)==1 
-                    if Partials.Data == 0
-                        obj.BasisFunction = BasisFunction;
-                        obj.Partials = pmat(zeros(1,0));
-                        % XXX handles calls like: b1 = basis(7,0)
-                    else
-                        error('Partial associated with a constant BasisFunction must be zero')
-                    end
-                    
-                elseif nvar ==1
-                    [BFext,Pext] = domunion(BasisFunction,Partials);
-                    obj.BasisFunction = BFext;
-                    obj.Partials = Pext;
-                    obj.IVName = BFext.Domain.IVName;
+                if isa(BasisFunction, 'plftmat')
+                    % HP 25/04/25: This is a rudimentary first shot. For
+                    % lft based basis function it can only be a single
+                    % plftmat as basis function and plftmat for its
+                    % partial. No other functionalties work at the moment
+                    % for lft basis functions
+                    obj.BasisFunction = plftmat(BasisFunction);
+                    nvar = length(fieldnames(BasisFunction.Parameter));
+                    obj.Partials = plftmat(varargin{1});
                 else
-                    error('BasisFunction must have at most one IV for 2 input argument call')                    
+                    BasisFunction = pmat(BasisFunction);
+                    nvar = BasisFunction.Domain.NumIV;
+                    Partials = pmat(varargin{1});
+
+                    if nvar == 0 && numel(Partials.Data)==1
+                        if Partials.Data == 0
+                            obj.BasisFunction = BasisFunction;
+                            obj.Partials = pmat(zeros(1,0));
+                            % XXX handles calls like: b1 = basis(7,0)
+                        else
+                            error('Partial associated with a constant BasisFunction must be zero')
+                        end
+
+                    elseif nvar ==1
+                        [BFext,Pext] = domunion(BasisFunction,Partials);
+                        obj.BasisFunction = BFext;
+                        obj.Partials = Pext;
+                        obj.IVName = BFext.Domain.IVName;
+                    else
+                        error('BasisFunction must have at most one IV for 2 input argument call')
+                    end
                 end
+                
                 
             elseif nargin ==3 && ~ischar(varargin{1})
                 [BFext,Pext] = domunion(BasisFunction,varargin{1});
@@ -156,36 +169,45 @@ classdef basis
             nbasis = size(obj.BasisFunction,1);
             nvar = size(obj.IVName,1);
             
-            % Describe number of IVs
-            if nvar==1
-                IVStr = ['1 PGRID'];
+            % check for plftmat. If it is in plftmat just diplay the
+            % plftmat. 
+            if isa(obj.BasisFunction,'plftmat')
+                obj.BasisFunction
+
             else
-                IVStr = [int2str(nvar) ' PGRIDs'];
-            end
-            
-            if nbasis>0
-                dispStr = ['BASIS: ' int2str(nbasis) ' basis functions '];
-                dispStr = [dispStr 'and ' int2str(nvar) ' partial derivatives'];
-                dispStr = [dispStr ' with respect to ' IVStr];
-            end
-            disp(dispStr);
-            
-            % Display individual IVs
-            Dom = obj.BasisFunction.Domain;            
-            dispStr = display(Dom);
-            if nvar>0
-                tmp = 'The BASIS object consists of the following blocks:';
-                for i=2:size(dispStr,1)
-                   stri = dispStr(i,:);
-                   idx = strfind(stri,', rate bounds');
-                   tmp = char(tmp,stri(1:idx-1)); 
+
+
+                % Describe number of IVs
+                if nvar==1
+                    IVStr = ['1 PGRID'];
+                else
+                    IVStr = [int2str(nvar) ' PGRIDs'];
                 end
-                dispStr = tmp;
-%                 dispStr = char(tmp,dispStr(2:end,:));
-            else
-                dispStr = '';
+
+                if nbasis>0
+                    dispStr = ['BASIS: ' int2str(nbasis) ' basis functions '];
+                    dispStr = [dispStr 'and ' int2str(nvar) ' partial derivatives'];
+                    dispStr = [dispStr ' with respect to ' IVStr];
+                end
+                disp(dispStr);
+
+                % Display individual IVs
+                Dom = obj.BasisFunction.Domain;
+                dispStr = display(Dom);
+                if nvar>0
+                    tmp = 'The BASIS object consists of the following blocks:';
+                    for i=2:size(dispStr,1)
+                        stri = dispStr(i,:);
+                        idx = strfind(stri,', rate bounds');
+                        tmp = char(tmp,stri(1:idx-1));
+                    end
+                    dispStr = tmp;
+                    %                 dispStr = char(tmp,dispStr(2:end,:));
+                else
+                    dispStr = '';
+                end
+                disp(dispStr)
             end
-            disp(dispStr)                       
         end
         
         % Size
@@ -242,6 +264,8 @@ classdef basis
         % isvalid
         function [pflag,errstr] = isvalid(obj)
         % ISVALID Determine if BASIS object is valid.
+
+        % 25/04/25 HP: no check for plftmat yet
             errstr = [];
             pflag = 1;
             
@@ -266,43 +290,50 @@ classdef basis
                 errstr = 'IVName should be a cell array';
             end
             
+
             % BasisFunction must be an nbasis-by-1 PMAT
             BF = obj.BasisFunction;
-            if isa(BF,'pmat') && size(BF,2)==1
-                nbasis = size(BF,1);
-            else
-                pflag = 0;
-                errstr = 'BasisFunction should be an Nbasis-by-1 PMAT';
+
+            if ~isa(BF,'plftmat')
+                if isa(BF,'pmat') && size(BF,2)==1
+                    nbasis = size(BF,1);
+                else
+                    pflag = 0;
+                    errstr = 'BasisFunction should be an Nbasis-by-1 PMAT';
+                end
+                % All variables in BF must appear in IVN
+                if ~isempty( setdiff(BF.Domain.IVName,IVN) )
+                    pflag = 0;
+                    errstr = 'Variables in BasisFunction must be a subset of Variables in IVName';
+                end
             end
-            % All variables in BF must appear in IVN
-            if ~isempty( setdiff(BF.Domain.IVName,IVN) )
-                pflag = 0;
-                errstr = 'Variables in BasisFunction must be a subset of Variables in IVName';
-            end
-            
             % Partials must be an nbasis-by-nvar PMAT
             P = obj.Partials;
-            if isa(P,'pmat') && size(P,1)==nbasis && size(P,2)==nvar
-                % All variables in Partial must appear in BF
-                if ~isempty( setdiff(P.Domain.IVName,BF.Domain.IVName) )
-                    pflag = 0;
-                    errstr = 'Variables in Partials must be a subset of Variables in BasisFunctions';
-                end
-                
-                % Any variables in IVN that don't appear in BF must have
-                % zero partials
-                lidx = ismember(IVN,BF.Domain.IVName);
-                idx = find(~lidx);
-                if ~isempty(idx)
-                    tmp = P(:,idx);
-                    if any(tmp.Data)
+
+            if ~isa(P,'plftmat')
+
+                if isa(P,'pmat') && size(P,1)==nbasis && size(P,2)==nvar
+                    % All variables in Partial must appear in BF
+                    if ~isempty( setdiff(P.Domain.IVName,BF.Domain.IVName) )
                         pflag = 0;
-                        errstr = 'Any variables in IVName that do not appear in BasisFunctions must have zero partials.';
+                        errstr = 'Variables in Partials must be a subset of Variables in BasisFunctions';
                     end
+
+                    % Any variables in IVN that don't appear in BF must have
+                    % zero partials
+                    lidx = ismember(IVN,BF.Domain.IVName);
+                    idx = find(~lidx);
+                    if ~isempty(idx)
+                        tmp = P(:,idx);
+                        if any(tmp.Data)
+                            pflag = 0;
+                            errstr = 'Any variables in IVName that do not appear in BasisFunctions must have zero partials.';
+                        end
+                    end
+                else
+                    pflag = 0;
+                    errstr = 'Partials should be a Nbasis-by-Nvar PMAT';
                 end
-            else
-                pflag = 0;
-                errstr = 'Partials should be a Nbasis-by-Nvar PMAT';
             end
             
             if pflag==0 && nargout==0
