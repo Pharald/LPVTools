@@ -97,12 +97,6 @@ Qz_matrix = simplify(G_matrix*Q_matrix,simplifyopt);
 
 Gw = [zeros(nstate,nstate) eye(nstate); eye(nstate) zeros(nstate,nstate); zeros(sum(np),nstate), Hp]; 
 
-% Qz
-% [QQ,ndeltaq] = partition_mat(Qz_matrix);
-
-% Gw
-% [GW,ndeltagw] = partition_mat(Gw);
-
 %% LMI Setup
 
 setlmis([])
@@ -116,19 +110,6 @@ else
 end
 
 [W,n,sW] = lmivar(1,[nstate 1]);
-
-% defining multipliers
-% sS_1w = skewdec(ndeltagw,n);
-% [S_1w,n,~] = lmivar(3,sS_1w); % skew symmetric
-% sR_1w = diag(n+1:ndeltagw+n);
-% [R_1w,n,~] = lmivar(3,sR_1w); % diagonal
-% PiGw = lmivar(3,[-sR_1w, sS_1w; sS_1w',sR_1w]);
-% 
-% sS_1q = skewdec(ndeltaq,n);
-% [S_1q,n,sS_1q] = lmivar(3,sS_1q); % skew symmetric
-% sR_1q = diag(n+1:ndeltaq+n);
-% R_1q = lmivar(3,sR_1q); % diagonal
-% PiQz = lmivar(3,[-sR_1q, sS_1q; sS_1q', sR_1q]);
 
 %% LMI conditions
 cnt = 1;
@@ -144,8 +125,6 @@ cnt = cnt+1;
 
 % second LMI condition
 % full block S procedure multipliers defined in fullBlockS
-% R_1q < 0;
-% lmiterm([cnt 1 1 R_1q],1,1);  % R_1q
 [QQ,PiQz,n,cnt] = fullBlockS(Qz_matrix,n,cnt);
 cnt = cnt+1;
 
@@ -158,8 +137,6 @@ lmiterm([cnt 4 4 0],-eye(nu+ny));          % -eye(nu+ny)
 cnt = cnt+1;
 
 % inversion condition
-% 0 < R_1w
-% lmiterm([-cnt 1 1 R_1w],1,1); % R_1w
 [GW,PiGw,n,cnt] = fullBlockS(Gw,n,-cnt);
 cnt = -cnt;
 cnt = cnt + 1;
@@ -171,14 +148,6 @@ lmiterm([-cnt 1 1 PiGw],1,1);     % PiGw
 lmiterm([-cnt 2 3 0],1);
 lmiterm([-cnt 3 3 W],1,1);
 lmiterm([-cnt 4 4 Z_0],1,1);
-
-% % % ------------------------------------------------------------------------
-% % positive definiteness of W
-% % 0 < W(0)
-% lmiterm([7 1 1 0],0);               % 0
-% lmiterm([-7 1 1 W],Hp_0',Hp_0);     % H_p'*W_0*Hp_0
-% % % ------------------------------------------------------------------------
-
 
 % Get LMI Options
 % TODO HP 10/11/2024: Shall we include options object in the code?
@@ -229,29 +198,3 @@ Nl = ss(Afact,Bfact(:,ny+1:end),Cfact,Dfact(:,ny+1:end));
 fact =ss(Afact,Bfact,Cfact,Dfact);
 
 end 
-
-function [RR1,ndelta] = partition_mat(G)
-
-% ------------Partition R1 -----------------------------------------------
-if isa(G,'uss') || isa(G,'umat')
-G = simplify(G,'full');
-    [G0,delta] = lftdata(G);
-
-elseif isa(G,'plftss') || isa(G,'plftmat')
-    G = simplify(G.Data,'full');
-[G0,delta,~,~] = lftdata(G);
-end
-
-% lft(G0,deltar); 
-
-n_in = size(G,2);
-n_out = size(G,1);
-ndelta = size(delta,1);
-
-G011 = G0(1:ndelta,1:ndelta);
-G021 = G0(ndelta+1:end,1:ndelta);
-G022 = G0(ndelta+1:end,ndelta+1:end);
-G012 = G0(1:ndelta,ndelta+1:end);
-
-RR1 = [G011, G012; eye(ndelta), zeros(ndelta,n_in); G021, G022];
-end
