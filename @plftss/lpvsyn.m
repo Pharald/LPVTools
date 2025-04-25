@@ -1,5 +1,5 @@
 
-function [Kopt,gamopt,Info] = lpvsyn(P,nmeas,ncont,Xb,Yb,opt)
+function [Kopt,gamopt,Info] = lpvsyn(P,ne,nu,Xb,Yb,opt)
 % LPVSYN  Parameter-dependent controller synthesis for PLFTSS
 %
 % P is a plftss
@@ -7,6 +7,11 @@ function [Kopt,gamopt,Info] = lpvsyn(P,nmeas,ncont,Xb,Yb,opt)
 % and partial containting the partial derivatives of the basis functions.
 % The basis and partial fields must be plft or double.
 %
+% lpvsyn(P,nmeas,ncont,Xb,Yb,opt)
+% lpvsyn(P,nmeas,ncont,opt) % no basis NOT SUPPORTED
+% lpvsyn(P,nmeas,ncont,Xb,Yb) % default options
+% lpvsyn(P,nmeas,ncont) % default options no basis functions NOT SUPPORTED
+
 % See also: lpvsynOptions.
 
 narginchk(3,6);
@@ -16,31 +21,24 @@ nin = nargin;
 if nin==3
         % K = lpvsyn(sys,nmeas,ncont)
         opt = lpvsynOptions;
-elseif nin<=4
+elseif nin<=4 % no basis functions specified
     opt = Xb;
     % EB 06.12.24: How is no basis function case handled? -> will error if
     % attempted
-%     
-%         % K = lpvsyn(sys,nmeas,ncont,opt)
-%         opt = Xb;
-%     end
     Yb.basis = [];
     Yb.partial = [];
     Xb = Yb;
+    error('Basis functions must be specified')
 elseif nin==5
     % K = lpvsyn(sys,nmeas,ncont,Xb,Yb)
     opt = lpvsynOptions;
-elseif nin~=6
-    error('Incorrect number of input arguments.')
 end
 
 Method = opt.Method;
 
 % Dimensions
 szP = iosize(P);
-nu = ncont;
-ne = nmeas;
-nd = nu; % disturbance is summative on input
+nd = nu; % assumes disturbance is summative on input
 
 %%
 
@@ -55,7 +53,7 @@ end
 rgridPlaceholder = rgrid(params,domData',domRB);
 
 % Orthogonalize general OLIC interconnection
-[sysb,TL,TR,FT] = orthog4syn_plftss(sysb,rgridPlaceholder,nmeas,ncont);
+[sysb,TL,TR,FT] = orthog4syn_plftss(sysb,rgridPlaceholder,ne,nu);
 %%
 
 [M,DELTA,BLKSTRUCT,NORMUNC] = lftdata(sysb,[],'Parameters');
@@ -261,7 +259,7 @@ cnt = cnt + 1;
 lmiterm([-cnt 1 1 gam],1,1);
 
 % Gammalb*I < gam < Gammaub*I
-if opt.Gammalb>0
+if opt.Gammalb > 0
     cnt = cnt+1;
     lmiterm([cnt 1 1 0],opt.Gammalb);
     lmiterm([-cnt 1 1 gam],1,1);
@@ -448,7 +446,7 @@ if isequal(opt.Method,'BackOff')
     Info1 = Info;
     gamopt1 = gamopt;    
    
-    [Kopt,gamopt,Info2] = lpvsyn(P,nmeas,ncont,Xb,Yb,opt2);
+    [Kopt,gamopt,Info2] = lpvsyn(P,ne,nu,Xb,Yb,opt2);
 %  lmisys = setmvar(lmisys,gam,opt2.Gammaub);
 % [tfeas,xfeas] = feasp(lmisys,[0 1000 0 10 0]);
 
