@@ -234,10 +234,10 @@ if isa(R,'double')
     Cfact = R^(-0.5)*C;
     Dfact = [R^(-0.5), R^(-0.5)*D];
 else
-% ------ TESTING in CASES WHERE R is not parameter varying ---
-    Cfact = R.NominalValue^(-0.5)*C;
-    Dfact = [R.NominalValue^(-0.5), R.NominalValue^(-0.5)*D];
-% ------------------------------------------------------------
+
+    Cfact = lftinvsqrt(R)*C;
+    Dfact = [lftinvsqrt(R), lftinvsqrt(R)*D];
+
 end
 
 Ml = ss(Afact,Bfact(:,1:ny),Cfact,Dfact(:,1:ny));
@@ -252,8 +252,57 @@ fact = plftss(fact,RB);
 end 
 
 
-function lftsqrt(R)
+function y = lftinvsqrt(R)
 
-sqrt(R)
+% R^(-0.5)
+% "quick fix" using symbolic toolbox
+
+% sqrtR = R^(0.5);
+[Rb,deltar,blkstruct] = lftdata(R);
+Uname = fieldnames(R.Uncertainty);
+
+nr = size(Rb,1);
+nd = size(deltar,1);
+np = size(blkstruct,1); % # of uncertain params
+
+for iv = 1:np
+    sId = blkstruct(iv).Occurrences; % size of param in delta block 
+end
+
+urealVec = cell([1 np]);
+
+if nd~=0
+    Rb11 = Rb(1:nd,1:nd);
+    Rb12 = Rb(1:nd,nd+1:end);
+    Rb21 = Rb(nd+1:end,1:nd);
+    Rb22 = Rb(nd+1:end,nd+1:end);
+
+    delta = sym('p1')*eye(sId(1));
+    deltaVec = 'p1';
+    urealVec{1} = R.Uncertainty.(Uname{1});
+
+    if np > 1 
+        for ii = 2:nb
+            name = append('p',char(string(ii)));
+            deltaVec = [deltaVec, name];
+            delta = blkdiag(delta,sym(name)*eye(sId(ii)));
+        end
+    end
+
+
+Rsym = Rb22 + Rb21*delta*inv(eye(nd) - Rb11*delta)*Rb12;
+ysym = inv(sqrtm(Rsym));
+
+y = subs(ysym,deltaVec,urealVec);
+
+
+% ----------------------------------
+% yb22 = sqrt(Rb22);
+% 
+% y = inv(sqrtR);
+
+else
+    y = R.NominalValue^(-0.5);
+end
 
 end
