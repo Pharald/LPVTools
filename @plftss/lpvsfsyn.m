@@ -288,7 +288,7 @@ else
     % feedback gain calculation
     K  = -(B2' + D112*Bhat'*gamma^(-2) - inv(D112*D111'*gamma^(-2) - eye(ne))*(C11*Xp*gamma^(-1) + D111*Bhat'*gamma^(-1)))*gamma*Xpinv - C21;
     % reconstruct as a plftss
-    K = plftss(K,RB);
+    K = plftmat(K,RB);
     end
 end
 end
