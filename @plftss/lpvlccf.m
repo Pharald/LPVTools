@@ -14,8 +14,8 @@ function [fact,Ml,Nl,L] = lpvlccf(P,Zb)
 % the gain L separately.
 %
 % The following assumptions are made in the current implementation:
-% 1. The D = 0 in the state space system P
-% 2. All parameter variation is normalised in the range [-1 1]
+% 1. The D matrix in the plant is not parameter dependent
+
 
 nin = nargin;
 narginchk(1, 2);
@@ -43,12 +43,9 @@ end
 % [Pdata,RBz,BFz,Pz] = basis2data(P,Zb); % EB: 04.25 make lft basis
 % definition compatible with pss basis objects
 
-if nnz(strcmp(fieldnames(Zb),'bSplit')) == 0
-    nparz = 0;
-else
-nparz = size(Zb.bSplit,1); % # of parameters in the basis functions
-end
-RBz = [-1 1]*ones(nparz,1); % EB 04.25: assuming normalised
+% All state space matrices and Hp must be umat (or double) so that
+% lftdata() correclty extracts the delta blocks after the outer factors are
+% constructed
 
 % Get state space data of PMAT system P
 % get state space data
@@ -70,32 +67,74 @@ ny = size(C,1);    % # of measurements
 nu = size(B,2);    % # of inputs
 nstate = size(A,1);
 nbasis = size(Zb.basis,1); % # of basis functions
-zbNames = fieldnames(Zb.basis.Uncertainty);
+% both cases possible with plftmat object --------------------------------
+% zbNames = fieldnames(Zb.basis.Uncertainty); % if params are ureal
+zbNames = fieldnames(Zb.basis.Data.Uncertainty); % if params are tvreal
+% ------------------------------------------------------------------------
 nparz = size(zbNames,1); % # of params in basis Z
-np = Zb.bSplit*nstate;
+if nparz > 1
+    np = Zb.bSplit*nstate;
+else
+    np = size(Zb.basis,1)*nstate;
+end
+RB = Zb.basis.RateBounds;
+RBz = Zb.basis.RateBounds{2};
 
-R = eye(ny); %eye(ny)+D*D'; % assuming D == 0, for operation R^(0.5) later, R cannot be an lft
-S = eye(nu); %eye(nu)+D'*D; 
+% not compatible with parameter varying D
+if ~isa(D,'double') && ~isempty(fieldnames(D.Uncertainty))
+    error('D matrix in plant cannot be parameter dependent')
+end
+
+R = eye(ny) + D*D';
+S = eye(nu) + D'*D; 
+Ab = A-B*inv(S)*D'*C;
 
 simplifyopt = 'full'; % EB 31.07: Reduces number of occurences
 
-Hp = Zb.basis(1)*eye(nstate);
-partialHp = Zb.partial(1)*eye(nstate);
-for ii = 2:nbasis
-    Hp = [Hp; Zb.basis(ii)*eye(nstate)];
-    partialHp = [partialHp; Zb.partial(ii)*eye(nstate)];
+Hp = Zb.basis.Data(1)*eye(nstate);
+
+if ~isa(Zb.partial,'double')
+    flgplft = 1;
+    partialHp = Zb.partial.Data(1)*eye(nstate);
+else
+    flgplft = 0;
+    partialHp = Zb.partial(1)*eye(nstate);
 end
-Hp_0 = Hp.nominalValue;
+
+% stack basis functions
+for ii = 2:nbasis
+    Hp = [Hp; Zb.basis.Data(ii)*eye(nstate)];
+    if flgplft
+        partialHp = [partialHp; Zb.partial.Data(ii)*eye(nstate)];
+    else
+        partialHp = [partialHp; Zb.partial(ii)*eye(nstate)];
+    end
+end
+
+partialHp = partialHp*RBz(2);
+Hp_0 = Hp.NominalValue;
 
 
 %% Factorisation of Parameter dependence from LMI conditions --------------
 
-% define Qz
-G_matrix = blkdiag([Hp partialHp; zeros(sum(np),nstate), Hp], -eye(nu + ny));
-Q_matrix = [A, B; eye(nstate), zeros(nstate,nu); -C, zeros(ny,nu); zeros(nu,nstate) -eye(nu)];
-Qz_matrix = simplify(G_matrix*Q_matrix,simplifyopt);
+% % define Qz
+% G_matrix = blkdiag([Hp partialHp; zeros(sum(np),nstate), Hp], -eye(nu + ny));
+% Q_matrix = [A, B; eye(nstate), zeros(nstate,nu); -C, zeros(ny,nu); zeros(nu,nstate) -eye(nu)];
+% Qz_matrix = simplify(G_matrix*Q_matrix,simplifyopt);
+% 
+% Gw = [zeros(nstate,nstate) eye(nstate); eye(nstate) zeros(nstate,nstate); zeros(sum(np),nstate), Hp]; 
 
-Gw = [zeros(nstate,nstate) eye(nstate); eye(nstate) zeros(nstate,nstate); zeros(sum(np),nstate), Hp]; 
+Qz_matrix = simplify([Hp*Ab + partialHp, Hp*B; ...
+                     Hp, zeros(size(Hp,1),size(B,2)); ...
+                     -C, zeros(size(C,1),size(B,2)); ...
+                  1/2*(R\C), zeros(size(C,1),size(B,2)); ...
+                 zeros(size(B,2),size(C,2)), -eye(size(B,2)); ...
+                 zeros(size(D,1),size(Ab,2)), -D],simplifyopt);
+
+Gw = simplify([zeros(nstate,nstate) eye(nstate); ... 
+       eye(nstate) zeros(nstate,nstate); ...
+       zeros(np,nstate), Hp]);
+
 
 %% LMI Setup
 
@@ -114,10 +153,10 @@ end
 %% LMI conditions
 cnt = 1;
 
-% first LMI condition
-% 0 < Z_0
-lmiterm([-cnt 1 1 Z_0],1,1);  % Z_0
-cnt = cnt+1;
+% % first LMI condition
+% % 0 < Z_0
+% lmiterm([-cnt 1 1 Z_0],1,1);  % Z_0
+% cnt = cnt+1;
 
 % 0 < Z(0)
 lmiterm([-cnt 1 1 Z_0],Hp_0',Hp_0);   % H_p'*Z_0*Hp_0
@@ -133,7 +172,8 @@ lmiterm([cnt 0 0 0],QQ);          % QQ'__ QQ outer factor
 lmiterm([cnt 1 1 PiQz],1,1);      % PiQz
 % Z_mat
 lmiterm([cnt 2 3 Z_0],1,1);
-lmiterm([cnt 4 4 0],-eye(nu+ny));          % -eye(nu+ny)
+lmiterm([cnt 4 5 0],eye(ny));
+lmiterm([cnt 6 6 0],-eye(nu+ny));          % -eye(nu+ny)
 cnt = cnt+1;
 
 % inversion condition
@@ -190,11 +230,30 @@ L = -(B*D'+Zp\C')/R;
 
 Afact = A+L*C;
 Bfact = [L, B+L*D];
-Cfact = R^(-0.5)*C;
-Dfact = [R^(-0.5), R^(-0.5)*D];
+if isa(R,'double')
+    Cfact = R^(-0.5)*C;
+    Dfact = [R^(-0.5), R^(-0.5)*D];
+else
+% ------ TESTING in CASES WHERE R is not parameter varying ---
+    Cfact = R.NominalValue^(-0.5)*C;
+    Dfact = [R.NominalValue^(-0.5), R.NominalValue^(-0.5)*D];
+% ------------------------------------------------------------
+end
 
 Ml = ss(Afact,Bfact(:,1:ny),Cfact,Dfact(:,1:ny));
 Nl = ss(Afact,Bfact(:,ny+1:end),Cfact,Dfact(:,ny+1:end));
-fact =ss(Afact,Bfact,Cfact,Dfact);
+fact = ss(Afact,Bfact,Cfact,Dfact);
+
+% --- PLFTSS ---
+Ml = plftss(Ml,RB);
+Nl = plftss(Nl,RB);
+fact = plftss(fact,RB);
 
 end 
+
+
+function lftsqrt(R)
+
+sqrt(R)
+
+end
