@@ -19,140 +19,123 @@ nin = nargin;
 
 if nin ==2
     opt = lpvsynOptions; % default settings
-elseif nin == 3  && ~isa(Xb,struct) % no basis functions specified -> will cause error
+    Xb =[];
+elseif nin == 3  && ~isa(Xb,'basis') % no basis functions specified -> will cause error
     opt = Xb;
-    Xb.basis = [];
-    Xb.partial = [];
-    Xb.bSplit = [];
-    error('Basis functions must be specified')
+    Xb = [];
+end
+
+if ~isa(P,'plftss')
+    error(['Plant must be a plftss object'])
+end
+
+nx = order(P); % # of states
+
+if isempty(Xb)
+    Xb = basis(plftmat(eye(nx)),plftmat(zeros(nx,nx)));
+end
+
+npar = length(fieldnames(Xb.BasisFunction.Parameter)); % # parameters in basis function
+% Check for non-rate bounded case
+ratebndflg = true;
+if npar==0
+    ratebndflg = false;
+end
+
+% Assign LFT for basis function and partials
+Gp = Xb.BasisFunction;
+partialGp = [];
+if ratebndflg
+    partialGp = Xb.Partials;
 end
 
 Method = opt.Method;
 
-% State-space data
-if isa(P,'plftss')
-[At, Bt, Ct, Dt] = ssdata(P);
-% data as umat objects
-Asf = At.Data;
-B = Bt.Data;
-C = Ct.Data;
-D = Dt.Data;
-else % also compatible with P as a uss
- Asf = P.a;
- B = P.b;
- C = P.c;
- D = P.d;
-end
+
 
 % Dimensions
-nx = size(Asf,1);
-ndu = size(B,2);
-ne = size(C,1) - nu;
-nd = ndu-nu;
+szP = size(P);
+ne = szP(1);   % # of errors
+ndu = szP(2);  % # of inputs of G = nd + nu
+nd = ndu-nu;   % # of disturbances
 
-% partitioned
-% Generalised plant does not include un-scaled in/outputs to controller
+simplifyopt = 'full'; % EB 31.07: Reduces number of occurences but is an approximation
 
-simplifyopt = 'full'; % EB 31.07: Reduces number of occurences 
+% State-space data
+[A, B, C, D] = ssdata(P);
+B1 = B(:,1:nd);
+B2 = B(:,nd+1:end);
+D1 = D(:,1:nd);
+D2 = D(:,nd+1:end);
 
-nbasisX = size(Xb.basis,1); % # of basis functions X
-if ~isa(Xb.basis,'double')
-    Xbb = Xb.basis.Data;
-    xbNames = fieldnames(Xbb.Uncertainty);
-    nparx = size(xbNames,1); % # of params in basis X
-    RB = Xb.basis.RateBounds;
-%     RB{i,1} % parameter names
-%     RB{i,2} % values, 2x1 double
-else
-    Xbb = Xb.basis;
-    nparx = 0;
-    RB = [];
+
+% Determine if D2 has full column rank and scale D2 to
+%    Q2*D2*R2INV = [0;I].
+% Hence if the system is redefined with a unitary transformation
+% on ERROR, etilde := Q2 e, and invertible transformation on CONTROL,
+% u := R2INV utilde, in the new variables, D2Tilde = [0;I].  Note that
+% the unitary transformation on e does not change ||e||, and the invertible
+% transformation on u can be included in the overall controller.
+%
+% NOTE HP 02/05/25: This so far only works if D2 is not parameter
+% dependent. 
+
+nparD2 = length(fieldnames(D2.Parameter));
+
+if nparD2 ~=0 
+    error(['D2 must be a constant matrix'])
 end
 
-if ~isa(Xb.partial,'double')
-    Xbp = Xb.partial.Data;
-else
-    Xbp = Xb.partial;
-    nparx = 0;
+D2 = D2.Data.nominalvalue;
+[q2,r2] = qr(D2);
+rrk = double(rank(r2));
+if (rrk ~= nu)
+    error(' D12 DOES NOT HAVE FULL COLUMN RANK over IV')
 end
 
+q2 = q2(:,[nu+1:end 1:nu]);
+r2inv = inv(r2(1:nu,:));  
+    
+B2 = B2*r2inv;
+C = q2'*C;
+D1 = q2'*D1;
+D2 = [zeros(ne-nu,nu); eye(nu)];
+    
+C1 = C(1:ne-nu,:);
+C2 = C(ne-nu+1:end,:);
+D11 = D1(1:ne-nu,:);
+D12 = D1(ne-nu+1:end,:);
+    
+Ahat = A-B2*C2; 
+Bhat = B1-B2*D12; 
 
-Gp = Xbb(1)*eye(nx);
-partialGp = Xbp(1)*eye(nx);
-for ii = 2:nbasisX
-    Gp = [Gp; Xbb(ii)*eye(nx)];
-    partialGp = [partialGp; Xbp(ii)*eye(nx)];
-end
+% Outer factor for full block S-procedure
 
-Gp_0 = Gp.nominalValue; % Gp is a umat
+np = size(Gp,1);
+Qx = [Gp*Ahat' - partialGp, Gp*C1', zeros(np,ne);...
+    Gp, zeros(np,2*ne-nu);...
+    B2', zeros(nu,2*ne-nu);...
+    zeros(ne-nu,nx), eye(ne-nu), zeros(ne-nu,ne);...
+    zeros(nx,nx+ne), Bhat; ...
+    eye(nx), zeros(nx,2*ne-nu); ...
+    zeros(ne,nx+ne-nu),eye(ne);...
+    zeros(ne-nu,nx), D11', zeros(ne-nu,ne)]; 
+Qx = simplify(Qx,simplifyopt);
 
-if nnz(strcmp(fieldnames(Xb),'bSplit')) ~= 0
-    np = Xb.bSplit*nx;
-else
-    np = size(Gp,1);    
-end
-
-% Check for non-rate bounded case
-% --> not implemented
-ratebndflg = true;
-if (nbasisX ==1 && nparx==0)
-    ratebndflg = false;
-end
-
-
-% the 12 column is empty because there is only 1 weighted input
-% EB: 04.25 this is not the general plant form including weighted
-% disturbance input, it is the plant form specific to the structured
-% controller synthesis
-Csf11 = C(1:ne,:);
-Csf21 = C(ne+1:ne+nu,:);
-Bsf11 = B(:,1:ne);
-Bsf12 = [];
-Bsf2 = B(:,ne+1:ne+nu);
-Dsf1111 = D(1:ne,1:ne);
-Dsf1112 = [];
-Dsf1121 = D(ne+1:ne+nu, 1:ne);
-Dsf1122 = [];
-Dsf2 = D(ne+1:ne+nu,nd+1:nd+nu);
-Csf2 = eye(nx); % must be full state feedback
-
-% checks
-% if  Dsf2~= eye(nu) % check not compatible with umat
-%         warning('general form of plant is not adhered to, solution may not work')
-% end
-
-%% LFT FORM
-% General form following notation of theorem 3 in Theis, Pfifer 2020
-Ahat = Asf- Bsf2*Csf21;
-B2 = Bsf2;
-D111 = [Dsf1111 Dsf1112];
-D112 = [Dsf1121 Dsf1122];
-Dmat = [D111; D112];
-Bhat = [Bsf11 Bsf12]- Bsf2*D112;
-C11 = Csf11;
-C21 = Csf21;
-% -----------------------
-
-% LMI matrices
-Qx_pmat = [Gp*Ahat' - partialGp, Gp*C11', zeros(sum(np),ne); Gp, zeros(sum(np),2*ne); B2', zeros(nu,2*ne); zeros(ne,nx), eye(ne), zeros(ne,ne); zeros(nx,nx+ne), Bhat; eye(nx), zeros(nx,2*ne); zeros(ne,nx+ne),eye(ne); zeros(ne,nx), D111', zeros(ne,ne)]; 
-Qx_pmat = simplify(Qx_pmat,simplifyopt);
 
 %%
 
+% Initialize LMI and define variables
 setlmis([])
+% HP 02/05/25: check if lmis in ginv would not be better
+[gam,ndec] = lmivar(1,[1 1]);
+
+X = lmivar(1,[np 1]);    
+
 
 if isequal(Method,'MaxFeas')
-    % lower bound on X
-   [LBC,n] = lmivar(1,[nx 0]); 
-end
-
-gam = lmivar(1,[1 1]);              % decision variable 1
-
-kx = size(np,1);
-if kx > 1
-    [X_0,n,~] = lmivar(1,[np ones(kx,1)]);  % blkdiag, npxnp
-else
-    [X_0,n,~] = lmivar(1,[np 1]);  % symmetric, npxnp
+    % LBC is lower bound on X
+    [LBC,ndec] = lmivar(1,[nx 0]);
 end
 
 
@@ -288,7 +271,7 @@ else
     % feedback gain calculation
     K  = -(B2' + D112*Bhat'*gamma^(-2) - inv(D112*D111'*gamma^(-2) - eye(ne))*(C11*Xp*gamma^(-1) + D111*Bhat'*gamma^(-1)))*gamma*Xpinv - C21;
     % reconstruct as a plftss
-    K = plftmat(K,RB);
+    K = r2inv*plftmat(K,RB);
     end
 end
 end
