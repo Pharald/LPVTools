@@ -44,6 +44,7 @@ end
 
 % Assign LFT for basis function and partials
 Gp = Xb.BasisFunction;
+Gp0 = Gp.Data.nominalvalue;
 partialGp = [];
 if ratebndflg
     partialGp = Xb.Partials;
@@ -178,7 +179,7 @@ end
 
 % 0 < Gp_0'*X_0*Gp_0
 cnt = cnt + 1;
-lmiterm([-cnt 1 1 X_0],Gp_0',Gp_0);
+lmiterm([-cnt 1 1 X],Gp0',Gp0);
 if isequal(Method,'MaxFeas')
     lmiterm([cnt 1 1 LBC],1,1);
 end
@@ -186,7 +187,7 @@ end
 % second LMI condition -> handled in fullBlockS
 % R_1q < 0
 cnt = cnt + 1;
-[QQ,PiQx,~,cnt] = fullBlockS(Qx_pmat,n,cnt);
+[QQ,PiQx,~,cnt] = fullBlockS(Qx,cnt);
 
 % QQ'*blkdiag(PiQx,X_0mat)*QQ <0
 cnt = cnt + 1;
@@ -194,7 +195,7 @@ lmiterm([cnt 0 0 0],QQ);            % QQ'__QQ outer factor
 lmiterm([cnt 1 1 PiQx],1,1);        % PiQx
 
 % X_0mat
-lmiterm([cnt 2 3 X_0],1,1);
+lmiterm([cnt 2 3 X],1,1);
 lmiterm([cnt 4 4 gam],-eye(nu),1);
 lmiterm([cnt 5 5 gam],-eye(ne),1);
 lmiterm([cnt 6 7 0],eye(nx));

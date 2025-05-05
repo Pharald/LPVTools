@@ -23,96 +23,58 @@ if nin==1
     Zb = [];
 end
 
+if ~isa(P,'plftss')
+    error('P must be a plftss object')
+end
+
+nx = order(P);
 
 % Parse system data:
 if isempty(Zb)
-    Zb = basis(1,0);
-elseif ~isa(Zb,'struct')
-    error('Zb must be a structure with fields Zb.basis and Zb.partial')
+    Zb = basis(plftmat(eye(nx)),plftmat(zeros(nx,nx)));
+elseif ~isa(Zb,'basis')
+    error('Zb must be a BASIS object')
+end
+
+npar = length(fieldnames(Zb.BasisFunction.Parameter)); % # parameters in basis function
+% Check for non-rate bounded case
+ratebndflg = true;
+if npar==0
+    ratebndflg = false;
+end
+
+% Assign LFT for basis function and partials
+Hp = Zb.BasisFunction;
+Hp0 = Hp.Data.nominalvalue;
+partialHp = [];
+if ratebndflg
+    partialHp = Zb.Partials;
 end
 
 
-% Single balancing transformation
-% TODO HP 10/11/24: in the original code we did not balance.
-% P0 = P;
-% P = lpvbalance(P0);
+% Dimensions
+szP = size(P);
+ny = szP(1);    % # of measurements
+nu = szP(2);    % # of inputs 
+np = size(Hp,1);
+
+simplifyopt = 'full'; % EB 31.07: Reduces number of occurences but is an approximation
+
+% State-space data
+[A, B, C, D] = ssdata(P);
 
 
-%% =================================================================
-% Transform system and basis to non-LPVTools format.
-% [Pdata,RBz,BFz,Pz] = basis2data(P,Zb); % EB: 04.25 make lft basis
-% definition compatible with pss basis objects
-
-% All state space matrices and Hp must be umat (or double) so that
-% lftdata() correclty extracts the delta blocks after the outer factors are
-% constructed
-
-% Get state space data of PMAT system P
-% get state space data
-if isa(P,'plftss')
-[At, Bt, Ct, Dt] = ssdata(P);
-% data as umat objects
-A = At.Data;
-B = Bt.Data;
-C = Ct.Data;
-D = Dt.Data;
-else
- A = P.a;
- B = P.b;
- C = P.c;
- D = P.d;
+% check for parameter dependence in D
+nparD = length(fieldnames(D.Parameter));
+if nparD ~=0 
+    error(['D must be a constant matrix'])
 end
 
-ny = size(C,1);    % # of measurements
-nu = size(B,2);    % # of inputs
-nstate = size(A,1);
-nbasis = size(Zb.basis,1); % # of basis functions
-% both cases possible with plftmat object --------------------------------
-% zbNames = fieldnames(Zb.basis.Uncertainty); % if params are ureal
-zbNames = fieldnames(Zb.basis.Data.Uncertainty); % if params are tvreal
-% ------------------------------------------------------------------------
-nparz = size(zbNames,1); % # of params in basis Z
-if nparz > 1
-    np = Zb.bSplit*nstate;
-else
-    np = size(Zb.basis,1)*nstate;
-end
-RB = Zb.basis.RateBounds;
-RBz = Zb.basis.RateBounds{2};
+R = eye(ny)+D*D';
+S = eye(nu)+D'*D; 
+Atil = A-B*inv(S)*D'*C;
+Ctil = C'*inv(R)*C;
 
-% not compatible with parameter varying D
-if ~isa(D,'double') && ~isempty(fieldnames(D.Uncertainty))
-    error('D matrix in plant cannot be parameter dependent')
-end
-
-R = eye(ny) + D*D';
-S = eye(nu) + D'*D; 
-Ab = A-B*inv(S)*D'*C;
-
-simplifyopt = 'full'; % EB 31.07: Reduces number of occurences
-
-Hp = Zb.basis.Data(1)*eye(nstate);
-
-if ~isa(Zb.partial,'double')
-    flgplft = 1;
-    partialHp = Zb.partial.Data(1)*eye(nstate);
-else
-    flgplft = 0;
-    partialHp = Zb.partial(1)*eye(nstate);
-end
-
-% stack basis functions
-for ii = 2:nbasis
-    Hp = [Hp; Zb.basis.Data(ii)*eye(nstate)];
-    if flgplft
-        partialHp = [partialHp; Zb.partial.Data(ii)*eye(nstate)];
-    else
-        partialHp = [partialHp; Zb.partial(ii)*eye(nstate)];
-    end
-end
-
-partialHp = partialHp*RBz(2);
-Hp_0 = Hp.NominalValue;
 
 
 %% Factorisation of Parameter dependence from LMI conditions --------------
@@ -124,31 +86,25 @@ Hp_0 = Hp.NominalValue;
 % 
 % Gw = [zeros(nstate,nstate) eye(nstate); eye(nstate) zeros(nstate,nstate); zeros(sum(np),nstate), Hp]; 
 
-Qz_matrix = simplify([Hp*Ab + partialHp, Hp*B; ...
-                     Hp, zeros(size(Hp,1),size(B,2)); ...
-                     -C, zeros(size(C,1),size(B,2)); ...
-                  1/2*(R\C), zeros(size(C,1),size(B,2)); ...
-                 zeros(size(B,2),size(C,2)), -eye(size(B,2)); ...
-                 zeros(size(D,1),size(Ab,2)), -D],simplifyopt);
+Qz = [Hp*Atil + partialHp, Hp*B; ...
+      Hp, zeros(np,nu); ...
+      C, zeros(ny,nu); ...
+      zeros(nu,ny), eye(nu)];
+Qz = simplify(Qz,simplifyopt);
+                 
 
-Gw = simplify([zeros(nstate,nstate) eye(nstate); ... 
-       eye(nstate) zeros(nstate,nstate); ...
-       zeros(np,nstate), Hp]);
+Gw = simplify([zeros(nx,nx) eye(nx); ... 
+       eye(nx) zeros(nx,nx); ...
+       zeros(np,nx), Hp]);
 
 
 %% LMI Setup
 
 setlmis([])
-k = size(np,1);
-if  k > 1
-    % blockdiagonal structure, basis functions for each parameter are
-    % independent
-    [Z_0,n,~] = lmivar(1,[np, ones(k,1)]); % blockdiagonal
-else
-    [Z_0,n,~] = lmivar(1,[np 1]); % symmetric, npxnp
-end
 
-[W,n,sW] = lmivar(1,[nstate 1]);
+Z0 = lmivar(1,[np 1]);
+
+[W,~,sW] = lmivar(1,[nx 1]);
 
 %% LMI conditions
 cnt = 1;
@@ -159,25 +115,25 @@ cnt = 1;
 % cnt = cnt+1;
 
 % 0 < Z(0)
-lmiterm([-cnt 1 1 Z_0],Hp_0',Hp_0);   % H_p'*Z_0*Hp_0
+lmiterm([-cnt 1 1 Z_0],Hp0',Hp0);   % H_p'*Z_0*Hp_0
 cnt = cnt+1;
 
 % second LMI condition
 % full block S procedure multipliers defined in fullBlockS
-[QQ,PiQz,n,cnt] = fullBlockS(Qz_matrix,n,cnt);
+[QQ,PiQz,n,cnt] = fullBlockS(Qz,cnt);
 cnt = cnt+1;
 
 % QQ'*blkdiag(PiQz, Z_0mat)*QQ < 0
 lmiterm([cnt 0 0 0],QQ);          % QQ'__ QQ outer factor
 lmiterm([cnt 1 1 PiQz],1,1);      % PiQz
 % Z_mat
-lmiterm([cnt 2 3 Z_0],1,1);
-lmiterm([cnt 4 5 0],eye(ny));
-lmiterm([cnt 6 6 0],-eye(nu+ny));          % -eye(nu+ny)
+lmiterm([cnt 2 3 Z0],1,1);
+lmiterm([cnt 4 4 0],-inv(R));
+lmiterm([cnt 5 5 0],-eye(nu));          % -eye(nu+ny)
 cnt = cnt+1;
 
 % inversion condition
-[GW,PiGw,n,cnt] = fullBlockS(Gw,n,-cnt);
+[GW,PiGw,n,cnt] = fullBlockS(Gw,-cnt);
 cnt = -cnt;
 cnt = cnt + 1;
 

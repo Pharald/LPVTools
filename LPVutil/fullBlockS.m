@@ -1,4 +1,4 @@
-function [Gpart,Pi,ndec,cnt,info] = fullBlockS(Gp,ndec,cnt)
+function [Gpart,Pi,ndec,cnt,info] = fullBlockS(G,cnt)
 
 % for X(p) < 0 that satisfies X(p) = G'(p) X0 G(p) and G(p) = Fu(G0,Delta(p))
 % and X0 is symmetrical
@@ -15,18 +15,52 @@ function [Gpart,Pi,ndec,cnt,info] = fullBlockS(Gp,ndec,cnt)
 nargoutchk(4,5); % not necessary to output info
 
 % partition Gp and determine size of Delta(p)
-[Gpart,ndelta] = partition_mat(Gp);
+[G0,delta,blkstruc,~] = lftdata(G.Data);
+
+
+% get dimensions
+nin = size(G,2);
+nout = size(G,1);
+ndelta = size(delta,1);
+
+% partition G0
+G011 = G0(1:ndelta,1:ndelta);
+G021 = G0(ndelta+1:end,1:ndelta);
+G022 = G0(ndelta+1:end,ndelta+1:end);
+G012 = G0(1:ndelta,ndelta+1:end);
+
+% reconstruct
+Gpart = [G011, G012; eye(ndelta), zeros(ndelta,nin); G021, G022];
+
 
 info.ndelta = ndelta;
 
 % Define multiplier
 % ---- Can add options and more types of multipliers
 
-% symmetric multiplier such that parameter dependent LMI is fullfilled 
-sS = skewdec(ndelta,ndec);
-[~,ndec,sS] = lmivar(3,sS);         % skew symmetric
-sR = diag(ndec+1:ndelta+ndec);
-[R,ndec,~] = lmivar(3,sR);                 % diagonal
+% convert the blk structure from lftdata to a mat structure for setting up
+% LMI variable
+blk = zeros(length(blkstruc),2);
+
+for ii = 1:length(blkstruc)
+    if ~strcmp('ureal',blkstruc(ii).Type)
+        error('Parameter need to be tvreal')
+    end
+    blk(ii,1) = blkstruc(ii).Occurrences;
+    blk(ii,2) = 1;
+end
+
+[R,ndec,sR] = lmivar(1,blk); % block diagonal multiplier to commute with Delta
+
+sS = [];
+for ii = 1:size(blk,1)
+    sS = blkdiag(sS,skewdec(blk(ii,1),ndec));
+    ndec = ndec + blk(ii,1)*(blk(ii,1)-1)/2;
+end
+
+[S,ndec,sS] = lmivar(3,sS);         % skew symmetric block diagonal multiplier
+
+
 Pi = lmivar(3,[-sR, sS; sS', sR]);
 
 info.Pidim = [ndelta*2, ndelta*2]; % dimensions of multiplier
@@ -40,30 +74,7 @@ lmiterm([cnt 1 1 R],1,1);
 
 end
 
-function [Gpart,ndelta] = partition_mat(G)
 
-% separate G into lft(G0,deltar); 
 
-if isa(G,'uss') || isa(G,'umat')
-G = simplify(G,'full');
-    [G0,delta] = lftdata(G);
 
-elseif isa(G,'plftss') || isa(G,'plftmat')
-    G = simplify(G.Data,'full');
-[G0,delta,~,~] = lftdata(G);
-end
 
-% get dimensions
-n_in = size(G,2);
-n_out = size(G,1);
-ndelta = size(delta,1);
-
-% partition G0
-G011 = G0(1:ndelta,1:ndelta);
-G021 = G0(ndelta+1:end,1:ndelta);
-G022 = G0(ndelta+1:end,ndelta+1:end);
-G012 = G0(1:ndelta,ndelta+1:end);
-
-% reconstruct
-Gpart = [G011, G012; eye(ndelta), zeros(ndelta,n_in); G021, G022];
-end
