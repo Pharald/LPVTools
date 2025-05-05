@@ -67,13 +67,13 @@ simplifyopt = 'full'; % EB 31.07: Reduces number of occurences but is an approxi
 % check for parameter dependence in D
 nparD = length(fieldnames(D.Parameter));
 if nparD ~=0 
-    error(['D must be a constant matrix'])
+    error('D must be a constant matrix')
 end
 
-R = eye(ny)+D*D';
-S = eye(nu)+D'*D; 
+R = eye(ny)+D*D'; R = R.Data.NominalValue;
+S = eye(nu)+D'*D; S = S.Data.NominalValue;
 Atil = A-B*inv(S)*D'*C;
-Ctil = C'*inv(R)*C;
+% Ctil = C'*inv(R)*C;
 
 
 
@@ -89,7 +89,7 @@ Ctil = C'*inv(R)*C;
 Qz = [Hp*Atil + partialHp, Hp*B; ...
       Hp, zeros(np,nu); ...
       C, zeros(ny,nu); ...
-      zeros(nu,ny), eye(nu)];
+      zeros(nu,nx), eye(nu)];
 Qz = simplify(Qz,simplifyopt);
                  
 
@@ -115,12 +115,12 @@ cnt = 1;
 % cnt = cnt+1;
 
 % 0 < Z(0)
-lmiterm([-cnt 1 1 Z_0],Hp0',Hp0);   % H_p'*Z_0*Hp_0
+lmiterm([-cnt 1 1 Z0],Hp0',Hp0);   % H_p'*Z_0*Hp_0
 cnt = cnt+1;
 
 % second LMI condition
 % full block S procedure multipliers defined in fullBlockS
-[QQ,PiQz,n,cnt] = fullBlockS(Qz,cnt);
+[QQ,PiQz,~,cnt] = fullBlockS(Qz,cnt);
 cnt = cnt+1;
 
 % QQ'*blkdiag(PiQz, Z_0mat)*QQ < 0
@@ -133,7 +133,7 @@ lmiterm([cnt 5 5 0],-eye(nu));          % -eye(nu+ny)
 cnt = cnt+1;
 
 % inversion condition
-[GW,PiGw,n,cnt] = fullBlockS(Gw,-cnt);
+[GW,PiGw,~,cnt] = fullBlockS(Gw,-cnt);
 cnt = -cnt;
 cnt = cnt + 1;
 
@@ -143,7 +143,7 @@ lmiterm([-cnt 1 1 PiGw],1,1);     % PiGw
 % W_mat
 lmiterm([-cnt 2 3 0],1);
 lmiterm([-cnt 3 3 W],1,1);
-lmiterm([-cnt 4 4 Z_0],1,1);
+lmiterm([-cnt 4 4 Z0],1,1);
 
 % Get LMI Options
 % TODO HP 10/11/2024: Shall we include options object in the code?
@@ -177,88 +177,24 @@ if ~FeasFlag
 end
 
 %%
-valZ0 = dec2mat(lmisys,xopt,Z_0);
+valZ0 = dec2mat(lmisys,xopt,Z0);
 Zp = Hp'*valZ0*Hp;
-partialZp = partialHp'*valZ0*Hp + Hp'*valZ0*partialHp;
+% partialZp = partialHp'*valZ0*Hp + Hp'*valZ0*partialHp;
 
 % Coprime Factorization State Matrices reconstruction
 L = -(B*D'+Zp\C')/R; 
 
 Afact = A+L*C;
 Bfact = [L, B+L*D];
-if isa(R,'double')
-    Cfact = R^(-0.5)*C;
-    Dfact = [R^(-0.5), R^(-0.5)*D];
-else
+Cfact = R^(-0.5)*C;
+Dfact = [R^(-0.5), R^(-0.5)*D];
 
-    Cfact = lftinvsqrt(R)*C;
-    Dfact = [lftinvsqrt(R), lftinvsqrt(R)*D];
-
-end
 
 Ml = ss(Afact,Bfact(:,1:ny),Cfact,Dfact(:,1:ny));
 Nl = ss(Afact,Bfact(:,ny+1:end),Cfact,Dfact(:,ny+1:end));
 fact = ss(Afact,Bfact,Cfact,Dfact);
 
-% --- PLFTSS ---
-Ml = plftss(Ml,RB);
-Nl = plftss(Nl,RB);
-fact = plftss(fact,RB);
 
 end 
 
 
-function y = lftinvsqrt(R)
-
-% R^(-0.5)
-% "quick fix" using symbolic toolbox
-
-% sqrtR = R^(0.5);
-[Rb,deltar,blkstruct] = lftdata(R);
-Uname = fieldnames(R.Uncertainty);
-
-nr = size(Rb,1);
-nd = size(deltar,1);
-np = size(blkstruct,1); % # of uncertain params
-
-for iv = 1:np
-    sId = blkstruct(iv).Occurrences; % size of param in delta block 
-end
-
-urealVec = cell([1 np]);
-
-if nd~=0
-    Rb11 = Rb(1:nd,1:nd);
-    Rb12 = Rb(1:nd,nd+1:end);
-    Rb21 = Rb(nd+1:end,1:nd);
-    Rb22 = Rb(nd+1:end,nd+1:end);
-
-    delta = sym('p1')*eye(sId(1));
-    deltaVec = 'p1';
-    urealVec{1} = R.Uncertainty.(Uname{1});
-
-    if np > 1 
-        for ii = 2:nb
-            name = append('p',char(string(ii)));
-            deltaVec = [deltaVec, name];
-            delta = blkdiag(delta,sym(name)*eye(sId(ii)));
-        end
-    end
-
-
-Rsym = Rb22 + Rb21*delta*inv(eye(nd) - Rb11*delta)*Rb12;
-ysym = inv(sqrtm(Rsym));
-
-y = subs(ysym,deltaVec,urealVec);
-
-
-% ----------------------------------
-% yb22 = sqrt(Rb22);
-% 
-% y = inv(sqrtR);
-
-else
-    y = R.NominalValue^(-0.5);
-end
-
-end
