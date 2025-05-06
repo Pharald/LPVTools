@@ -46,7 +46,9 @@ end
 % Assign LFT for basis function and partials
 Hp = Zb.BasisFunction;
 Hp0 = Hp.Data.nominalvalue;
-partialHp = [];
+np = size(Hp,1);
+
+partialHp = zeros(np,nx);
 if ratebndflg
     partialHp = Zb.Partials;
 end
@@ -56,7 +58,6 @@ end
 szP = size(P);
 ny = szP(1);    % # of measurements
 nu = szP(2);    % # of inputs 
-np = size(Hp,1);
 
 simplifyopt = 'full'; % EB 31.07: Reduces number of occurences but is an approximation
 
