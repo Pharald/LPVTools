@@ -83,7 +83,6 @@ D2 = D(:,nd+1:end);
 % dependent. 
 
 nparD2 = length(fieldnames(D2.Parameter));
-
 if nparD2 ~=0 
     error(['D2 must be a constant matrix'])
 end
@@ -244,7 +243,6 @@ if ~isequal(opt.Solver,'lmilab')
 end
 
 [copt,xopt] = mincx(lmisys,c,LMIopt,x0);
-Gamma = 1/dec2mat(lmisys,xopt,ginv);
 Info = [];
 
 % Handle Infeasible LMI Case
@@ -254,6 +252,7 @@ if isempty(xopt)
     Info = struct('xopt',xopt,'copt',copt,'lmisys',lmisys);
     return;
 else
+    Gamma = 1/dec2mat(lmisys,xopt,ginv);
     if isequal(Method,'BackOff')
         opt2 = opt;
         opt2.Method = 'MaxFeas';

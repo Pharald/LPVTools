@@ -1,5 +1,4 @@
-
-function [Kopt,gamopt,Info] = lpvsyn(P,ne,nu,Xb,Yb,opt)
+function [K,Gamma,Info] = lpvsyn(sys,nmeas,ncont,Xb,Yb,opt)
 % LPVSYN  Parameter-dependent controller synthesis for PLFTSS
 %
 % P is a plftss
@@ -14,46 +13,60 @@ function [Kopt,gamopt,Info] = lpvsyn(P,ne,nu,Xb,Yb,opt)
 
 % See also: lpvsynOptions.
 
-narginchk(3,6);
+
+% Parse Inputs
 nin = nargin;
-
-
-if nin==3
+narginchk(3, 6)
+nout = nargout;
+if nin<=4
+    if nin==3
         % K = lpvsyn(sys,nmeas,ncont)
         opt = lpvsynOptions;
-elseif nin<=4 % no basis functions specified
-    opt = Xb;
-    % EB 06.12.24: How is no basis function case handled? -> will error if
-    % attempted
-    Yb.basis = [];
-    Yb.partial = [];
+    else
+        % K = lpvsyn(sys,nmeas,ncont,opt)
+        opt = Xb;
+    end
+    Yb = [];
     Xb = Yb;
-    error('Basis functions must be specified')
 elseif nin==5
     % K = lpvsyn(sys,nmeas,ncont,Xb,Yb)
     opt = lpvsynOptions;
+elseif nin~=6
+    error('Incorrect number of input arguments.')
 end
-
 Method = opt.Method;
 
-% Dimensions
-szP = iosize(P);
-nd = nu; % assumes disturbance is summative on input
+nx = order(sys); % # of states
 
-%%
 
-sysb = P; % no balancing
-
-params = fieldnames(sysb.Parameter); % 09.12.24: Error sysb.Parameter no longer exists?
-for ii = 1:length(params)
-    domRange(ii,:) = sysb.Parameter.(params{ii}).range;
-    domRB(ii,:) = sysb.Parameter.(params{ii}).ratebounds;
-    domData{ii,:} = linspace(domRange(ii,1),domRange(ii,2),30); % 30 grid points per param
+if isempty(Yb)
+    Yb = basis(plftmat(eye(nx)),plftmat(zeros(nx,nx)));
+elseif ~isa(Yb,'basis')
+    error('Yb must be a BASIS object')
 end
-rgridPlaceholder = rgrid(params,domData',domRB);
+if isempty(Xb)
+    Xb = basis(plftmat(eye(nx)),plftmat(zeros(nx,nx)));
+elseif ~isa(Xb,'basis')
+    error('Xb must be a BASIS object')
+end
+
+% Check for non-rate bounded case
+nparx = length(fieldnames(Xb.BasisFunction.Parameter)); % # parameters in basis function
+npary = length(fieldnames(Yb.BasisFunction.Parameter)); % # parameters in basis function
+
+ratebndflg = true;
+if nparx==0 && npary==0
+    ratebndflg = false; 
+end
+
+% Dimensions
+nd = size(sys,2) - ncont;
+ne = size(sys,1) - nmeas;
+
+sysb = sys; % no balancing
 
 % Orthogonalize general OLIC interconnection
-[sysb,TL,TR,FT] = orthog4syn_plftss(sysb,rgridPlaceholder,ne,nu);
+[sysb,TL,TR,FT] = orthog4syn(sysb,nmeas,ncont);
 %%
 
 [M,DELTA,BLKSTRUCT,NORMUNC] = lftdata(sysb,[],'Parameters');
@@ -69,127 +82,112 @@ for i=1:Nblk
     end
 end
 nr = sum(nri);
-nx = order(M);
 
 simplifyopt = 'full'; % EB 31.07.24: Reduces number of occurences in lft blocks
 
 %% Basis functions
 % define basis functions for feedback
-nbasisX = size(Xb.basis,1); % # of basis functions X
-if ~isa(Xb.basis,'double')
-    Xbb = Xb.basis.Data;
-    xbNames = fieldnames(Xbb.Uncertainty);
-    nparx = size(xbNames,1); % # of params in basis X
-else
-    Xbb = Xb.basis;
-    nparx = 0;
+% Assign LFT for basis function and partials
+Gp = Xb.BasisFunction;
+Gp0 = Gp.Data.nominalvalue;
+nXp = size(Gp,1);
+partialGp = zeros(nXp,nx);
+if ratebndflg
+    partialGp = Xb.Partials;
 end
 
-if ~isa(Xb.partial,'double')
-    Xbp = Xb.partial.Data;
-else
-    Xbp = Xb.partial;
-    nparx = 0;
+Hp = Yb.BasisFunction;
+Hp0 = Hp.Data.nominalvalue;
+nYp = size(Hp,1);
+partialHp = zeros(nYp,nx);
+if ratebndflg
+    partialHp = Yb.Partials;
 end
-
-
-Gp = Xbb(1)*eye(nx);
-partialGp = Xbp(1)*eye(nx);
-for ii = 2:nbasisX
-    Gp = [Gp; Xbb(ii)*eye(nx)];
-    partialGp = [partialGp; Xbp(ii)*eye(nx)];
-end
-
-Gp_0 = Gp.nominalValue; % Gp is a umat
-
-if nnz(strcmp(fieldnames(Xb),'bSplit')) ~= 0
-    np_g = Xb.bSplit*nx;
-else
-    np_g = size(Gp,1);    
-end
-
-% define basis functions for filter
-nbasisY = size(Yb.basis,1); % # of basis functions Y
-if ~isa(Xb.basis,'double')
-    Ybb = Yb.basis.Data;
-    ybNames = fieldnames(Ybb.Uncertainty);
-    npary = size(ybNames,1); % # of params in basis Y
-else
-    Ybb = Yb.basis;
-    npary = 0;
-end
-
-if ~isa(Yb.partial,'double')
-    Ybp = Yb.partial.Data;
-else
-    Ybp = Yb.partial;
-    npary = 0;
-end
-
-Hp = Ybb(1)*eye(nx);
-partialHp = Ybp(1)*eye(nx);
-for ii = 2:nbasisY
-    Hp = [Hp; Ybb(ii)*eye(nx)];
-    partialHp = [partialHp; Ybp(ii)*eye(nx)];
-end
-
-Hp_0 = Hp.nominalValue;
-
-if nnz(strcmp(fieldnames(Yb),'bSplit')) ~= 0
-    np_h = Yb.bSplit*nx;
-else
-    np_h = size(Hp,1);    
-end
-
 
 
 %%
 
 % State-space data
-[A,B,C,D] = ssdata(sysb);
+[a,b,c,d] = ssdata(sysb);
+ne1 = ne-ncont;
+ne2 = ncont;
+nd1 = nd-nmeas;
+nd2 = nmeas;
+
+d11 = d(1:ne,1:nd);
+d11dot1 = d(1:ne,1:nd1);
+d11dot2 = d(1:ne,nd1+1:nd);
+d111dot = d(1:ne1,1:nd);
+d112dot = d(ne1+1:ne,1:nd);
+d1111 = d(1:ne1,1:nd1);
+d1112 = d(1:ne1,nd1+1:nd);
+d1121 = d(ne1+1:ne,1:nd1);
+d1122 = d(ne1+1:ne,nd1+1:nd);
+d12 = [zeros(ne1,ne2); eye(ne2,ne2)];
+d21 = [zeros(nd2,nd1) eye(nd2,nd2)];
+
+b11 = b(:,1:nd1);
+b12 = b(:,nd1+1:nd);
+b1 = [b11 b12];
+b2 = b(:,nd+1:end);
+c11 = c(1:ne1,:);
+c12 = c(ne1+1:ne,:);
+c1 = [c11;c12];
+c2 = c(ne+1:end,:);
+
+Ahat = a - b2*c12;
+Bhat = b1 - b2*d112dot;
+Atil = a - b12*c2;
+Ctil = c1 - d11dot2*c2;
 
 % partitioned
 % General form following notation in thesis of Wu
-C11 = C(1:ne,:);
-C12 = C(ne+1:ne+nu,:);
-C2 = C(ne+nu+1:ne+nu+ne,:); 
-
-B11 = B(:,1:nd);
-B12 = B(:,nd+1:nd+ne);
-Bof2 = B(:,ne+nd+1:ne+nd+nu);
-
-D1111 = D(1:ne,1:nd);
-D1112 = D(1:ne,nd+1:nd+ne);
-D1121 = D(ne+1:ne+nu, 1:nd);
-D1122 = D(ne+1:ne+nu,nd+1:nd+ne);
-
-B1 = [B11 B12];
-B2 = Bof2;
-C1 = [C11; C12];
-D111dot = [D1111 D1112];
-D112dot = [D1121 D1122];
-Dmat = [D111dot; D112dot];
-D11dot1 = [D1111; D1121];
-D11dot2 = [D1112; D1122];
-D11 = [D111dot; D112dot];
-D12 = D(1:ne+nu, nd+ne+1:end);
-D21 = D(ne+nu+1:end, 1:nd+ne);
-D22 = D(ne+nu+1:end, nd+ne+1:end);
-
-Ahat = A- B2*C12;
-Abar = A-B12*C2;
-
-Bhat = B1 - B2*D112dot;
-Cbar = C1 - D11dot2*C2;
+% C11 = C(1:ne,:);
+% C12 = C(ne+1:ne+ncont,:);
+% C2 = C(ne+ncont+1:ne+ncont+ne,:); 
+% 
+% B11 = B(:,1:nd);
+% B12 = B(:,nd+1:nd+ne);
+% Bof2 = B(:,ne+nd+1:ne+nd+ncont);
+% 
+% D1111 = D(1:ne,1:nd);
+% D1112 = D(1:ne,nd+1:nd+ne);
+% D1121 = D(ne+1:ne+ncont, 1:nd);
+% D1122 = D(ne+1:ne+ncont,nd+1:nd+ne);
+% 
+% B1 = [B11 B12];
+% B2 = Bof2;
+% C1 = [C11; C12];
+% D111dot = [D1111 D1112];
+% D112dot = [D1121 D1122];
+% Dmat = [D111dot; D112dot];
+% D11dot1 = [D1111; D1121];
+% D11dot2 = [D1112; D1122];
+% D11 = [D111dot; D112dot];
+% D12 = D(1:ne+ncont, nd+ne+1:end);
+% D21 = D(ne+ncont+1:end, 1:nd+ne);
+% D22 = D(ne+ncont+1:end, nd+ne+1:end);
+% 
+% Ahat = A- B2*C12;
+% Abar = A-B12*C2;
+% 
+% Bhat = B1 - B2*D112dot;
+% Cbar = C1 - D11dot2*C2;
 
 
 %% LMI matrices
-RpX_G_col1 = [eye(sum(np_g)); zeros(sum(np_g))]*Gp; % need two repeats of Gp as they are diagonal
-RpX_G_col2 = [zeros(sum(np_g)); eye(sum(np_g))]*Gp; 
+RpX_G_col1 = [eye(nXp); zeros(nXp)]*Gp; % need two repeats of Gp as they are diagonal
+RpX_G_col2 = [zeros(nXp); eye(nXp)]*Gp; 
 RpX_G = [RpX_G_col1,RpX_G_col2];
-RpX_mult = [Ahat' , C11', zeros(nx,nd+ne); eye(nx), zeros(nx,2*ne + nd)];
-RpX_rest =   [B2', zeros(nu,2*ne+nd); zeros(ne,nx), eye(ne), zeros(ne,ne+nd); zeros(nx,nx+ne), Bhat; eye(nx), zeros(nx,2*ne+nd);zeros(ne+nd,nx+ne),eye(ne+nd); zeros(ne+nd,nx), D111dot', zeros(ne+nd,ne+nd)];
-RpX_Gpart = [-partialGp, zeros(sum(np_g),nd+2*ne); zeros(sum(np_g) + 4*ne+2*nd+2*nx, nx+2*ne+nd)];
+RpX_mult = [Ahat' , c11', zeros(nx,nd+ne); eye(nx), zeros(nx,ne1+ne+nd)];
+RpX_rest =   [b2', zeros(ncont,ne1+ne+nd);...
+    zeros(ne1,nx), eye(ne1), zeros(ne1,ne+nd); ...
+    zeros(nx,nx+ne), Bhat;...
+    eye(nx), zeros(nx,2*ne+nd);...
+    zeros(ne+nd,nx+ne),eye(ne+nd);...
+    zeros(nd,nx), d111dot', zeros(nd,ne+nd)];
+RpX_Gpart = [-partialGp, zeros(nXp,nd+2*ne);...
+    zeros(nXp + 4*ne+2*nd+2*nx, nx+2*ne+nd)];
 
 RpXmat = [RpX_G*RpX_mult; RpX_rest] + RpX_Gpart;
 
@@ -228,13 +226,13 @@ end
 % get outer factors and multipliers
 % LMIs relating to multipliers also defined in fullBlockS
 cnt = cnt+1;
-[RRX,PiRX,ndec,cnt] = fullBlockS(RpXmat,ndec,cnt);
+[RRX,PiRX,ndec,cnt] = fullBlockS(RpXmat,cnt);
 
 cnt = cnt+1;
-[RRY,PiRY,ndec,cnt] = fullBlockS(RpYmat,ndec,cnt);
+[RRY,PiRY,ndec,cnt] = fullBlockS(RpYmat,cnt);
 
 cnt = cnt+1;
-[RRXY,PiXY,ndec,cnt,XYinfo] = fullBlockS(GHxy,ndec,-cnt); % XY xondition is 0 <
+[RRXY,PiXY,ndec,cnt,XYinfo] = fullBlockS(GHxy,-cnt); % XY xondition is 0 <
 cnt = -cnt;
 
 [gam,ndec] = lmivar(1,[1 1]);
