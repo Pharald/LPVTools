@@ -1,4 +1,4 @@
-function [K,gamma,info] = lpvsfsyn(P,nu,Xb,opt)
+function [F,Gamma,Info] = lpvsfsyn(P,nu,Xb,opt)
 % Parameter-dependent state feedback controller synthesis in LFT
 % formualtion
 % P is uss and is the generalised plant with weighted in/outputs.
@@ -44,7 +44,9 @@ end
 
 % Assign LFT for basis function and partials
 Gp = Xb.BasisFunction;
-partialGp = [];
+Gp0 = Gp.Data.nominalvalue;
+np = size(Gp,1);
+partialGp = zeros(np,nx);
 if ratebndflg
     partialGp = Xb.Partials;
 end
@@ -81,7 +83,6 @@ D2 = D(:,nd+1:end);
 % dependent. 
 
 nparD2 = length(fieldnames(D2.Parameter));
-
 if nparD2 ~=0 
     error(['D2 must be a constant matrix'])
 end
@@ -111,97 +112,99 @@ Bhat = B1-B2*D12;
 
 % Outer factor for full block S-procedure
 
-np = size(Gp,1);
-Qx = [Gp*Ahat' - partialGp, Gp*C1', zeros(np,ne);...
-    Gp, zeros(np,2*ne-nu);...
-    B2', zeros(nu,2*ne-nu);...
-    zeros(ne-nu,nx), eye(ne-nu), zeros(ne-nu,ne);...
-    zeros(nx,nx+ne), Bhat; ...
-    eye(nx), zeros(nx,2*ne-nu); ...
-    zeros(ne,nx+ne-nu),eye(ne);...
-    zeros(ne-nu,nx), D11', zeros(ne-nu,ne)]; 
+
+Qx = [-Gp*Ahat' + partialGp, -Gp*C1', zeros(np,nd);...
+    -Gp, zeros(np,ne-nu+nd);...
+    B2', zeros(nu,ne-nu+nd);...
+    zeros(ne-nu,nx), eye(ne-nu), zeros(ne-nu,nd);...
+    zeros(nx,nx+ne-nu), Bhat; ...
+    eye(nx), zeros(nx,ne-nu+nd); ...
+    zeros(nd,nx+ne-nu),eye(nd);...
+    zeros(nd,nx), D11', zeros(nd,nd)]; 
 Qx = simplify(Qx,simplifyopt);
 
 
-%%
-
 % Initialize LMI and define variables
 setlmis([])
-% HP 02/05/25: check if lmis in ginv would not be better
-[gam,ndec] = lmivar(1,[1 1]);
-
-X = lmivar(1,[np 1]);    
-
 
 if isequal(Method,'MaxFeas')
     % LBC is lower bound on X
     [LBC,ndec] = lmivar(1,[nx 0]);
 end
 
+[ginv,ndec] = lmivar(1,[1 1]);
 
+X = lmivar(1,[np 1]);    
 
-%% LMI conditions
-
-cnt = 0;
-
-% first LMI condition
-% MOVE THIS CHECK TO THE END and update Gamma value before running
-% feasiblity problem for suboptimal
-% if nnz(sqrt(Dmat'*Dmat) > eye(ne)) > 0
-% warning('Dmat^T*Dmat^0.5 > I, first condition does not hold')
-% end
-
-% condition: gam^2*eye(ne) - Dmat'*Dmat >= 0];
-% check at the end
-
-if opt.Gammalb > 0
-    cnt = cnt+1;
-    lmiterm([cnt 1 1 0],opt.Gammalb);
-    lmiterm([-cnt 1 1 gam],1,1);
-else
-    % 0 < gam
+% LMI for Dissipation Inequality
+cnt = 1;
+[QQ,PiQx,ndec,cnt] = fullBlockS(Qx,cnt);
 cnt = cnt + 1;
-lmiterm([-cnt 1 1 gam],1,1);
-end
-if isfinite(opt.Gammaub)
-    cnt = cnt +1;
-    lmiterm([cnt 1 1 gam],1,1);
-    lmiterm([-cnt 1 1 0],opt.Gammaub);    
-end
-
-% 0 < X_0
-% cnt = cnt + 1;
-% lmiterm([-cnt 1 1 X_0],1,1);
-% if isequal(Method,'MaxFeas')
-%     lmiterm([cnt 1 1 LBC],1,1);
-% end
-
-% 0 < Gp_0'*X_0*Gp_0
-cnt = cnt + 1;
-lmiterm([-cnt 1 1 X_0],Gp_0',Gp_0);
-if isequal(Method,'MaxFeas')
-    lmiterm([cnt 1 1 LBC],1,1);
-end
-
-% second LMI condition -> handled in fullBlockS
-% R_1q < 0
-cnt = cnt + 1;
-[QQ,PiQx,~,cnt] = fullBlockS(Qx_pmat,n,cnt);
 
 % QQ'*blkdiag(PiQx,X_0mat)*QQ <0
-cnt = cnt + 1;
 lmiterm([cnt 0 0 0],QQ);            % QQ'__QQ outer factor
 lmiterm([cnt 1 1 PiQx],1,1);        % PiQx
 
 % X_0mat
-lmiterm([cnt 2 3 X_0],1,1);
-lmiterm([cnt 4 4 gam],-eye(nu),1);
-lmiterm([cnt 5 5 gam],-eye(ne),1);
-lmiterm([cnt 6 7 0],eye(nx));
-lmiterm([cnt 8 8 gam],-eye(ne),1);
-lmiterm([cnt 8 9 0],eye(ne));
+lmiterm([cnt 2 3 X],1,1);
+lmiterm([cnt 4 4 0],-eye(ne));
+lmiterm([cnt 5 6 ginv],eye(nx),1);
+lmiterm([cnt 7 8 0],-eye(nd));
+lmiterm([cnt 7 8 ginv],eye(nd),1);
+cnt = cnt + 1;
 
-lmisys = getlmis;
+
+% xpdlow*I < Gp_0'*X_0*Gp_0 < xpdupp*I
+if opt.Xlb > 0
+    xpdlow = opt.Xlb;
+else
+    xpdlow = 1e-6;
+end
+if isequal(Method,'MaxFeas')
+    lmiterm([cnt 1 1 LBC],1,1);
+else
+    lmiterm([cnt 1 1 0],xpdlow*eye(nx));
+end
+lmiterm([-cnt 1 1 X],Gp0',Gp0);
+cnt = cnt+1;
+
+if isfinite(opt.Xub)
+    xpdupp = opt.Xub;
+else
+    xpdupp = 1e6;
+end
+lmiterm([-cnt 1 1 0],xpdupp*eye(nx));
+lmiterm([cnt 1 1 X],Gp0',Gp0);
+
+cnt = cnt+1;
+
+% constraint [-I D1'/gam; D1/gam -I] <0
+% which implies that gam>= max(svd(D1)), i.e. ginv<=1/max(svd(D1))
+gmin = max(0,opt.Gammalb);
+
+% check if D1 is parameter dependent
+nparD1 = length(fieldnames(D1.Parameter));
+if nparD1 == 0 
+    gmin = max(gmin,norm(D1.Data.NominalValue));
+else
+   D1grid = lft2grid(D1,100);
+   normD1 = norm(D1grid);
+   gmin = max(gmin,max(normD1.Data));
+end  
+
+if gmin>0
+    lmiterm([-cnt 1 1 0],1/gmin);
+    lmiterm([cnt 1 1 ginv],1,1);
+    cnt=cnt+1;
+end
+
+% 1/Gammaub <= 1/Gamma
+if isfinite(opt.Gammaub)
+    lmiterm([-cnt 1 1 ginv],1,1);
+    lmiterm([cnt 1 1 0],1/opt.Gammaub);
+    cnt = cnt +1;
+end
+
 
 % Get LMI Options
 if ~isempty(opt.SolverOptions)
@@ -228,50 +231,56 @@ else
     x0 = [];
 end
 
- n = decnbr(lmisys); 
- c = zeros(n,1);
- c(1) = 1; % corresponding to first decision variable which is gamma
+% SDP: min gam subject to LMI constraints
+lmisys = getlmis;
+ndec = decnbr(lmisys);
+c = zeros(ndec,1);
+c(1) = -1; 
 
-if isequal(Method,'Backoff')
-   c(1) = -1; % maximise LBC 
-end
 
 if ~isequal(opt.Solver,'lmilab')
     error('Specified solver is currently not available.');
 end
 
 [copt,xopt] = mincx(lmisys,c,LMIopt,x0);
+Info = [];
 
-info = struct('xopt',xopt,'copt',copt,'lmisys',lmisys);
-
+% Handle Infeasible LMI Case
 if isempty(xopt)
-    K = [];
-    gamma = inf;
+    F = [];
+    Gamma = inf;
+    Info = struct('xopt',xopt,'copt',copt,'lmisys',lmisys);
     return;
 else
-    gamma = dec2mat(lmisys,xopt,gam);
-    Xp = Gp'*dec2mat(lmisys,xopt,X_0)*Gp;
-    partialXp = partialGp'*dec2mat(lmisys,xopt,X_0)*Gp + Gp'*dec2mat(lmisys,xopt,X_0)*partialGp;
-
+    Gamma = 1/dec2mat(lmisys,xopt,ginv);
     if isequal(Method,'BackOff')
         opt2 = opt;
         opt2.Method = 'MaxFeas';
-        opt2.Gammaub = opt.BackOffFactor*gamma;
+        opt2.Gammaub = opt.BackOffFactor*Gamma;
         opt2.SolverInit = [xopt;0];
-        info1 = struct('xopt',xopt,'copt',copt,'lmisys',lmisys,'Xp',Xp,'partialXp',partialXp);
-        gam1 = gamma;
-        [K,gamma,info2] = lpvsfsyn(P,nu,Xb,opt2);
-        info = struct('MinGamma',gam1,'Stage1Info',info1,'Stage2Info',info2);
+        info1 = struct('xopt',xopt,'copt',copt,'lmisys',lmisys,'X',X);
+        gam1 = Gamma;
+        [F,Gamma,info2] = lpvsfsyn(P,nu,Xb,opt2);
+        Info = struct('MinGamma',gam1,'Stage1Info',info1,'Stage2Info',info2);
 
     else
-        
-    % build controller
-    Xpinv = Xp\eye(size(Xp,1));
+        % Controller reconstruction
+        Xp = Gp'*dec2mat(lmisys,xopt,X)*Gp;
+        Zopt= inv(Xp)/Gamma^2;
 
-    % feedback gain calculation
-    K  = -(B2' + D112*Bhat'*gamma^(-2) - inv(D112*D111'*gamma^(-2) - eye(ne))*(C11*Xp*gamma^(-1) + D111*Bhat'*gamma^(-1)))*gamma*Xpinv - C21;
-    % reconstruct as a plftss
-    K = r2inv*plftmat(K,RB);
+        % Explicit solution for controller reconstruction
+        p12t = C1*Xp + D11*Bhat'/Gamma^2;
+        p22 = -eye(ne-nu) + D11*D11'/Gamma^2;
+        p23t = D12*D11'/Gamma^2;
+        F = -( B2'+ D12*Bhat'/Gamma^2 ...
+            -p23t*(p22\p12t) )*Zopt*Gamma^2 - C2;
+
+        % Undo orthog transformation
+        F = r2inv*F;
+
     end
 end
+
+    
+
 end

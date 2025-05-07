@@ -1,13 +1,11 @@
 % Orthogonalizes a general OLIC interconnection for Ratebounded LPV design
 % function [osys,Tleft,Tright,ftterm,unil,unir] = orthog4syn(P,nmeas,nctrl)
-function [osys,Tleft,Tright,ftterm,ne,nd,unil,unir] = orthog4syn(P,DOM,nmeas,nctrl)
+function [osys,Tleft,Tright,ftterm,ne,nd,unil,unir] = orthog4syn(P,nmeas,nctrl)
 
-if nargin ~= 4
+if nargin ~= 3
    disp('usage: [osys,invl,invr,ftterm,unil,unir] = orthog4syn(sys,nmeas,nctrl)');
    return
 end
-
-P = lft2grid(P,DOM);
 
 szP = size(P);
 nd = szP(2) - nctrl;
@@ -25,6 +23,19 @@ d11 = d(1:ne,1:nd);
 d12 = d(1:ne,nd+1:end);
 d21 = d(ne+1:end,1:nd);
 d22 = d(ne+1:end,nd+1:end);
+
+
+nparD12 = length(fieldnames(d12.Parameter));
+if nparD12 ~=0 
+    error(['D12 must be a constant matrix'])
+end
+d12 = d12.Data.NominalValue;
+nparD21 = length(fieldnames(d21.Parameter));
+if nparD21 ~=0 
+    error(['D21 must be a constant matrix'])
+end
+d21 = d21.Data.NominalValue;
+
 % Determine if D12 has full column rank and scale D12 to
 %    Q12*D12*R12INV = [0;I].
 % Hence if the system is redefined with a unitary transformation
@@ -33,7 +44,7 @@ d22 = d(ne+1:end,nd+1:end);
 % the unitary transformation on e does not change ||e||, and the invertible
 % transformation on u can be included in the overall controller.
 [q12,r12] = qr(d12);
-rrk = double(lpvmin(rank(r12)));
+rrk = double(rank(r12));
 if (rrk ~= nctrl)
    error(' D12 DOES NOT HAVE FULL COLUMN RANK over IV')
 end
@@ -43,7 +54,7 @@ unil = q12';
 % Determine if D21 has full col rank and scale D21 to
 %    R21INV'*D21*Q21 = [0 I].
 [q21,r21] = qr(d21');
-crk = double(lpvmin(rank(r21)));
+crk = double(rank(r21));
 if (crk ~= nmeas)
    error(' D21 DOES NOT HAVE FULL ROW RANK')
 end
@@ -64,11 +75,4 @@ c = [c1;c2];
 b = [b1 b2];
 d = [d11 d12;d21 d22];
 osys = ss(a,b,c,d);
-
-osys = grid2lft(osys);
-Tleft = grid2lft(Tleft);
-Tright = grid2lft(Tright);
-ftterm = grid2lft(ftterm);
-unil = grid2lft(unil);
-unir = grid2lft(unir);
 
