@@ -107,12 +107,9 @@ end
 
 
 if strcmp(alg,'struc')
-    if isa(G,'pss')
+    
         [K,Gamma,Info] = LOCALlpvmixsynstruc(G,W1,W2,W3,W4,Xb,Yb,opt);
-    else
-        error('currently only grid based structured synthesis supported')
-    end
-
+        
 elseif strcmp(alg,'full')
     % add performance weights    
     % TODO HP 09/12/24: based on the connect command. Need to reevaluate
@@ -181,7 +178,8 @@ Pcop = W2\P*W4;
 nperf = size(M,2);
 
 % build plant for state feedback synthesis
-Psf = ss(A,[L B],-C,[W2/(M.d) D]);
+[~,~,~,Md] = ssdata(M); % -- EB 05.25 necessary for lft case until plftss objects are fixed (of M.d is a plftss instead of pmat) 
+Psf = ss(A,[L B],-C,[W2/(Md) D]);
 
 % add output performance weights 
 tmp = parallel(Psf,W3,(nperf+1:nperf+ncont),1:ncont,[],[]);
