@@ -248,6 +248,7 @@ fact = ss(Afact,Bfact,Cfact,Dfact);
 Ml = plftss(Ml,RB);
 Nl = plftss(Nl,RB);
 fact = plftss(fact,RB);
+L = plftmat(L,RB);
 
 end 
 
