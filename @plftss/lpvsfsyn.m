@@ -149,7 +149,7 @@ lmiterm([cnt 1 1 PiQx],1,1);        % PiQx
 lmiterm([cnt 2 3 X],1,1);
 lmiterm([cnt 4 4 0],-eye(ne));
 lmiterm([cnt 5 6 ginv],eye(nx),1);
-lmiterm([cnt 7 8 0],-eye(nd));
+lmiterm([cnt 7 7 0],-eye(nd));
 lmiterm([cnt 7 8 ginv],eye(nd),1);
 cnt = cnt + 1;
 
