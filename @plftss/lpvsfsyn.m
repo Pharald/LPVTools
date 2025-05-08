@@ -5,13 +5,6 @@ function [F,Gamma,Info] = lpvsfsyn(P,nu,Xb,opt)
 % it must not include the state feedback signal to the controller (or dimensions will not work)
 % nu = number of control inputs from controller to plant
 
-%% To Do:
-% - updating plant formulation to include disturbance inputs for more
-% general case
-% - lpvsynoptions not included: lb and ub on X, (Y, J, L), balance
-% - solver options -> only lmilab supported
-% - rate bounded vs non rate bounded
-
 %%
 
 narginchk(2,4);
@@ -113,8 +106,8 @@ Bhat = B1-B2*D12;
 % Outer factor for full block S-procedure
 
 
-Qx = [-Gp*Ahat' + partialGp, -Gp*C1', zeros(np,nd);...
-    -Gp, zeros(np,ne-nu+nd);...
+Qx = [Gp*Ahat' - partialGp, Gp*C1', zeros(np,nd);...
+    Gp, zeros(np,ne-nu+nd);...
     B2', zeros(nu,ne-nu+nd);...
     zeros(ne-nu,nx), eye(ne-nu), zeros(ne-nu,nd);...
     zeros(nx,nx+ne-nu), Bhat; ...

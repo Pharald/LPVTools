@@ -144,8 +144,8 @@ Ctil = c1 - d11dot2*c2;
 
 % LMI Outer factors
 
-Qx = [-Gp*Ahat' + partialGp, -Gp*c11', zeros(nXp,nd);...
-    -Gp, zeros(nXp,ne1+nd);...
+Qx = [Gp*Ahat' - partialGp, Gp*c11', zeros(nXp,nd);...
+    Gp, zeros(nXp,ne1+nd);...
     b2', zeros(ncont,ne1+nd);...
     zeros(ne1,nx), eye(ne1), zeros(ne1,nd);...
     zeros(nx,nx+ne1), Bhat; ...
@@ -386,23 +386,13 @@ if isequal(opt.Method,'BackOff')
 else
 %     Construct controller (see thesis of Wu)
 
-% 02.12.2024 EB: there is a controller construction function klpv()
-% is this the same reconstruction?
-
- % the following controller formulation uses the Y and X defined in the
- % thesis of Wu, the above optimisation rearranged to have non-inverse
- % gamma terms -> this has to be reversed for the next step
-     YP = 1/Gamma*Yp;
-     XP = 1/Gamma*Xp;
-     partialXP = 1/Gamma*partialXp;
-
      g2 = Gamma^(2);
      g_2 = 1/g2;
 
-     XPinv = XP\eye(size(XP,1));
-     partialXPinv = -XP\(partialXP/XP);
+     XPinv = Xp\eye(size(Xp,1));
+     partialXPinv = -Xp\(partialXp/Xp);
 
-     Q = YP-g_2*XPinv;
+     Q = Yp-g_2*XPinv;
 
      Om = - d1122 - d1121*((g2*eye(size(d1111,2))\eye(size(d1111,2))) - d1111'* d1111)*d1111'*d1112;
 
@@ -414,21 +404,21 @@ else
      Dh = (eye(size(D11_,1)) - g_2*(D11_*D11_'))\eye(size(D11_,1));
      Dt = (eye(size(D11_,2)) - g_2*(D11_'*D11_))\eye(size(D11_,2));
 
-     F = (-d12'*Dh*d12)\((b2+B1_*D11_'*Dh*d12*g2)'/XP + d12'*Dh*C1_);
-     L = -(YP\(c2+d21*Dt*D11_'*C1_*g_2)' + B1_*Dt*d21')/(d21*Dt*d21');
+     F = (-d12'*Dh*d12)\((b2+B1_*D11_'*Dh*d12*g2)'/Xp + d12'*Dh*C1_);
+     L = -(Yp\(c2+d21*Dt*D11_'*C1_*g_2)' + B1_*Dt*d21')/(d21*Dt*d21');
 
      Af = A_ + b2*F;
      Cf = C1_ + d12*F;
 
-     Afx = XP\Af;
-     left = XP\B1_ + Cf'*D11_;
+     Afx = Xp\Af;
+     left = Xp\B1_ + Cf'*D11_;
 
      H = -(Afx+Afx'+partialXPinv+Cf'*Cf+g_2*left*Dt*left');
 
-     q = YP - g_2*XPinv;
-     qiy = q\YP;
+     q = Yp - g_2*XPinv;
+     qiy = q\Yp;
 
-     m1 = H + F'*(b2'/XP + d12'*Cf);
+     m1 = H + F'*(b2'/Xp + d12'*Cf);
      m2 = (q*(-qiy*L*d21 - B1_) + g_2*F'*d12'*D11_)*Dt*left';
      m = m1 + m2;
 
