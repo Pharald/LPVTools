@@ -140,211 +140,162 @@ Bhat = b1 - b2*d112dot;
 Atil = a - b12*c2;
 Ctil = c1 - d11dot2*c2;
 
-% partitioned
-% General form following notation in thesis of Wu
-% C11 = C(1:ne,:);
-% C12 = C(ne+1:ne+ncont,:);
-% C2 = C(ne+ncont+1:ne+ncont+ne,:); 
-% 
-% B11 = B(:,1:nd);
-% B12 = B(:,nd+1:nd+ne);
-% Bof2 = B(:,ne+nd+1:ne+nd+ncont);
-% 
-% D1111 = D(1:ne,1:nd);
-% D1112 = D(1:ne,nd+1:nd+ne);
-% D1121 = D(ne+1:ne+ncont, 1:nd);
-% D1122 = D(ne+1:ne+ncont,nd+1:nd+ne);
-% 
-% B1 = [B11 B12];
-% B2 = Bof2;
-% C1 = [C11; C12];
-% D111dot = [D1111 D1112];
-% D112dot = [D1121 D1122];
-% Dmat = [D111dot; D112dot];
-% D11dot1 = [D1111; D1121];
-% D11dot2 = [D1112; D1122];
-% D11 = [D111dot; D112dot];
-% D12 = D(1:ne+ncont, nd+ne+1:end);
-% D21 = D(ne+ncont+1:end, 1:nd+ne);
-% D22 = D(ne+ncont+1:end, nd+ne+1:end);
-% 
-% Ahat = A- B2*C12;
-% Abar = A-B12*C2;
-% 
-% Bhat = B1 - B2*D112dot;
-% Cbar = C1 - D11dot2*C2;
 
 
-%% LMI matrices
-RpX_G_col1 = [eye(nXp); zeros(nXp)]*Gp; % need two repeats of Gp as they are diagonal
-RpX_G_col2 = [zeros(nXp); eye(nXp)]*Gp; 
-RpX_G = [RpX_G_col1,RpX_G_col2];
-RpX_mult = [Ahat' , c11', zeros(nx,nd+ne); eye(nx), zeros(nx,ne1+ne+nd)];
-RpX_rest =   [b2', zeros(ncont,ne1+ne+nd);...
-    zeros(ne1,nx), eye(ne1), zeros(ne1,ne+nd); ...
-    zeros(nx,nx+ne+ne1), Bhat;...
-    eye(nx), zeros(nx,ne+ne1+nd);...
-    zeros(ne+nd,nx+ne1),eye(ne+nd);...
-    zeros(nd,nx), d111dot', zeros(nd,ne+nd)];
-RpX_Gpart = [-partialGp, zeros(nXp,nd+2*ne);...
-    zeros(nXp + 4*ne+2*nd+2*nx, nx+2*ne+nd)];
+% LMI Outer factors
 
-RpXmat = [RpX_G*RpX_mult; RpX_rest] + RpX_Gpart;
+Qx = [-Gp*Ahat' + partialGp, -Gp*c11', zeros(nXp,nd);...
+    -Gp, zeros(nXp,ne1+nd);...
+    b2', zeros(ncont,ne1+nd);...
+    zeros(ne1,nx), eye(ne1), zeros(ne1,nd);...
+    zeros(nx,nx+ne1), Bhat; ...
+    eye(nx), zeros(nx,ne1+nd); ...
+    zeros(nd,nx+ne1),eye(nd);...
+    zeros(nd,nx), d111dot', zeros(nd,nd)]; 
+Qx = simplify(Qx,simplifyopt);
 
-RpY_H_col1 = [eye(sum(np_h)); zeros(sum(np_h))]*Hp;
-RpY_H_col2 = [zeros(sum(np_h)); eye(sum(np_h))]*Hp; 
-RpY_H = [RpY_H_col1,RpY_H_col2];
-RpY_mult = [Abar, B11, zeros(nx,nu+ne); eye(nx), zeros(nx,nd +ne + nu)];
-RpY_rest =  [C2 zeros(ne,nd +ne + nu); zeros(nd, nx), eye(nd), zeros(nd,ne+nu); zeros(nx,nx+ne), Cbar'; eye(nx), zeros(nx,nd+ne+nu); zeros(ne+nu,nx+nd), eye(ne+nu);zeros(ne+nu,nx), D11dot1, zeros(ne+nu,ne+nu)];
-RpY_Hpart = [partialHp, zeros(sum(np_h),nd+nu+ne); zeros(sum(np_h) + nd + 2*nx + 3*ne + 2*nu, nx+nd+nu+ne)];
 
-RpYmat = [RpY_H*RpY_mult; RpY_rest] + RpY_Hpart;
+Qy = [Hp*Atil + partialHp, Hp*b11, zeros(nYp,ne);...
+    Hp, zeros(nXp,nd1+ne);...
+    c2, zeros(nmeas,nd1+ne);...
+    zeros(nd1,nx), eye(nd1), zeros(nd1,ne);...
+    zeros(nx,nx+nd1), Ctil'; ...
+    eye(nx), zeros(nx,nd1+ne); ...
+    zeros(ne,nx+nd1),eye(ne);...
+    zeros(ne,nx), d11dot1, zeros(ne,ne)]; 
+Qy = simplify(Qy,simplifyopt);
 
-GHxy = [Gp zeros(sum(np_g),nx); zeros(nx,nx), eye(nx); eye(nx), zeros(nx,nx); zeros(sum(np_h),nx), Hp];
+
+Qxy = [Gp zeros(nXp,nx); zeros(nx,nx), eye(nx); eye(nx), zeros(nx,nx); zeros(nYp,nx), Hp];
+Qxy = simplify(Qxy,simplifyopt);
 
 
 % Create LMI variables
 setlmis([])
 
-cnt = 0;
-
-kx = size(np_g,1);
-if kx > 1
-    [X_0,~,sX_0] = lmivar(1,[np_g ones(kx,1)]);  % blkdiag, npxnp
-else
-    [X_0,~,sX_0] = lmivar(1,[np_g 1]);  % symmetric, npxnp
+if isequal(Method,'PoleCon')
+    error('PoleCon Method is currently not supported for plftss objects')
 end
 
-ky = size(np_h,1);
-if ky > 1
-[Y_0,ndec,sY_0] = lmivar(1,[np_h ones(ky,1)]);  % blkdiag, npxnp
-else
-[Y_0,ndec,sY_0] = lmivar(1,[np_h 1]);  % symmetric, npxnp
+if isequal(Method,'MaxFeas')
+    % LBC is lower bound on X
+    [LBC,ndec] = lmivar(1,[nx 0]);
 end
+
+[ginv,ndec] = lmivar(1,[1 1]);
+
+X = lmivar(1,[nXp 1]);    
+Y = lmivar(1,[nYp 1]);    
+
+
+cnt = 1;
 
 
 % get outer factors and multipliers
 % LMIs relating to multipliers also defined in fullBlockS
+[RRX,PiRX,ndec,cnt] = fullBlockS(Qx,cnt);
 cnt = cnt+1;
-[RRX,PiRX,ndec,cnt] = fullBlockS(RpXmat,cnt);
 
+[RRY,PiRY,ndec,cnt] = fullBlockS(Qy,cnt);
 cnt = cnt+1;
-[RRY,PiRY,ndec,cnt] = fullBlockS(RpYmat,cnt);
 
-cnt = cnt+1;
-[RRXY,PiXY,ndec,cnt,XYinfo] = fullBlockS(GHxy,-cnt); % XY xondition is 0 <
+[RRXY,PiXY,ndec,cnt,XYinfo] = fullBlockS(Qxy,-cnt); % XY xondition is 0 <
 cnt = -cnt;
+cnt = cnt+1;
 
-[gam,ndec] = lmivar(1,[1 1]);
-
-if isequal(opt.Method,'MaxFeas')
-    [LBC,ndec] = lmivar(1,[np_g 0]);
-% [FVone,ndec,sFVone] = lmivar(1,[1 1]);
-% [FV,ndec,sFV] = lmivar(3,sFVone*eye(nxy))
-end
-
-% % LMI conditions
-% cnt = 0;
-
-if nnz(sqrt(Dmat.data.nominal'*Dmat.data.nominal) > eye(ne + nu)) > 0
-    % Dmat is plftmat but should have no blocks so equal to nominal
-warning('Dmat^T*Dmat^0.5 > I, first condition does not hold')
-end
-% 
-
-% 0 < gam
-cnt = cnt + 1;
-lmiterm([-cnt 1 1 gam],1,1);
-
-% Gammalb*I < gam < Gammaub*I
-if opt.Gammalb > 0
-    cnt = cnt+1;
-    lmiterm([cnt 1 1 0],opt.Gammalb);
-    lmiterm([-cnt 1 1 gam],1,1);
-end
-if isfinite(opt.Gammaub)
-    cnt = cnt+1;
-    lmiterm([-cnt 1 1 0],opt.Gammaub);    
-    lmiterm([cnt 1 1 gam],1,1);
-end
-
+% LMI conditions
 
 % X and Y positive definite
-% 0 < Y_0
-cnt = cnt + 1;
-lmiterm([-cnt 1 1 Y_0],1,1);
 
-% 0 < Hp_0'*Y_0*Hp_0
-cnt = cnt + 1;
-lmiterm([-cnt 1 1 Y_0],Hp_0',Hp_0);
 
-% 0 < X_0
-cnt = cnt + 1;
-lmiterm([-cnt 1 1 X_0],1,1);
-
-% 0 < Gp_0'*X_0*Gp_0
-cnt = cnt + 1;
-lmiterm([-cnt 1 1 X_0],Gp_0',Gp_0);
-
-% 0 < Rxy % in fullBlockS
-
-%     0 < RRXY'*blkdiag(PiXY,XY_0mat)*RRXY
-cnt = cnt + 1;
-lmiterm([-cnt 0 0 0],RRXY);  % RRXY'__RRXY outer factor
-lmiterm([-cnt 1 1 PiXY],1,1);
-lmiterm([-cnt 2 2 X_0],1,1);
-lmiterm([-cnt 3 4 0],eye(nx));
-lmiterm([-cnt 5 5 Y_0],1,1);
-
-if isequal(Method,'MaxFeas')
-    lmiterm([cnt 2 2 LBC],1,1);
-    ndt = XYinfo.ndelta;        % dimensions from partition of LFT
-    outerFact = zeros(size(RRXY));
-    outerFact(1:ndt,1:ndt) = eye(ndt);
-    lmiterm([cnt 0 0 0],outerFact);   
-% lmiterm([cnt 0 0 LBC],eye(size(RRXY,2))); % doesn't allow dimensions
+% ypdlow*I < Hp_0'*Y_0*Hp_0 < ypdupp*I
+if opt.Ylb > 0
+    ypdlow = opt.Ylb;
+else
+    ypdlow = 1e-6;
 end
+lmiterm([cnt 1 1 0],ypdlow*eye(nx));
+lmiterm([-cnt 1 1 Y],Hp0',Hp0);
+cnt = cnt + 1;
 
-% % Rx < 0 % in fullBlockS
+if isfinite(opt.Yub)
+    ypdupp = opt.Yub;
+else
+    ypdupp = 1e6;
+end
+lmiterm([-cnt 1 1 0],ypdupp*eye(nx));
+lmiterm([cnt 1 1 Y],Hp0',Hp0);
+cnt = cnt+1;
+
+
+
+% xpdlow*I < Gp_0'*X_0*Gp_0 < xpdupp*I
+if opt.Xlb > 0
+    xpdlow = opt.Xlb;
+else
+    xpdlow = 1e-6;
+end
+if isequal(Method,'MaxFeas')
+    lmiterm([cnt 1 1 LBC],1,1);
+else
+    lmiterm([cnt 1 1 0],xpdlow*eye(nx));
+end
+lmiterm([-cnt 1 1 X],Gp0',Gp0);
+cnt = cnt + 1;
+
+if isfinite(opt.Xub)
+    xpdupp = opt.Xub;
+else
+    xpdupp = 1e6;
+end
+lmiterm([-cnt 1 1 0],xpdupp*eye(nx));
+lmiterm([cnt 1 1 X],Gp0',Gp0);
+cnt = cnt+1;
+
 
 % RRX'*blkdiag(PiRX,X_0mat)*RRX < 0
-cnt = cnt + 1;
 lmiterm([cnt 0 0 0],RRX);  % RRX'__RRX outer factor
 lmiterm([cnt 1 1 PiRX],1,1); % PiRX multiplier
 % X_0mat
-lmiterm([cnt 2 3 X_0],1,1);
-lmiterm([cnt 4 4 gam],-eye(nu),1);
-lmiterm([cnt 5 5 gam],-eye(ne),1);
-lmiterm([cnt 6 7 0],eye(nx));
-lmiterm([cnt 8 8  gam],-eye(ne + nd),1);
-lmiterm([cnt 8 9 0],eye(ne + nd));
-
-% Ry < 0 % in fullBlockS
+lmiterm([cnt 2 3 X],1,1);
+lmiterm([cnt 4 4 0],-eye(ne1+ncont));
+lmiterm([cnt 5 6 ginv],eye(nx),1);
+lmiterm([cnt 7 7 0],-eye(nd));
+lmiterm([cnt 7 8 ginv],eye(nd),1);
+cnt = cnt + 1;
 
 % RRY'*blkdiag(PiRY,Y_0mat)*RRY < 0
-cnt = cnt + 1;
 lmiterm([cnt 0 0 0],RRY);  % RRY'__RRY outer factor
 lmiterm([cnt 1 1 PiRY],1,1); % PiRY multiplier
 % Y_0mat
-lmiterm([cnt 2 3 Y_0],1,1);
-lmiterm([cnt 4 4 gam],-eye(ne),1);
-lmiterm([cnt 5 5 gam],-eye(nd),1);
-lmiterm([cnt 6 7 0],eye(nx));
-lmiterm([cnt 8 8 gam],-eye(ne + nu),1);
-lmiterm([cnt 8 9 0],eye(ne + nu));
+lmiterm([cnt 2 3 Y],1,1);
+lmiterm([cnt 4 4 0],-eye(nd1+nmeas));
+lmiterm([cnt 5 6 ginv],eye(nx),1);
+lmiterm([cnt 7 7 0],-eye(ne));
+lmiterm([cnt 7 8 ginv],eye(ne),1);
+cnt = cnt + 1;
 
 
+%     0 < RRXY'*blkdiag(PiXY,XY_0mat)*RRXY
+lmiterm([-cnt 0 0 0],RRXY);  % RRXY'__RRXY outer factor
+lmiterm([-cnt 1 1 PiXY],1,1);
+lmiterm([-cnt 2 2 X],1,1);
+lmiterm([-cnt 3 4 ginv],eye(nx),1);
+lmiterm([-cnt 5 5 Y],1,1);
+cnt = cnt + 1;
 
-% Set Objective
- cobj= zeros(ndec,1);
+if opt.Gammalb>0
+    lmiterm([cnt 1 1 ginv],1,1);
+    lmiterm([-cnt 1 1 0],1/opt.Gammalb);
+    cnt = cnt +1;
+end
+if isfinite(opt.Gammaub)
+    lmiterm([-cnt 1 1 ginv],1,1);
+    lmiterm([cnt 1 1 0],1/opt.Gammaub);
+    cnt = cnt +1;
+end
 
- if isequal(opt.Method,'MaxFeas')
-     % Method = 'MaxFeas':   max LBC
-    cobj(end) = -1;
- else
-     % Method = 'BackOff' or 'MinGamma'
-     cobj(end) = 1;
- end
+
 
 % Get LMI Options
 % TODO PJS 5/29/2011: Default options for other solvers?
@@ -377,36 +328,20 @@ end
 
 % Solve LMI
 lmisys = getlmis;
-FeasFlag = 1;
-if isequal(Method,'PoleCon')
-    % Pole constraint is a GEVP
-    % Currently only implemented using LMILAB/GEVP
-    nlfc = nmod;
-    [copt,xopt] = gevp(lmisys,nlfc,LMIopt);
-    
-    % TODO: Add initial conditions
-    %[copt,copt] = gevp(lmisys,nlfc,LMIopt,t0,x0);
-elseif isequal(opt.Solver,'lmilab')
-    [copt,xopt] = mincx(lmisys,cobj,LMIopt,x0);
-    if isempty(copt)
-        FeasFlag = 0;
-    end
-elseif isequal(opt.Solver,'sedumi')
-    % Convert to Sedumi format
-    % TODO PJS 5/29/2011: Currently ignores x0
-    [F0,Fi,blk] = lmitrans(lmisys);
-    K.s = blk;
-    [xdual,xopt,info]=sedumi(Fi,-cobj,F0,K,LMIopt);
-    copt = cobj'*xopt;
-    if info.pinf==1 || info.dinf==1 || info.numerr~=0
-        % TODO PJS 5/29/2011: Also check info.feasratio?
-        FeasFlag = 0;
-    end
-    
-else
-    % TODO PJS 5/20/2011: Implement other solvers with LMITRANS
+ndec = decnbr(lmisys);
+cobj = zeros(ndec,1);
+cobj(1) = -1; 
+
+if ~isequal(opt.Solver,'lmilab')
     error('Specified solver is currently not available.');
 end
+
+FeasFlag = 1;
+[copt,xopt] = mincx(lmisys,cobj,LMIopt,x0);
+if isempty(copt)
+    FeasFlag = 0;
+end
+
 
 % Handle Infeasible LMI Case
 % TODO PJS 5/20/2011: What should we return in this case?
@@ -418,22 +353,20 @@ if ~FeasFlag
 end
 
 % Get optimal X/Y/Gamma variables
-% if ~isequal(Method,'PoleCon')
-    gamopt = dec2mat(lmisys,xopt,gam);
-% end
+Gamma = 1/dec2mat(lmisys,xopt,ginv);
 
-   Yp = Hp'*dec2mat(lmisys,xopt,Y_0)*Hp;
-   partialYp = partialHp'*dec2mat(lmisys,xopt,Y_0)*Hp + Hp'*dec2mat(lmisys,xopt,Y_0)*partialHp;
-   Xp = Gp'*dec2mat(lmisys,xopt,X_0)*Gp;
-   partialXp = partialGp'*dec2mat(lmisys,xopt,X_0)*Gp + Gp'*dec2mat(lmisys,xopt,X_0)*partialGp;
+Yp = Hp'*dec2mat(lmisys,xopt,Y)*Hp;
+partialYp = partialHp'*dec2mat(lmisys,xopt,Y)*Hp + Hp'*dec2mat(lmisys,xopt,Y)*partialHp;
+Xp = Gp'*dec2mat(lmisys,xopt,X)*Gp;
+partialXp = partialGp'*dec2mat(lmisys,xopt,X)*Gp + Gp'*dec2mat(lmisys,xopt,X)*partialGp;
 
-    Info = struct('xopt',xopt,'copt',copt,'lmisys',lmisys);
+Info = struct('xopt',xopt,'copt',copt,'lmisys',lmisys);
 
 if isequal(opt.Method,'BackOff')
     % Solve Stage 2 LMI: Maximize the Min Eig of X/Y Coupling Constraint   
     opt2 = opt;
     opt2.Method = 'MaxFeas';
-    opt2.Gammaub = opt.BackOffFactor*gamopt;
+    opt2.Gammaub = opt.BackOffFactor*Gamma;
       
     % Construct feasible solution from optimal Stage 1 LMI answer
     % TO DO
@@ -442,13 +375,13 @@ if isequal(opt.Method,'BackOff')
     
     % Solve Stage 2 Relaxed LMI
     Info1 = Info;
-    gamopt1 = gamopt;    
+    Gamma1 = Gamma;
    
-    [Kopt,gamopt,Info2] = lpvsyn(P,ne,nu,Xb,Yb,opt2);
+    [K,Gamma,Info2] = lpvsyn(sys,nmeas,ncont,Xb,Yb,opt2);
 %  lmisys = setmvar(lmisys,gam,opt2.Gammaub);
 % [tfeas,xfeas] = feasp(lmisys,[0 1000 0 10 0]);
 
-    Info = struct('MinGamma',gamopt1,'Stage1Info',Info1,'Stage2Info',Info2);
+    Info = struct('MinGamma',Gamma1,'Stage1Info',Info1,'Stage2Info',Info2);
     return
 else
 %     Construct controller (see thesis of Wu)
@@ -459,86 +392,64 @@ else
  % the following controller formulation uses the Y and X defined in the
  % thesis of Wu, the above optimisation rearranged to have non-inverse
  % gamma terms -> this has to be reversed for the next step
-     YP = 1/gamopt*Yp;
-     XP = 1/gamopt*Xp;
-     partialXP = 1/gamopt*partialXp;
+     YP = 1/Gamma*Yp;
+     XP = 1/Gamma*Xp;
+     partialXP = 1/Gamma*partialXp;
 
-g2 = gamopt^(2);
-g_2 = 1/g2;
+     g2 = Gamma^(2);
+     g_2 = 1/g2;
 
-XPinv = XP\eye(size(XP,1));
-partialXPinv = -XP\(partialXP/XP);
+     XPinv = XP\eye(size(XP,1));
+     partialXPinv = -XP\(partialXP/XP);
 
-Q = YP-g_2*XPinv;
+     Q = YP-g_2*XPinv;
 
-Om = - D1122 - D1121*((g2*eye(size(D1111,2))\eye(size(D1111,2))) - D1111'* D1111)*D1111'*D1112;
+     Om = - d1122 - d1121*((g2*eye(size(d1111,2))\eye(size(d1111,2))) - d1111'* d1111)*d1111'*d1112;
 
-A_ = A + B2*Om*C2;
-B1_ = B1 + B2*Om*D21;
-C1_ = C1 + D12*Om*C2;
-D11_ = D11 + D12*Om*D21;
+     A_ = a + b2*Om*c2;
+     B1_ = b1 + b2*Om*d21;
+     C1_ = c1 + d12*Om*c2;
+     D11_ = d11 + d12*Om*d21;
 
-Dh = (eye(size(D11_,1)) - g_2*(D11_*D11_'))\eye(size(D11_,1));
-Dt = (eye(size(D11_,2)) - g_2*(D11_'*D11_))\eye(size(D11_,2));
+     Dh = (eye(size(D11_,1)) - g_2*(D11_*D11_'))\eye(size(D11_,1));
+     Dt = (eye(size(D11_,2)) - g_2*(D11_'*D11_))\eye(size(D11_,2));
 
-    F = (-D12'*Dh*D12)\((B2+B1_*D11_'*Dh*D12*g2)'/XP + D12'*Dh*C1_);
-    L = -(YP\(C2+D21*Dt*D11_'*C1_*g_2)' + B1_*Dt*D21')/(D21*Dt*D21');
+     F = (-d12'*Dh*d12)\((b2+B1_*D11_'*Dh*d12*g2)'/XP + d12'*Dh*C1_);
+     L = -(YP\(c2+d21*Dt*D11_'*C1_*g_2)' + B1_*Dt*d21')/(d21*Dt*d21');
 
-    Af = A_ + B2*F;
-    Cf = C1_ + D12*F;
+     Af = A_ + b2*F;
+     Cf = C1_ + d12*F;
 
-    Afx = XP\Af;
-    left = XP\B1_ + Cf'*D11_;
-    
-    H = -(Afx+Afx'+partialXPinv+Cf'*Cf+g_2*left*Dt*left');
+     Afx = XP\Af;
+     left = XP\B1_ + Cf'*D11_;
 
-    q = YP - g_2*XPinv;
-    qiy = q\YP;
+     H = -(Afx+Afx'+partialXPinv+Cf'*Cf+g_2*left*Dt*left');
 
-        m1 = H + F'*(B2'/XP + D12'*Cf);
-        m2 = (q*(-qiy*L*D21 - B1_) + g_2*F'*D12'*D11_)*Dt*left';
-        m = m1 + m2;  
+     q = YP - g_2*XPinv;
+     qiy = q\YP;
 
-        %% 02.12.24 EB: a way to reduce number of occurences than using simplify
-        
-        K.a = Af + qiy*L*C2 - g_2*(q\m);
-        K.b = -qiy*L;
-        K.c = F;
-        K.d = Om;
-        Kopt = plftss(K.a,K.b,K.c,K.d);
-     
-        Info = struct('xopt',xopt,'lmisys',lmisys,...
+     m1 = H + F'*(b2'/XP + d12'*Cf);
+     m2 = (q*(-qiy*L*d21 - B1_) + g_2*F'*d12'*D11_)*Dt*left';
+     m = m1 + m2;
+
+     %% 02.12.24 EB: a way to reduce number of occurences than using simplify
+
+     ak = Af + qiy*L*c2 - g_2*(q\m);
+     bk = -qiy*L;
+     ck = F;
+     dk = Om;
+     K = plftss(ak,bk,ck,dk);
+
+     Info = struct('xopt',xopt,'lmisys',lmisys,...
                'Xopt',Xp,'Yopt',Yp);
 
 end
+
+
 end
 
 
-function [RR1,ndelta] = partition_mat(G)
 
-% ------------Partition R1 -----------------------------------------------
-if isa(G,'uss') || isa(G,'umat')
-G = simplify(G,'full');
-    [G0,delta] = lftdata(G);
-
-elseif isa(G,'plftss') || isa(G,'plftmat')
-    G = simplify(G.Data,'full');
-[G0,delta,~,~] = lftdata(G);
-end
-
-% lft(G0,deltar); 
-
-n_in = size(G,2);
-n_out = size(G,1);
-ndelta = size(delta,1);
-
-G011 = G0(1:ndelta,1:ndelta);
-G021 = G0(ndelta+1:end,1:ndelta);
-G022 = G0(ndelta+1:end,ndelta+1:end);
-G012 = G0(1:ndelta,ndelta+1:end);
-
-RR1 = [G011, G012; eye(ndelta), zeros(ndelta,n_in); G021, G022];
-end
 
 
 
