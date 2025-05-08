@@ -93,7 +93,8 @@ Qz = [Hp*Atil + partialHp, Hp*B; ...
       zeros(nu,nx), eye(nu)];
 Qz = simplify(Qz,simplifyopt);
                  
-
+% EB: If constant basis functions are used Hp has no blocks so Gw causes
+% errors with lftdata()
 Gw = simplify([zeros(nx,nx) eye(nx); ... 
        eye(nx) zeros(nx,nx); ...
        zeros(np,nx), Hp]);
