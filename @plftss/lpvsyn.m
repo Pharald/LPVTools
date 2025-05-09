@@ -205,8 +205,14 @@ cnt = cnt+1;
 
 % LMI conditions
 
-% X and Y positive definite
+% % X and Y positive definite
+% X_0 > 0
+lmiterm([-cnt 1 1 X],1,1);
+cnt = cnt+1;
 
+% Y_0 > 0
+lmiterm([-cnt 1 1 Y],1,1);
+cnt = cnt+1;
 
 % ypdlow*I < Hp_0'*Y_0*Hp_0 < ypdupp*I
 if opt.Ylb > 0

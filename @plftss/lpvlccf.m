@@ -113,8 +113,8 @@ cnt = 1;
 
 % % first LMI condition
 % % 0 < Z_0
-% lmiterm([-cnt 1 1 Z_0],1,1);  % Z_0
-% cnt = cnt+1;
+lmiterm([-cnt 1 1 Z0],1,1);  % Z_0
+cnt = cnt+1;
 
 % 0 < Z(0)
 lmiterm([-cnt 1 1 Z0],Hp0',Hp0);   % H_p'*Z_0*Hp_0

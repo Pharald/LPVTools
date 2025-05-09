@@ -146,6 +146,9 @@ lmiterm([cnt 7 7 0],-eye(nd));
 lmiterm([cnt 7 8 ginv],eye(nd),1);
 cnt = cnt + 1;
 
+% X_0 > 0
+lmiterm([-cnt 1 1 X],1,1);
+cnt = cnt+1;
 
 % xpdlow*I < Gp_0'*X_0*Gp_0 < xpdupp*I
 if opt.Xlb > 0
