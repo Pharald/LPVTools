@@ -242,7 +242,7 @@ else
     xpdlow = 1e-6;
 end
 if isequal(Method,'MaxFeas')
-    lmiterm([cnt 1 1 LBC],1,1);
+    lmiterm([cnt 1 1 LBC],eye(nx),1);
 else
     lmiterm([cnt 1 1 0],xpdlow*eye(nx));
 end
@@ -312,7 +312,7 @@ elseif isequal(opt.Solver,'lmilab')
     LMIopt = zeros(5,1);
     %LMIopt(1) = 1/(gmax-gmin); % Tol setting in old code
     if isequal(Method,'MaxFeas')
-        LMIopt(2) = 50;   % Max # of iters for MaxFeas problem
+        LMIopt(2) = 250;   % Max # of iters for MaxFeas problem
 %     elseif RateBndFlag
 %         %LMIopt(2) = 600;  % Setting in old LPVOFSYN1
 %         LMIopt(2) = 350;  % Max # of iters for rate bounded syn
@@ -353,7 +353,7 @@ end
 % TODO PJS 5/20/2011: What should we return in this case?
 if ~FeasFlag
     K = [];
-    gamopt = inf;
+    Gamma = inf;
     Info = struct('xopt',xopt,'copt',copt,'lmisys',lmisys);
     return;
 end
