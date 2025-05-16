@@ -390,7 +390,6 @@ if isequal(opt.Method,'BackOff')
     Info = struct('MinGamma',Gamma1,'Stage1Info',Info1,'Stage2Info',Info2);
     return
 else
-%     Construct controller (see thesis of Wu)
 
      g2 = Gamma^(2);
      g_2 = 1/g2;
@@ -398,9 +397,11 @@ else
      XPinv = Xp\eye(size(Xp,1));
      partialXPinv = -Xp\(partialXp/Xp);
 
+     %     Construct controller (see thesis of Wu)
+
      Q = Yp-g_2*XPinv;
 
-     Om = - d1122 - d1121*((g2*eye(size(d1111,2))\eye(size(d1111,2))) - d1111'* d1111)*d1111'*d1112;
+     Om = - d1122 - d1121*((g2*eye(size(d1111,2))\eye(size(d1111,2)) - d1111'* d1111)\d1111)'*d1112;
 
      A_ = a + b2*Om*c2;
      B1_ = b1 + b2*Om*d21;
@@ -428,13 +429,14 @@ else
      m2 = (q*(-qiy*L*d21 - B1_) + g_2*F'*d12'*D11_)*Dt*left';
      m = m1 + m2;
 
-     %% 02.12.24 EB: a way to reduce number of occurences than using simplify
-
      ak = Af + qiy*L*c2 - g_2*(q\m);
      bk = -qiy*L;
      ck = F;
      dk = Om;
-     K = plftss(ak,bk,ck,dk);
+     ortK = ss(ak,bk,ck,dk);
+
+     % undo orthogonalisation
+    K = lft([TR;eye(ncont)]*ortK*[TL' eye(nmeas)],FT);
 
      Info = struct('xopt',xopt,'lmisys',lmisys,...
                'Xopt',Xp,'Yopt',Yp);
