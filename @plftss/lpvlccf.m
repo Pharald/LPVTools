@@ -120,6 +120,10 @@ cnt = cnt+1;
 lmiterm([-cnt 1 1 Z0],Hp0',Hp0);   % H_p'*Z_0*Hp_0
 cnt = cnt+1;
 
+% % 0 < W
+lmiterm([-cnt 1 1 W],1,1);
+cnt = cnt+1;
+
 % second LMI condition
 % full block S procedure multipliers defined in fullBlockS
 [QQ,PiQz,~,cnt] = fullBlockS(Qz,cnt);

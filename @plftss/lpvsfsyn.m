@@ -1,4 +1,4 @@
-function [F,Gamma,Info] = lpvsfsyn(P,nu,Xb,opt)
+function [F,Gamma,Info] = lpvsfsyn(P,nu,Xb,alg,opt)
 % Parameter-dependent state feedback controller synthesis in LFT
 % formualtion
 % P is uss and is the generalised plant with weighted in/outputs.
@@ -7,21 +7,40 @@ function [F,Gamma,Info] = lpvsfsyn(P,nu,Xb,opt)
 
 %%
 
-narginchk(2,4);
+narginchk(2,5);
 nin = nargin;
 
-if nin ==2
-    opt = lpvsynOptions; % default settings
-    Xb =[];
-elseif nin == 3  && ~isa(Xb,'basis') % no basis functions specified -> will cause error
-    opt = Xb;
+if nin==2
+    opt = lpvsynOptions;
     Xb = [];
+    alg = 'L2';
+elseif nin==3
+    if isa(Xb,'lpvsynOptions')
+        opt = Xb;
+        Xb = [];
+        alg = 'L2';  
+    elseif isa(Xb,'basis')
+        alg = 'L2'; 
+        opt = lpvsynOptions;
+    elseif isa(Xb,'char')
+        alg = Xb;
+        Xb = [];
+        opt = lpvsynOptions;
+    else
+        error(['The third argment in a call to lpvsfsyn must be '...
+            'either a BASIS object, a CHAR, or a lpvsynOptions'])
+    end
+elseif nin==4
+    if isa(alg,'lpvsynOptions')
+        opt = alg;
+        alg = 'L2';        
+    elseif isa(alg,'char')
+        opt = lpvsynOptions;
+    else
+        error(['The fourth argment in a call to lpvsfsyn must be '...
+            'either a a CHAR, or a lpvsynOptions'])
+    end
 end
-
-if ~isa(P,'plftss')
-    error(['Plant must be a plftss object'])
-end
-
 nx = order(P); % # of states
 
 if isempty(Xb)
