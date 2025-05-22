@@ -26,6 +26,11 @@ Current Developers: Harald Pfifer, Emily Burgin
 
 The toolbox has been originally developed by G. Balas, A. Hjartarson, A. Packard, and P. Seiler. We are grateful for them to allow us taking over working on these tools.
 
+## References
+- H. Pfifer, and E. Burgin, "LPVTools 2.0 and its Application to Spacecraft Attitude Control", 6th IFAC Workshop on Linear Parameter Varying Systems, 2025.
+- A. Hjartarson, A. Packard, and P. Seiler, "LPVTools: A Toolbox for Modeling, Analysis, and Synthesis of Parameter Varying Control Systems", First IFAC Workshop on Linear Parameter Varying Systems, 2015.
+
+
 ## Donation
 Gary Balas passed away on November 12, 2014. If you like the toolbox then please consider donating to the [Gary Balas Memorial Fund](https://makingagift.umn.edu/give/fund.html?fundCode=20671&desc_source=UWXXCSEBALAS).
 
