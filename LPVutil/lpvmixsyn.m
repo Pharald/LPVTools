@@ -125,8 +125,8 @@ elseif strcmp(alg,'full')
     W3.InputName = 'u';  W3.OutputName = 'e2';
     W4.InputName = 'd2'; W4.OutputName ='d';
     G.InputName ='v';    G.OutputName = 'y';
-    S1 = sumblk('e = r -y');
-    S2 = sumblk('v = u + d');
+    S1 = sumblk('e = r -y',nmeas);
+    S2 = sumblk('v = u + d',ncont);
 
     P = connect(G,W1,W2,W3,W4,S1,S2,{'d1','d2','u'},{'e1','e2','e'});
     % perform synthesis
