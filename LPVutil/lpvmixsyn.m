@@ -1,5 +1,5 @@
 function [K,Gamma,Info] = lpvmixsyn(G,W1,W2,W3,W4,varargin)
-% LPVMIXSYN Mixed-sensitivity synthesis for PSS
+% LPVMIXSYN Mixed-sensitivity synthesis for PSS or PLFTSS
 %
 % lft(P,K): [z1] = [W1 0 ][S  -SG ][W2 0 ][w1]
 %           [z2]   [0  W3][KS -KSG][0  W4][w2]

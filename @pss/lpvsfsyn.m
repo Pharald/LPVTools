@@ -1,23 +1,40 @@
 function [F,Gamma,Info] = lpvsfsyn(P,ncont,Xb,alg,opt)
 % LPVSFSYN  Parameter-dependent state feedback controller synthesis for PSS
-% 
-% [F,GAM,INFO] = LPVSFSYN(P,NCON,'L2') computes a parameter-varying 
-% state-feedback controller for the parameter-varying system P. 
-% NCON specifies the number of available control inputs in P. F is the 
-% state-feedback controller for the plant P, which minimizes the L2 norm 
-% from the input of P to its output. GAM is the minimum L2 norm 
-% achived by F. INFO is a struct with additional data. 
 %
-% [F,GAM,INFO] = LPVSFSYN(P,NCON,'LQG') computes a parameter-varying 
-% state-feedback controller F, which minimizes the stochastic LPV bound.  
-% The stochastic LPV bound is defined as the expected value of the average 
-% instantaneous power of the output of P, assuming its inputs are zero mean, 
-% white-noise processes with unit intensity.
+% [F,GAMMA,INFO] = LPVSYN(P,NCONT) computes a parameter-varying
+% state-feedback gain F which minimizes the induced L2 norm of the 
+% interconnection defined by lft(P,F). F is a PMAT with NCON outputs, 
+% defined on same domain as P. GAMMA is the induced L2 norm of lft(P,K).
+% This three argument call assumes that the rate-bounds of the independent
+% variables in P are [-inf,inf]. INFO is a structure containing data from
+% the Linear Matrix Inequalities that are solved to obtain F.
 %
-% [F,GAM,INFO] = LPVSFSYN(P,NCON,Xb,ALG,OPT) performs a rate-bounded synthesis.
-% Xb and Yb are BASIS objects specifying the basis functions to be used in 
-% the synthesis. ALG can be either 'L2' or 'LQG'. A call without the ALG
-% argument is equivalent to [F,GAM,INFO] = LPVSFSYN(P,NCON,Xb,'L2').
+% [F,GAMMA,INFO] = LPVSYN(P,NCONT,Xb) computes the rate-bounded 
+% parameter-varying state-feedback gain F for a system P. F is the 
+% controller which minimizes the induced L2 norm of lft(P,F) when the 
+% rate-bounds of the  independent variables of P are incorporated into
+% the synthesis. Xb is a BASIS object, which describe the assumed parameter 
+% dependence of the lyapunov matrices used in solving for F.
+%
+% [F,GAM,INFO] = LPVSFSYN(P,NCONT,Xb,ALG) computes a parameter-varying 
+% state-feedback gain F, which minimizes the induced L2 norm if ALG = 'L2' 
+% or the stochastic LPV bound if ALG = 'LQG'. The stochastic LPV bound is 
+% defined as the expected value of the average instantaneous power of the 
+% output of P, assuming its inputs are zero mean, white-noise processes 
+% with unit intensity.
+%
+% [F,GAMMA,INFO] = LPVSYN(P,NCONT,Xb,ALG,OPT) allows the user to pass in
+% a LPVSYNOPTIONS object. 
+%
+% The default algorithm for LPVSFSYN will solve the given synthesis problem
+% twice. The first iteration attempts to find a solution that minimizes the
+% induced L2 norm of lft(P,K). The second iteration will solve the 
+% optimization problem again, with the caveat that any solution that is 
+% found to lie within 15% of the optimal induced L2 norm of lft(P,K) from 
+% the first iteration, is satisfactory. This formulation has been found to 
+% yield controllers that are better numerically conditioned. The back-off 
+% factor of 15% can be reset to a different value in LPVSYNOPTIONS.
+%
 %
 % See also: lpvsynOptions, lpvestsyn, lpvsyn, lpvncfyn, lpvmixsyn, lpvloopshape.
 
@@ -45,9 +62,9 @@ elseif nin==3
     if isa(Xb,'lpvsynOptions')
         opt = Xb;
         Xb = [];
-        alg = 'L2';  
+        alg = 'L2';
     elseif isa(Xb,'basis')
-        alg = 'L2'; 
+        alg = 'L2';
         opt = lpvsynOptions;
     elseif isa(Xb,'char')
         alg = Xb;
@@ -60,12 +77,17 @@ elseif nin==3
 elseif nin==4
     if isa(alg,'lpvsynOptions')
         opt = alg;
-        alg = 'L2';        
+        alg = 'L2';
     elseif isa(alg,'char')
         opt = lpvsynOptions;
     else
         error(['The fourth argment in a call to lpvsfsyn must be '...
             'either a a CHAR, or a lpvsynOptions'])
+    end
+elseif nin==5
+    if ~isa(opt,'lpvsynOptions')
+        error(['The fifth argment in a call to lpvsfsyn must be '...
+            'a lpvsynOptions'])
     end
 end
 

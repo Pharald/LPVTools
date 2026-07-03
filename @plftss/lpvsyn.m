@@ -1,17 +1,34 @@
 function [K,Gamma,Info] = lpvsyn(sys,nmeas,ncont,Xb,Yb,opt)
 % LPVSYN  Parameter-dependent controller synthesis for PLFTSS
 %
-% P is a plftss
-% Xb and Yb are structures with fields basis containing the basis functions
-% and partial containting the partial derivatives of the basis functions.
-% The basis and partial fields must be plft or double.
+% [K,GAMMA,INFO] = LPVSYN(P,NMEAS,NCONT) computes a parameter-varying
+% controller K which minimizes the induced L2 norm of the interconnection 
+% defined by lft(P,K). K is a PLFTSS with NMEAS inputs and NCON outputs, 
+% defined on same domain as P. GAMMA is the induced L2 norm of lft(P,K).
+% This three argument call assumes that the rate-bounds of the independent
+% variables in P are [-inf,inf]. INFO is a structure containing data from
+% the Linear Matrix Inequalities that are solved to obtain K.
 %
-% lpvsyn(P,nmeas,ncont,Xb,Yb,opt)
-% lpvsyn(P,nmeas,ncont,opt) % no basis NOT SUPPORTED
-% lpvsyn(P,nmeas,ncont,Xb,Yb) % default options
-% lpvsyn(P,nmeas,ncont) % default options no basis functions NOT SUPPORTED
-
-% See also: lpvsynOptions.
+% [K,GAMMA,INFO] = LPVSYN(P,NMEAS,NCONT,Xb,Yb) computes the rate-bounded 
+% parameter-varying controller K for a system P. K is the controller which 
+% minimizes the induced L2 norm of lft(P,K) when the rate-bounds of the  
+% independent variables of P are incorporated into the synthesis. 
+% Xb and Yb are BASIS objects specified as PLFT, which describe the assumed 
+% parameter dependence of the lyapunov matrices used in solving for K.
+%
+% [K,GAMMA,INFO] = LPVSYN(P,NMEAS,NCONT,Xb,Yb,OPT) allows the user to pass in
+% a LPVSYNOPTIONS object. 
+%
+% The default algorithm for LPVSYN will solve the given synthesis problem
+% twice. The first iteration attempts to find a solution that minimizes the
+% induced L2 norm of lft(P,K). The second iteration will solve the 
+% optimization problem again, with the caveat that any solution that is 
+% found to lie within 15% of the optimal induced L2 norm of lft(P,K) from 
+% the first iteration, is satisfactory. This formulation has been found to 
+% yield controllers that are better numerically conditioned. The back-off 
+% factor of 15% can be reset to a different value in LPVSYNOPTIONS.
+%
+% See also: lpvsynOptions, lpvsfsyn, lpvestsyn, lpvncfyn, lpvmixsyn, lpvloopshape.
 
 
 % Parse Inputs

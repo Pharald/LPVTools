@@ -1,44 +1,59 @@
-function [F,Gamma,Info] = lpvsfsyn(P,nu,Xb,alg,opt)
-% Parameter-dependent state feedback controller synthesis in LFT
-% formualtion
-% P is uss and is the generalised plant with weighted in/outputs.
-% it must not include the state feedback signal to the controller (or dimensions will not work)
-% nu = number of control inputs from controller to plant
+function [F,Gamma,Info] = lpvsfsyn(P,nu,Xb,opt)
+% LPVSFSYN  Parameter-dependent state feedback controller synthesis for PLFTSS
+%
+% [F,GAMMA,INFO] = LPVSYN(P,NCONT) computes a parameter-varying
+% state-feedback gain F which minimizes the induced L2 norm of the 
+% interconnection defined by lft(P,F). F is a PMAT with NCON outputs, 
+% defined on same domain as P. GAMMA is the induced L2 norm of lft(P,K).
+% This three argument call assumes that the rate-bounds of the independent
+% variables in P are [-inf,inf]. INFO is a structure containing data from
+% the Linear Matrix Inequalities that are solved to obtain F.
+%
+% [F,GAMMA,INFO] = LPVSYN(P,NCONT,Xb) computes the rate-bounded 
+% parameter-varying state-feedback gain F for a system P. F is the 
+% controller which minimizes the induced L2 norm of lft(P,F) when the 
+% rate-bounds of the  independent variables of P are incorporated into
+% the synthesis. Xb is a BASIS object, which describe the assumed parameter 
+% dependence of the lyapunov matrices used in solving for F.
+%
+%
+% [F,GAMMA,INFO] = LPVSYN(P,NCONT,Xb,OPT) allows the user to pass in
+% a LPVSYNOPTIONS object. 
+%
+% The default algorithm for LPVSFSYN will solve the given synthesis problem
+% twice. The first iteration attempts to find a solution that minimizes the
+% induced L2 norm of lft(P,K). The second iteration will solve the 
+% optimization problem again, with the caveat that any solution that is 
+% found to lie within 15% of the optimal induced L2 norm of lft(P,K) from 
+% the first iteration, is satisfactory. This formulation has been found to 
+% yield controllers that are better numerically conditioned. The back-off 
+% factor of 15% can be reset to a different value in LPVSYNOPTIONS.
+%
+%
+% See also: lpvsynOptions, lpvestsyn, lpvsyn, lpvncfyn, lpvmixsyn, lpvloopshape.
 
 %%
 
-narginchk(2,5);
+narginchk(2,4);
 nin = nargin;
 
 if nin==2
     opt = lpvsynOptions;
     Xb = [];
-    alg = 'L2';
 elseif nin==3
     if isa(Xb,'lpvsynOptions')
         opt = Xb;
         Xb = [];
-        alg = 'L2';  
     elseif isa(Xb,'basis')
-        alg = 'L2'; 
-        opt = lpvsynOptions;
-    elseif isa(Xb,'char')
-        alg = Xb;
-        Xb = [];
         opt = lpvsynOptions;
     else
         error(['The third argment in a call to lpvsfsyn must be '...
-            'either a BASIS object, a CHAR, or a lpvsynOptions'])
+            'either a BASIS object or a lpvsynOptions'])
     end
 elseif nin==4
-    if isa(alg,'lpvsynOptions')
-        opt = alg;
-        alg = 'L2';        
-    elseif isa(alg,'char')
-        opt = lpvsynOptions;
-    else
+    if ~isa(opt,'lpvsynOptions')
         error(['The fourth argment in a call to lpvsfsyn must be '...
-            'either a a CHAR, or a lpvsynOptions'])
+            'a lpvsynOptions'])
     end
 end
 nx = order(P); % # of states
