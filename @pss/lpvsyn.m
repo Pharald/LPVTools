@@ -1,22 +1,22 @@
 function [K,Gamma,Info] = lpvsyn(sys,nmeas,ncont,Xb,Yb,opt)
 % LPVSYN  Parameter-dependent controller synthesis for PSS
 %
-% [K,GAM,INFO] = LPVSYN(P,NMEAS,NCON) computes a parameter-varying
+% [K,GAMMA,INFO] = LPVSYN(P,NMEAS,NCONT) computes a parameter-varying
 % controller K which minimizes the induced L2 norm of the interconnection 
 % defined by lft(P,K). K is a PSS with NMEAS inputs and NCON outputs, 
-% defined on same domain as P. GAM is the induced L2 norm of lft(P,K).
+% defined on same domain as P. GAMMA is the induced L2 norm of lft(P,K).
 % This three argument call assumes that the rate-bounds of the independent
 % variables in P are [-inf,inf]. INFO is a structure containing data from
 % the Linear Matrix Inequalities that are solved to obtain K.
 %
-% [K,GAM,INFO] = LPVSYN(P,NMEAS,NCON,Xb,Yb) computes the rate-bounded 
+% [K,GAMMA,INFO] = LPVSYN(P,NMEAS,NCONT,Xb,Yb) computes the rate-bounded 
 % parameter-varying controller K for a system P. K is the controller which 
 % minimizes the induced L2 norm of lft(P,K) when the rate-bounds of the  
 % independent variables of P are incorporated into the synthesis. 
 % Xb and Yb are BASIS objects, which describe the assumed parameter 
 % dependence of the lyapunov matrices used in solving for K.
 %
-% [K,GAM,INFO] = LPVSYN(P,NMEAS,NCON,Xb,Yb,OPT) allows the user to pass in
+% [K,GAMMA,INFO] = LPVSYN(P,NMEAS,NCONT,Xb,Yb,OPT) allows the user to pass in
 % a LPVSYNOPTIONS object. 
 %
 % The default algorithm for LPVSYN will solve the given synthesis problem
