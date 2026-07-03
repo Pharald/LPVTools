@@ -58,8 +58,9 @@ for ii = 1:size(blk,1)
     ndec = ndec + blk(ii,1)*(blk(ii,1)-1)/2;
 end
 
-[S,ndec,sS] = lmivar(3,sS);         % skew symmetric block diagonal multiplier
-
+if ~all(blk(ii,1)==1)
+    [S,ndec,sS] = lmivar(3,sS);         % skew symmetric block diagonal multiplier
+end
 
 Pi = lmivar(3,[-sR, sS; sS', sR]);
 

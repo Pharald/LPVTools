@@ -166,10 +166,6 @@ Qy = [Hp*Atil + partialHp, Hp*b11, zeros(nYp,ne);...
 Qy = simplify(Qy,simplifyopt);
 
 
-Qxy = [Gp zeros(nXp,nx); zeros(nx,nx), eye(nx); eye(nx), zeros(nx,nx); zeros(nYp,nx), Hp];
-Qxy = simplify(Qxy,simplifyopt);
-
-
 % Create LMI variables
 setlmis([])
 
@@ -199,8 +195,16 @@ cnt = cnt+1;
 [RRY,PiRY,ndec,cnt] = fullBlockS(Qy,cnt);
 cnt = cnt+1;
 
-[RRXY,PiXY,ndec,cnt,XYinfo] = fullBlockS(Qxy,-cnt); % XY xondition is 0 <
-cnt = -cnt;
+if ratebndflg
+    Qxy = [Gp zeros(nXp,nx); zeros(nx,nx), eye(nx); eye(nx), zeros(nx,nx); zeros(nYp,nx), Hp];
+    Qxy = simplify(Qxy,simplifyopt);
+    [RRXY,PiXY,ndec,cnt,XYinfo] = fullBlockS(Qxy,-cnt); % XY xondition is 0 <
+    cnt = -cnt;
+else
+    lmiterm([cnt 1 1 X],1,1);
+    lmiterm([cnt 1 2 0],eye(nx));
+    lmiterm([cnt 2 2 Y],1,1);
+end
 cnt = cnt+1;
 
 % LMI conditions

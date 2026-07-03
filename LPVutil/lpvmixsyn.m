@@ -37,7 +37,7 @@ if nin==5
 elseif nin==6
     Yb = [];
     Xb = Yb;
-    if isa(varargin{1},'lpvsynoptions')
+    if isa(varargin{1},'lpvsynOptions')
         opt = varargin{1};
         alg = 'full';
     elseif isa(varargin{1},'char')
