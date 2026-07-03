@@ -76,11 +76,8 @@ nd = size(sys,2) - ncont;
 ne = size(sys,1) - nmeas;
 blk = [nd ne; ncont nmeas];
 
-if contains(opt.balance,'off')
-    sysb = sys;
-else
 sysb = lpvbalance(sys,blk);
-end
+
 
 % Orthogonalize general OLIC interconnection
 [P,TL,TR,FT] = orthog4syn(sysb,nmeas,ncont);
