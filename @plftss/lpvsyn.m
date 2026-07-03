@@ -195,17 +195,13 @@ cnt = cnt+1;
 [RRY,PiRY,ndec,cnt] = fullBlockS(Qy,cnt);
 cnt = cnt+1;
 
-if ratebndflg
+if ratebndflg % outer factor for X Y positive definite condition
     Qxy = [Gp zeros(nXp,nx); zeros(nx,nx), eye(nx); eye(nx), zeros(nx,nx); zeros(nYp,nx), Hp];
     Qxy = simplify(Qxy,simplifyopt);
-    [RRXY,PiXY,ndec,cnt,XYinfo] = fullBlockS(Qxy,-cnt); % XY xondition is 0 <
+    [RRXY,PiXY,ndec,cnt,XYinfo] = fullBlockS(Qxy,-cnt); % XY xondition is > 0
     cnt = -cnt;
-else
-    lmiterm([cnt 1 1 X],1,1);
-    lmiterm([cnt 1 2 0],eye(nx));
-    lmiterm([cnt 2 2 Y],1,1);
+    cnt = cnt+1;
 end
-cnt = cnt+1;
 
 % LMI conditions
 
@@ -287,12 +283,20 @@ cnt = cnt + 1;
 
 
 %     0 < RRXY'*blkdiag(PiXY,XY_0mat)*RRXY
-lmiterm([-cnt 0 0 0],RRXY);  % RRXY'__RRXY outer factor
-lmiterm([-cnt 1 1 PiXY],1,1);
-lmiterm([-cnt 2 2 X],1,1);
-lmiterm([-cnt 3 4 ginv],eye(nx),1);
-lmiterm([-cnt 5 5 Y],1,1);
-cnt = cnt + 1;
+if ratebndflg
+    lmiterm([-cnt 0 0 0],RRXY);  % RRXY'__RRXY outer factor
+    lmiterm([-cnt 1 1 PiXY],1,1);
+    lmiterm([-cnt 2 2 X],1,1);
+    lmiterm([-cnt 3 4 ginv],eye(nx),1);
+    lmiterm([-cnt 5 5 Y],1,1);
+    cnt = cnt + 1;
+else
+    % no full block S procedure was applied because X and Y are not LPV
+    lmiterm([-cnt 1 1 X],1,1);
+    lmiterm([-cnt 1 2 0],eye(nx));
+    lmiterm([-cnt 2 2 Y],1,1);
+    cnt = cnt + 1;
+end
 
 if opt.Gammalb>0
     lmiterm([cnt 1 1 ginv],1,1);
