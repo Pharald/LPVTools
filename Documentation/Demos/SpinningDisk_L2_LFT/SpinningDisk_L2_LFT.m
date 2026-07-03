@@ -189,10 +189,23 @@ nmeas = 2;					% # of measurements
 ncont = 1;					% # of controls
 [Knr,Gamma,Info] = lpvsyn(G,nmeas,ncont);
 
+% ratebounded case: choose basis functions. A constant and a linear
+% function are selected
+nx = order(G);
+Xb = basis([eye(nx); rho*eye(nx)], ...
+                [zeros(nx,nx);eye(nx)]*rhoDot);
+Yb = Xb;
+[Krb,Gammarb,Inforb] = lpvsyn(G,nmeas,ncont,Xb,Yb);
+
 %%
 % The control design is successfull, and the controller |Knr| is guarenteed 
 % to achieve an induced $L_2$ norm that is less than or equal to |Gamma|
 Gamma
+
+% For the case with selected basis functions, the controller |Krb| is
+% guaranteed to achieve an induced $L_2$ norm that is less than or equal to
+% |Gammarb|
+Gammarb
 
 %% Evaluating Pointwise Performance 
 % 
