@@ -66,7 +66,22 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
 
 
-  </style></head><body><div class="content"><h1>Synthesis for gridded LPV systems</h1><!--introduction--><p>Lets consider a rate-dependent, output-feedback control problem involving stabilization, tracking, disturbance rejection and input penalty. The problem is taken from a</p><div><ol><li>G. Meyer, and L. Cicolani, &#8220;Application of nonlinear systems inverses to automatic flight control design-system concepts and flight evaluations,&#8221; <i>AGARDograph: Theory and Applications 01 Optimal Control in Aerospace Systems</i>, No. 251,1981.</li><li>F. Wu, X. H. Yang, A. Packard, and G. Becker, &#8220;Induced L2-norm control for LPV systems with bounded parameter variation rates,&#8221; <i>Int. J Robust and Nonlinear Control</i>, Vol. 6, Issue 9-10, pp. 983-998, 1996, doi: 10.1002/(SICI)1099-1239(199611)6:9/10&lt;983::AID-RNC263&gt;3.0.CO;2-C.</li></ol></div><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">The System</a></li><li><a href="#2">Problem Formulation</a></li><li><a href="#4">Synthesis</a></li><li><a href="#8">Pointwise analysis in the LTI framework</a></li><li><a href="#15">LPV Simulation</a></li></ul></div><h2>The System<a name="1"></a></h2><p>The generalized plant model, <tt>G</tt>, is created from 3 subsystems as seen in Figure 1, an unstable continuous-time plant, <tt>P</tt>, a parameter-dependent rotation matrix, <tt>R</tt>, and two 1st order actuator models.</p><p><img vspace="5" hspace="5" src="GridSynthesis_System.png" alt=""> </p><p><i>Figure 1: The parameter-dependent system <tt>G</tt>.</i></p><p><tt>G</tt> is an LPV system with three inputs (<img src="Grid_Synthesis_eq18096895394918367257.png" alt="$f$">, <img src="Grid_Synthesis_eq01172196929062917706.png" alt="$u_1$">, <img src="Grid_Synthesis_eq09545947833240664896.png" alt="$u_2$">), two outputs (<img src="Grid_Synthesis_eq14532394993968910913.png" alt="$v_1$">, <img src="Grid_Synthesis_eq03007134714359720275.png" alt="$v_2$">), and four states. <tt>G</tt> can be written in the standard form as a parameter varying state-space system:</p><p><img src="Grid_Synthesis_eq09329330081923492225.png" alt="$$&#xA;\left[ \begin{array}{c}&#xA;\dot{x}_1(t) \\ \dot{x}_2(t) \\&#xA;\dot{x}_3(t) \\ \dot{x}_4(t) \end{array} \right]&#xA;= \left[ \begin{array}{cccc}&#xA;0.75 &amp; 2 &amp; cos(\rho) &amp; sin(\rho) \\&#xA;0 &amp; 0.5 &amp; -sin(\rho) &amp; cos(\rho) \\&#xA;0 &amp;0 &amp;-10 &amp; 0 \\&#xA;0 &amp; 0&amp; 0 &amp; -10&#xA;\end{array} \right]&#xA;\left[ \begin{array}{c} x_1 (t) \\ x_2 (t) \\ x_3 (t) \\ x_4 (t)\end{array} \right]&#xA;\left[ \begin{array}{ccc}&#xA;0 &amp; 0 &amp;0 \\&#xA;3 &amp; 0 &amp; 0 \\&#xA;0 &amp; 10 &amp;0  \\&#xA;0 &amp; 0 &amp; 10&#xA;\end{array} \right]&#xA;\left[ \begin{array}{c}&#xA;f \\&#xA;u_1 \\&#xA;u_2&#xA;\end{array} \right]&#xA;\ \ \ \ \ \ \ (1)$$"></p><p><img src="Grid_Synthesis_eq12730198841437368816.png" alt="$$&#xA;\left[ \begin{array}{c}&#xA;v_1 \\&#xA;v_2&#xA;\end{array} \right]&#xA;=&#xA;\left[ \begin{array}{cccc}&#xA;1 &amp; 0  &amp; 0 &amp; 0 \\&#xA;0 &amp; 1 &amp; 0 &amp; 0&#xA;\end{array} \right]&#xA;\ \ \ \ \ \ \ (2)$$"></p><p>The following commands create a grid-based LPV model of the parameter dependent system in Equation (1):</p><pre class="codeinput"><span class="comment">% Define the time-varying real parameter.</span>
+  </style></head><body><div class="content"><h1>Synthesis for gridded LPV systems</h1><!--introduction-->
+  
+  <!--/introduction-->
+  
+  <h2>Contents</h2>
+  <div><ul><li><a href="#1">The System</a></li>
+    <li><a href="#2">Problem Formulation</a></li>
+    <li><a href="#4">Synthesis</a></li>
+    <li><a href="#8">Pointwise analysis in the LTI framework</a></li>
+    <li><a href="#15">LPV Simulation</a></li></ul></div>
+  
+ <p>To open this example as a livescript, paste the following into the command window:</p>
+<pre class="codeinput">openLpvExample(<span class="string">'Grid_Synthesis'</span>) </pre>
+
+   <h2>The System<a name="1"></a></h2>
+   <p>The generalized plant model, <tt>G</tt>, is created from 3 subsystems as seen in Figure 1, an unstable continuous-time plant, <tt>P</tt>, a parameter-dependent rotation matrix, <tt>R</tt>, and two 1st order actuator models.</p><p><img vspace="5" hspace="5" src="GridSynthesis_System.png" alt=""> </p><p><i>Figure 1: The parameter-dependent system <tt>G</tt>.</i></p><p><tt>G</tt> is an LPV system with three inputs (<img src="Grid_Synthesis_eq18096895394918367257.png" alt="$f$">, <img src="Grid_Synthesis_eq01172196929062917706.png" alt="$u_1$">, <img src="Grid_Synthesis_eq09545947833240664896.png" alt="$u_2$">), two outputs (<img src="Grid_Synthesis_eq14532394993968910913.png" alt="$v_1$">, <img src="Grid_Synthesis_eq03007134714359720275.png" alt="$v_2$">), and four states. <tt>G</tt> can be written in the standard form as a parameter varying state-space system:</p><p><img src="Grid_Synthesis_eq09329330081923492225.png" alt="$$&#xA;\left[ \begin{array}{c}&#xA;\dot{x}_1(t) \\ \dot{x}_2(t) \\&#xA;\dot{x}_3(t) \\ \dot{x}_4(t) \end{array} \right]&#xA;= \left[ \begin{array}{cccc}&#xA;0.75 &amp; 2 &amp; cos(\rho) &amp; sin(\rho) \\&#xA;0 &amp; 0.5 &amp; -sin(\rho) &amp; cos(\rho) \\&#xA;0 &amp;0 &amp;-10 &amp; 0 \\&#xA;0 &amp; 0&amp; 0 &amp; -10&#xA;\end{array} \right]&#xA;\left[ \begin{array}{c} x_1 (t) \\ x_2 (t) \\ x_3 (t) \\ x_4 (t)\end{array} \right]&#xA;\left[ \begin{array}{ccc}&#xA;0 &amp; 0 &amp;0 \\&#xA;3 &amp; 0 &amp; 0 \\&#xA;0 &amp; 10 &amp;0  \\&#xA;0 &amp; 0 &amp; 10&#xA;\end{array} \right]&#xA;\left[ \begin{array}{c}&#xA;f \\&#xA;u_1 \\&#xA;u_2&#xA;\end{array} \right]&#xA;\ \ \ \ \ \ \ (1)$$"></p><p><img src="Grid_Synthesis_eq12730198841437368816.png" alt="$$&#xA;\left[ \begin{array}{c}&#xA;v_1 \\&#xA;v_2&#xA;\end{array} \right]&#xA;=&#xA;\left[ \begin{array}{cccc}&#xA;1 &amp; 0  &amp; 0 &amp; 0 \\&#xA;0 &amp; 1 &amp; 0 &amp; 0&#xA;\end{array} \right]&#xA;\ \ \ \ \ \ \ (2)$$"></p><p>The following commands create a grid-based LPV model of the parameter dependent system in Equation (1):</p><pre class="codeinput"><span class="comment">% Define the time-varying real parameter.</span>
 rho = pgrid(<span class="string">'rho'</span>,linspace(-pi,pi,7));
 rho.RateBounds = [-5 5];
 
@@ -113,7 +128,7 @@ Yb = Xb;
 <span class="comment">% LPV Rate-Bounded Control Design</span>
 opt = lpvsynOptions(<span class="string">'BackOffFactor'</span>,1.02);
 [Klpv,normlpv] = lpvsyn(H,2,2,Xb,Yb,opt);
-</pre><p>The LPV controller is a <tt>pss</tt> object <tt>klpv</tt></p><pre class="codeinput">Klpv
+</pre><p>The LPV controller is a <tt>pss</tt> object <tt>Klpv</tt></p><pre class="codeinput">Klpv
 </pre><pre class="codeoutput">PSS with 8 States, 2 Outputs, 2 Inputs, Continuous System.         
 The PSS consists of the following blocks:                          
   rho: Gridded real, 7 points in [-3.14,3.14], rate bounds [-5,5]. 
@@ -126,7 +141,7 @@ The PSS consists of the following blocks:
 The PSS consists of the following blocks:                          
   rho: Gridded real, 7 points in [-3.14,3.14], rate bounds [-5,5]. 
   rhoDot: Gridded real, 2 points in [-5,5], rate bounds [-Inf,Inf].
-</pre><p>Set the input and output names for CL</p><pre class="codeinput">CL.InputName = {<span class="string">'f'</span>,<span class="string">'u_1'</span>,<span class="string">'u_2'</span>};
+</pre><p>Set the input and output names for <tt>CL</tt></p><pre class="codeinput">CL.InputName = {<span class="string">'f'</span>,<span class="string">'u_1'</span>,<span class="string">'u_2'</span>};
 CL.OutputName = {<span class="string">'v_1'</span>,<span class="string">'v_2'</span>};
 </pre><p>Plot the output and input sensitivity functions at each point in the domain</p><pre class="codeinput">SF = loopsens(G(:,2:3),Klpv);
 sigma(SF.So,<span class="string">'b'</span>,SF.Si,<span class="string">'r--'</span>)
@@ -155,7 +170,20 @@ lpvstep(CL(:,1),ptraj)
 </pre><img vspace="5" hspace="5" src="Grid_Synthesis_03.png" alt=""> <p>We can also look at the time-domain response for a custom input: Plot the parameter dependent response for a unit doublet command when <img src="Grid_Synthesis_eq09402342697892027486.png" alt="$\rho(t) = sin(t)$">.</p><pre class="codeinput">u = [zeros(size(0:0.01:3)) ones(size(3.01:0.01:5)),<span class="keyword">...</span>
      -ones(size(5.01:0.01:7)) zeros(size(7.01:0.01:10))]';
  lpvlsim(CL(:,1),ptraj,u,t);
-</pre><img vspace="5" hspace="5" src="Grid_Synthesis_04.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+</pre><img vspace="5" hspace="5" src="Grid_Synthesis_04.png" alt=""> 
+
+<h2>References</h2>
+<div><ol><li>G. Meyer, and L. Cicolani, &#8220;Application of nonlinear systems inverses to automatic flight control design-system concepts and flight evaluations,&#8221; 
+      <i>AGARDograph: Theory and Applications 01 Optimal Control in Aerospace Systems</i>
+  , No. 251,1981.</li>
+  <li>F. Wu, X. H. Yang, A. Packard, and G. Becker, &#8220;Induced L2-norm control for LPV systems with bounded parameter variation rates,&#8221; 
+      <i>Int. J Robust and Nonlinear Control</i>
+  , Vol. 6, Issue 9-10, pp. 983-998, 1996, doi: 10.1002/(SICI)1099-1239(199611)6:9/10&lt;983::AID-RNC263&gt;3.0.CO;2-C.</li></ol></div>
+
+
+<p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div>
+
+<!--
 ##### SOURCE BEGIN #####
 %% Synthesis for gridded LPV systems
 % 
