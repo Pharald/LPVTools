@@ -1,0 +1,104 @@
+        /* Reset and base styles */
+        html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, font, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            outline: 0;
+            font-size: 100%;
+            vertical-align: baseline;
+            background: transparent;
+        }
+        body {
+            line-height: 1.5;
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            color: #000;
+            background: #fff;
+        }
+        h1 {
+            font-size: 1.8em; /* Slightly smaller than before */
+            color: #d55000;
+            margin: 20px 0 0px; /* Reduce bottom margin to decrease spacing */
+            font-weight: normal; /* Removed bold styling */
+            text-align: left;
+        }
+        .header-line {
+            border-top: 1px solid #d6d4d4;
+            border-bottom: 1px solid #d6d4d4;
+            margin: 10px 0;
+        }
+        h2 {
+            font-size: 1.2em;
+            color: #000;
+            font-weight: bold;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #d6d4d4;
+        }
+        p {
+            font-size: 1em; /* Default font size */        
+        }
+        pre {
+            font-size: 1em; /* Default font size */
+            color: grey; /* Change font color to grey */
+            margin-top: 0; /* Remove top margin to reduce spacing */
+            margin-bottom: 10px; /* Optional: Adjust bottom margin if needed */
+            line-height: 1.2; /* Adjust line height for tighter spacing */
+        }
+        a {
+            color: #005fce;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        footer {
+            margin-top: 25px;
+            padding-top: 10px;
+            border-top: 1px dotted #878787;
+            font-size: 0.8em;
+            color: #878787;
+            text-align: left;
+        }
+        footer a {
+            color: #878787;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
+        .content {
+            padding: 20px;
+        }
+        /* Navigation bar styles */
+        .navbar {
+            display: flex;
+            align-items: center;
+            background-color: #f4f4f4;
+            padding: 10px 20px;
+            border-bottom: 1px solid #d6d4d4;
+        }
+        .navbar-nav {
+            list-style: none;
+            display: flex;
+            gap: 15px;
+        }
+        .navbar-nav .nav-item {
+            display: inline-block;
+        }
+        .navbar-nav .nav-link {
+            color: #005fce;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .navbar-nav .nav-link:hover {
+            text-decoration: underline;
+        }
+
+        table th, table td {
+            text-align: left;
+            padding: 8px;
+            border: 1px solid #ddd;
+        }
+        table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
